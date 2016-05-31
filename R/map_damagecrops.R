@@ -62,11 +62,14 @@ map_damagecrops <- function(data, begin_date, end_date, storm = F, track = F, di
   }
   ###
 
-  #data(county.regions)
-  #region = data.frame(county.regions$region, rep(0,nrow(county.regions)))
-  #colnames(region) = c("region", "value")
+  data(county.regions)
+  region = data.frame(county.regions$region, rep(0,nrow(county.regions)))
+  colnames(region) = c("region", "value")
+
+  DamageCrops = rbind(region, DamageCrops)
 
   aggDamageCrops = aggregate(value ~ region, data = DamageCrops, sum)
+  aggDamageCrops[, 2] <- ifelse(aggDamageCrops[ ,2] == 0, NA, aggDamageCrops[ ,2])
 
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
                       "district of columbia", "florida", "georgia", "illinois",

@@ -32,7 +32,7 @@ map_indirectinjuries <- function(data, begin_date, end_date, storm = FALSE, trac
   if (is.na(dist_limit) == F) {
     distance_df <- hurricaneexposure::closest_dist %>%
       dplyr::filter_(~ storm_id == "Floyd-1999") %>%
-      dplyr::mutate_(exposed = ~ storm_dist <= 200)
+      dplyr::mutate_(exposed = ~ storm_dist <= dist_limit)
 
     metric_df <- distance_df %>%
       dplyr::mutate_(value = ~ factor(exposed,
@@ -51,11 +51,11 @@ map_indirectinjuries <- function(data, begin_date, end_date, storm = FALSE, trac
   }
   ###
 
-  #data(county.regions)
-  #region = data.frame(county.regions$region, rep(0,nrow(county.regions)))
-  #colnames(region) = c("region", "value")
+  data(county.regions)
+  region = data.frame(county.regions$region, rep(0,nrow(county.regions)))
+  colnames(region) = c("region", "value")
 
-  #DirectDea0 = rbind(region, DirectDea)
+  IndirectInj = rbind(region, IndirectInj)
 
   aggIndirectInj = aggregate(value ~ region, data = IndirectInj, sum)
   aggIndirectInj[, 2] <- ifelse(aggIndirectInj[ ,2] == 0, NA, aggIndirectInj[ ,2])

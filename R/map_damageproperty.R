@@ -60,11 +60,15 @@ map_damageproperty <- function(data, begin_date, end_date, storm = F, track = F,
   }
   ###
 
-  #data(county.regions)
-  #region = data.frame(county.regions$region, rep(0,nrow(county.regions)))
-  #colnames(region) = c("region", "value")
+  data(county.regions)
+  region = data.frame(county.regions$region, rep(0,nrow(county.regions)))
+  colnames(region) = c("region", "value")
+
+  DamageProperty = rbind(region, DamageProperty)
 
   aggDamageProperty = aggregate(value ~ region, data = DamageProperty, sum)
+  aggDamageProperty[, 2] <- ifelse(aggDamageProperty[ ,2] == 0, NA, aggDamageProperty[ ,2])
+
 
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
                       "district of columbia", "florida", "georgia", "illinois",

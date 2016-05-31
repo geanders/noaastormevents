@@ -32,7 +32,7 @@ map_directdeaths <- function(data, begin_date, end_date, storm = FALSE, track = 
   if (is.na(dist_limit) == F) {
     distance_df <- hurricaneexposure::closest_dist %>%
       dplyr::filter_(~ storm_id == "Floyd-1999") %>%
-      dplyr::mutate_(exposed = ~ storm_dist <= 200)
+      dplyr::mutate_(exposed = ~ storm_dist <= dist_limit)
 
     metric_df <- distance_df %>%
       dplyr::mutate_(value = ~ factor(exposed,
@@ -51,11 +51,11 @@ map_directdeaths <- function(data, begin_date, end_date, storm = FALSE, track = 
   }
   ###
 
-  #data(county.regions)
-  #region = data.frame(county.regions$region, rep(0,nrow(county.regions)))
-  #colnames(region) = c("region", "value")
+  data(county.regions)
+  region = data.frame(county.regions$region, rep(0,nrow(county.regions)))
+  colnames(region) = c("region", "value")
 
-  #DirectDea0 = rbind(region, DirectDea)
+  DirectDea = rbind(region, DirectDea)
 
   aggDirectDea = aggregate(value ~ region, data = DirectDea, sum)
   aggDirectDea[, 2] <- ifelse(aggDirectDea[ ,2] == 0, NA, aggDirectDea[ ,2])
