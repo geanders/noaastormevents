@@ -29,13 +29,13 @@ find_events <- function(first_date, last_date, ts_only = FALSE,
     stop("The `last_date` must be in the same year as and after the `first_date`.")
   }
 
-  file_name <- paste0("/Users/brookeanderson/Documents/CSU2016/hurricaneproject/noaastormevents/",
-                      "data-raw/StormEvents_details-ftp_v1.0_d",
-                      year(first_date),
-                      "_c20160223.csv")
-  # file_name <- paste0("data-raw/StormEvents_details-ftp_v1.0_d",
-  #                    year(first_date),
-   #                   "_c20160223.csv")
+  # file_name <- paste0("/Users/brookeanderson/Documents/CSU2016/hurricaneproject/noaastormevents/",
+  #                     "data-raw/StormEvents_details-ftp_v1.0_d",
+  #                     year(first_date),
+  #                     "_c20160223.csv")
+  file_name <- paste0("data-raw/StormEvents_details-ftp_v1.0_d",
+                     year(first_date),
+                    "_c20160223.csv")
   storm_data <- suppressWarnings(data.table::fread(file_name,
                             select = c("BEGIN_YEARMONTH", "BEGIN_DAY",
                                        "END_YEARMONTH", "END_DAY",
