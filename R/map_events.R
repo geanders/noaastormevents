@@ -7,15 +7,19 @@
 #'    "%Y-%m-%d".
 #' @param end_date A character string giving the date, in the format
 #'    "%Y-%m-%d". The end date must be in the same year as \code{begin_date}.
-#' @param storm A logical value indicating whether to filter events to only
+#' @param ts_only A logical value indicating whether to filter events to only
 #'    those in tropical storm-related categories.
 #'
 #' @examples
 #' find_events(first_date = "1999-10-15", last_date = "1999-10-20")
 #'
+#' find_events(first_date = "1999-10-16", last_date = "1999-10-18",
+#'    storm = "Floyd-1999", dist_limit = 200)
+#'
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
-find_events <- function(first_date, last_date, storm = FALSE){
+find_events <- function(first_date, last_date, ts_only = FALSE,
+                        dist_limit = NULL, storm = NULL){
 
   first_date <- lubridate::ymd(begin_date)
   last_date <- lubridate::ymd(end_date)
@@ -41,14 +45,23 @@ find_events <- function(first_date, last_date, storm = FALSE){
     dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
                   end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
     dplyr::filter(!is.na(begin_date) &
-                    begin_date %within% lubridate::interval(first_date, last_date))
+                    begin_date %within% lubridate::interval(first_date, last_date)) %>%
+    dplyr::tbl_df()
 
-  if (storm == T) {
+  if (ts_only) {
     ts_types <- c("Coastal Flood","Flash Flood","Flood","Heavy Rain",
                   "High Surf","High Wind Hurricane (Typhoon)",
                   "Storm Surge/Tide","Strong Wind","Thunderstorm Wind",
                   "Tornado","Tropical Storm","Waterspout")
     storm_data <- dplyr::filter(storm_data, type %in% ts_types)
+  }
+
+  if(!is.null(dist_limit) & !is.null(storm_id)){
+    distance_df <- hurricaneexposure::closest_dist %>%
+      dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
+    storm_data <- storm_data %>%
+      dplyr::left_join(distance_df, by = "fips") %>%
+      dplyr::filter_(~ !is.na(storm_dist))
   }
 
   return(storm_data)
@@ -60,17 +73,23 @@ find_events <- function(first_date, last_date, storm = FALSE){
 #' specified date range.
 #'
 #' @param east_only A logical value specifying whether to restrict the map to
-#'    the eastern half of the United States.
+#'    the eastern half of the United States (default is TRUE).
+#' @param add_tracks A logical value specifying whether to add the tracks of
+#'    a hurricane to the map (default = FALSE).
 #' @inheritParams find_events
 #'
 #' @examples
 #' map_events(first_date = "1999-10-15", last_date = "1999-10-20")
 #' map_events(first_date = "1999-10-16", last_date = "1999-10-18",
-#'    east_only = FALSE, storm = TRUE)
+#'    east_only = FALSE, ts_only = TRUE)
 #' map_events(first_date = "1999-10-16", last_date = "1999-10-18",
 #'    plot_type = "number of events")
-map_events <- function(first_date, last_date, storm = FALSE, east_only = TRUE,
-                       plot_type = "any events"){
+#' map_events(first_date = "1999-10-16", last_date = "1999-10-18",
+#'    dist_limit = 100, storm = "Floyd-1999",
+#'     add_tracks = TRUE, plot_type = "number of events")
+map_events <- function(first_date, last_date, ts_only = FALSE, east_only = TRUE,
+                       plot_type = "any events", dist_limit = NULL,
+                       storm = NULL, add_tracks = FALSE){
 
   data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
@@ -84,7 +103,8 @@ map_events <- function(first_date, last_date, storm = FALSE, east_only = TRUE,
                       "west virginia", "wisconsin")
 
   map_data <- find_events(first_date = first_date, last_date = last_date,
-                          storm = storm) %>%
+                          storm = storm, dist_limit = dist_limit,
+                          ts_only = ts_only) %>%
     dplyr::mutate(fips = as.numeric(fips)) %>%
     dplyr::rename(region = fips, value = type) %>%
     dplyr::full_join(county.regions, by = "region") %>%
@@ -133,6 +153,13 @@ map_events <- function(first_date, last_date, storm = FALSE, east_only = TRUE,
                                                    values = map_palette)
   }
 
-  return(out$render())
+  if(add_tracks){
+    tracks_map <- hurricaneexposure::map_tracks(storms = storm,
+                                                plot_object = out$render(),
+                                                plot_points = FALSE,
+                                                color = "black")
+    return(tracks_map)
+  } else {
+    return(out$render())
+  }
 }
-
