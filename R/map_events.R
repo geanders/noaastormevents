@@ -18,18 +18,24 @@
 #'
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
+#'
+#' @export
 find_events <- function(first_date, last_date, ts_only = FALSE,
                         dist_limit = NULL, storm = NULL){
 
-  first_date <- lubridate::ymd(begin_date)
-  last_date <- lubridate::ymd(end_date)
+  first_date <- lubridate::ymd(first_date)
+  last_date <- lubridate::ymd(last_date)
   if(last_date < first_date | year(first_date) != year(last_date)){
     stop("The `last_date` must be in the same year as and after the `first_date`.")
   }
 
-  file_name <- paste0("data-raw/StormEvents_details-ftp_v1.0_d",
+  file_name <- paste0("/Users/brookeanderson/Documents/CSU2016/hurricaneproject/noaastormevents/",
+                      "data-raw/StormEvents_details-ftp_v1.0_d",
                       year(first_date),
                       "_c20160223.csv")
+  # file_name <- paste0("data-raw/StormEvents_details-ftp_v1.0_d",
+  #                    year(first_date),
+   #                   "_c20160223.csv")
   storm_data <- suppressWarnings(data.table::fread(file_name,
                             select = c("BEGIN_YEARMONTH", "BEGIN_DAY",
                                        "END_YEARMONTH", "END_DAY",
@@ -56,7 +62,7 @@ find_events <- function(first_date, last_date, ts_only = FALSE,
     storm_data <- dplyr::filter(storm_data, type %in% ts_types)
   }
 
-  if(!is.null(dist_limit) & !is.null(storm_id)){
+  if(!is.null(dist_limit) & !is.null(storm)){
     distance_df <- hurricaneexposure::closest_dist %>%
       dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
     storm_data <- storm_data %>%
@@ -87,6 +93,10 @@ find_events <- function(first_date, last_date, ts_only = FALSE,
 #' map_events(first_date = "1999-10-16", last_date = "1999-10-18",
 #'    dist_limit = 100, storm = "Floyd-1999",
 #'     add_tracks = TRUE, plot_type = "number of events")
+#'
+#' @importFrom dplyr %>%
+#'
+#' @export
 map_events <- function(first_date, last_date, ts_only = FALSE, east_only = TRUE,
                        plot_type = "any events", dist_limit = NULL,
                        storm = NULL, add_tracks = FALSE){
