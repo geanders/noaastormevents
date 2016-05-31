@@ -173,3 +173,5 @@ map_events <- function(first_date, last_date, ts_only = FALSE, east_only = TRUE,
     return(out$render())
   }
 }
+
+
