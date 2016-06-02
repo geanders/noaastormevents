@@ -195,3 +195,5 @@ map_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE, eas
     return(out$render())
   }
 }
+
+
