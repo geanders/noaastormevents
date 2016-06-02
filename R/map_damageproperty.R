@@ -1,75 +1,131 @@
-data = read.csv("data-raw/StormEvents_details-ftp_v1.0_d1999_c20160223.csv", header = TRUE)
+#' Find all damaged property listings for date range
+#'
+#' This function will find all of the property damaged in the US for a specified date
+#' range.
+#'
+#' @param begin_date A character string giving the date, in the format
+#'    "%Y-%m-%d".
+#' @param end_date A character string giving the date, in the format
+#'    "%Y-%m-%d". The end date must be in the same year as \code{begin_date}.
+#' @param ts_only A logical value indicating whether to filter events to only
+#'    those in tropical storm-related categories.
+#'
+#' @examples
+#' find_damage_property(first_date = "1999-10-15", last_date = "1999-10-20")
+#'
+#' find_damage_property(first_date = "1999-10-16", last_date = "1999-10-18",
+#'    storm = "Floyd-1999", dist_limit = 200)
+#'
+#' @importFrom dplyr %>%
+#' @importFrom lubridate %within%
+#'
+#' @export
+find_damage_property <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
+                              dist_limit = NULL, storm = NULL){
 
-# Try dplyr functions: mutate, rename, filter
-
-library(lubridate)
-library(choroplethr)
-library(choroplethrMaps)
-library(dplyr)
-
-map_damageproperty <- function(data, begin_date, end_date, storm = F, track = F, dist_limit = NA){
-  begin.date = ymd(100*as.numeric(as.character(data$BEGIN_YEARMONTH)) + as.numeric(as.character(data$BEGIN_DAY)))
-  end.date = ymd(100*as.numeric(as.character(data$END_YEARMONTH)) + as.numeric(as.character(data$END_DAY)))
-
-  data0 = data.frame(begin.date, end.date, data)
-  int = interval(ymd(begin_date), ymd(end_date))
-  rows = which(data0$begin.date %within% int)
-  county = as.matrix(as.numeric(as.character(data$STATE_FIPS))*1000 + as.numeric(as.character(data$CZ_FIPS)))
-  data1 = data.frame(county[rows, ], data[rows, ])
-  names(data1)[1] = c("FIPS")
-
-  if (storm == T) {
-    data1 = filter(data1, EVENT_TYPE %in% c("Coastal Flood","Flash Flood","Flood","Heavy Rain",
-                                            "High Surf","High Wind Hurricane (Typhoon)","Storm Surge/Tide",
-                                            "Strong Wind","Thunderstorm Wind","Tornado","Tropical Storm","Waterspout"))
+  if(!is.null(first_date) & !is.null(last_date)){
+    first_date <- lubridate::ymd(first_date)
+    last_date <- lubridate::ymd(last_date)
+    if(last_date < first_date | year(first_date) != year(last_date)){
+      stop("The `last_date` must be in the same year as and after the `first_date`.")
+    }
   }
 
-  num.pro = as.numeric(gsub("[^0-9]", "", data1$DAMAGE_PROPERTY))
-  letter.pro = as.numeric(ifelse(grepl("K+", data1$DAMAGE_PROPERTY, perl=TRUE), 1000,
-                                 ifelse(grepl("M+", data1$DAMAGE_PROPERTY, perl=TRUE), 1000000,
-                                        ifelse(grepl("B+", data1$DAMAGE_PROPERTY, perl=TRUE), 1000000000,
-                                               ifelse(grepl("0+", data1$DAMAGE_PROPERTY, perl=TRUE), 0, " ")))))
+  # file_name <- paste0("/Users/brookeanderson/Documents/CSU2016/hurricaneproject/noaastormevents/",
+  #                     "data-raw/StormEvents_details-ftp_v1.0_d",
+  #                     year(first_date),
+  #                     "_c20160223.csv")
+  Year <- hurricaneexposure::closest_dist %>%
+    dplyr::filter_(~ storm_id == storm)
+  Year <-year(ymd_hm(Year$closest_date[1]))
 
-  DAMAGE_PROPERTY = as.matrix(num.pro * letter.pro)
-  data1$DAMAGE_PROPERTY = DAMAGE_PROPERTY
+  file_name <- paste0("data-raw/StormEvents_details-ftp_v1.0_d",
+                      Year,
+                      "_c20160223.csv")
 
-  DamageProperty = data1[,c("FIPS","DAMAGE_PROPERTY")]
-  colnames(DamageProperty) = c("region", "value")
-  DamageProperty[,2] = as.numeric(as.character(DamageProperty[,2]))
+  storm_data <- suppressWarnings(data.table::fread(file_name,
+                                                   select = c("BEGIN_YEARMONTH", "BEGIN_DAY",
+                                                              "END_YEARMONTH", "END_DAY",
+                                                              "STATE_FIPS", "CZ_FIPS", "DAMAGE_PROPERTY"),
+                                                   col.names = c("begin_ym", "begin_d", "end_ym", "end_d",
+                                                                 "st_fips", "ct_fips", "damage_property"))) %>%
+    dplyr::mutate(begin_d = sprintf("%02s", begin_d),
+                  end_d = sprintf("%02s", end_d),
+                  ct_fips = sprintf("%03s", ct_fips)) %>%
+    tidyr::unite(begin_date, begin_ym, begin_d, sep = "") %>%
+    tidyr::unite(end_date, end_ym, end_d, sep = "") %>%
+    tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
+    dplyr::tbl_df()
 
-  ###
-  if (is.na(dist_limit) == F) {
+  if(!is.null(dist_limit) & !is.null(storm)){
     distance_df <- hurricaneexposure::closest_dist %>%
-      dplyr::filter_(~ storm_id == "Floyd-1999") %>%
-      dplyr::mutate_(exposed = ~ storm_dist <= dist_limit)
-
-    metric_df <- distance_df %>%
-      dplyr::mutate_(value = ~ factor(exposed,
-                                      levels = c("FALSE", "TRUE")))
-
-    map_data <- metric_df %>%
-      dplyr::filter_(~ storm_id == "Floyd-1999") %>%
-      dplyr::mutate_(region = ~ as.numeric(as.character(fips))) %>%
-      dplyr::select_(~ region, ~ value)
-
-    selected <- map_data %>%
-      dplyr::filter(value == TRUE)
-
-    DamageProperty = DamageProperty %>%
-      dplyr::filter(region %in% selected$region)
+      dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
+    storm_data <- storm_data %>%
+      dplyr::left_join(distance_df, by = "fips") %>%
+      dplyr::filter_(~ !is.na(storm_dist))
   }
-  ###
-
-  data(county.regions)
-  region = data.frame(county.regions$region, rep(0,nrow(county.regions)))
-  colnames(region) = c("region", "value")
-
-  DamageProperty = rbind(region, DamageProperty)
-
-  aggDamageProperty = aggregate(value ~ region, data = DamageProperty, sum)
-  aggDamageProperty[, 2] <- ifelse(aggDamageProperty[ ,2] == 0, NA, aggDamageProperty[ ,2])
 
 
+  if(is.null(first_date) & is.null(last_date)){
+    first_date = min(as.numeric(storm_data$begin_date))
+    last_date = min(as.numeric(storm_data$end_date))
+    storm_data <- dplyr::mutate(storm_data, begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+                                end_date = suppressWarnings(lubridate::ymd(end_date)))
+  } else {
+    storm_data <- storm_data %>%
+      dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+                    end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
+      dplyr::filter(!is.na(begin_date) &
+                      begin_date %within% lubridate::interval(first_date, last_date))
+  }
+
+  if (ts_only) {
+    ts_types <- c("Coastal Flood","Flash Flood" ,"Flood","Heavy Rain",
+                  "High Surf","High Wind Hurricane (Typhoon)",
+                  "Storm Surge/Tide","Strong Wind","Thunderstorm Wind",
+                  "Tornado","Tropical Storm","Waterspout")
+    storm_data <- dplyr::filter(storm_data, type %in% ts_types)
+  }
+
+
+  num.property = as.numeric(gsub("[^0-9]", "", storm_data$damage_property))
+  letter.property = as.numeric(ifelse(grepl("K+", storm_data$damage_property, perl=TRUE), 1000,
+                                   ifelse(grepl("M+", storm_data$damage_property, perl=TRUE), 1000000,
+                                          ifelse(grepl("B+", storm_data$damage_property, perl=TRUE), 1000000000,
+                                                 ifelse(grepl("0+", storm_data$damage_property, perl=TRUE), 0, " ")))))
+  storm_data$damage_property = as.matrix(num.property * letter.property)
+
+
+  return(storm_data)
+}
+
+#' Map property damaged for a date range
+#'
+#' This function maps all property damaged listed with a starting date within a
+#' specified date range.
+#'
+#' @param east_only A logical value specifying whether to restrict the map to
+#'    the eastern half of the United States (default is TRUE).
+#' @param add_tracks A logical value specifying whether to add the tracks of
+#'    a hurricane to the map (default = FALSE).
+#' @inheritParams find_damage_property
+#'
+#' @examples
+#' map_damage_property(first_date = "1999-10-15", last_date = "1999-10-20")
+#' map_damage_property(first_date = "1999-10-16", last_date = "1999-10-18",
+#'    east_only = FALSE, ts_only = TRUE)
+#' map_damage_property(first_date = "1999-10-16", last_date = "1999-10-18")
+#' map_damage_property(first_date = "1999-10-16", last_date = "1999-10-18",
+#'    dist_limit = 100, storm = "Floyd-1999",
+#'     add_tracks = TRUE)
+#'
+#' @importFrom dplyr %>%
+#'
+#' @export
+map_damage_property <- function(first_date = NULL, last_date = NULL, ts_only = FALSE, east_only = TRUE,
+                             dist_limit = NULL, storm = NULL, add_tracks = FALSE){
+
+  data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
                       "district of columbia", "florida", "georgia", "illinois",
                       "indiana", "iowa", "kansas", "kentucky", "louisiana",
@@ -80,20 +136,81 @@ map_damageproperty <- function(data, begin_date, end_date, storm = F, track = F,
                       "tennessee", "texas", "vermont", "virginia",
                       "west virginia", "wisconsin")
 
-  breaks <- seq(0, 8, by = 1)
-  exposure_palette <- RColorBrewer::brewer.pal(length(breaks) - 2, name = "Greens")
+  map_data <- find_damage_property(first_date = first_date, last_date = last_date,
+                                storm = storm, dist_limit = dist_limit,
+                                ts_only = ts_only) %>%
+    dplyr::mutate(fips = as.numeric(fips)) %>%
+    dplyr::rename(region = fips, value = damage_property) %>%
+    dplyr::full_join(county.regions, by = "region") %>%
+    dplyr::filter(!is.na(county.name))
 
-  out <- choroplethr::CountyChoropleth$new(aggDamageProperty)
+  if(east_only){
+    map_data <- dplyr::filter(map_data, state.name %in% eastern_states)
+  }
+
+  map_data <- map_data %>% dplyr::select(region, value)
+  map_data$value <- as.numeric(as.character(map_data$value))
+
+  map_data <- map_data %>% dplyr::group_by(region)
+  map_data <- dplyr::summarise(map_data, value = sum(value, na.rm = TRUE))
+  map_data <-  dplyr::ungroup(map_data)
+
+  map_data$value <- ifelse(map_data$value == 0, NA, map_data$value)
+
+
+  exposure_palette <- RColorBrewer::brewer.pal((9) -2 , name = "Reds")
+
+  out <- choroplethr::CountyChoropleth$new(map_data)
   out$set_zoom(eastern_states)
-  out$ggplot_scale <- ggplot2::scale_fill_manual(name = "",
+  out$ggplot_scale <- ggplot2::scale_fill_manual(name = "Property Damaged",
                                                  values = exposure_palette)
 
-  if (track == F) {
+
+  if(add_tracks){
+    tracks_map <- hurricaneexposure::map_tracks(storms = storm,
+                                                plot_object = out$render(),
+                                                plot_points = FALSE,
+                                                color = "black")
+    return(tracks_map)
+  } else {
     return(out$render())
   }
-  else {
-    out = map_tracks(storms = "Floyd-1999", plot_object = out$render())
-    return(out)
-  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

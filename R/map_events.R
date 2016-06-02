@@ -20,22 +20,29 @@
 #' @importFrom lubridate %within%
 #'
 #' @export
-find_events <- function(first_date, last_date, ts_only = FALSE,
+find_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
                         dist_limit = NULL, storm = NULL){
 
-  first_date <- lubridate::ymd(first_date)
-  last_date <- lubridate::ymd(last_date)
-  if(last_date < first_date | year(first_date) != year(last_date)){
-    stop("The `last_date` must be in the same year as and after the `first_date`.")
+  if(!is.null(first_date) & !is.null(last_date)){
+    first_date <- lubridate::ymd(first_date)
+    last_date <- lubridate::ymd(last_date)
+    if(last_date < first_date | year(first_date) != year(last_date)){
+     stop("The `last_date` must be in the same year as and after the `first_date`.")
+    }
   }
 
   # file_name <- paste0("/Users/brookeanderson/Documents/CSU2016/hurricaneproject/noaastormevents/",
   #                     "data-raw/StormEvents_details-ftp_v1.0_d",
   #                     year(first_date),
   #                     "_c20160223.csv")
+  Year <- hurricaneexposure::closest_dist %>%
+    dplyr::filter_(~ storm_id == storm)
+  Year <-year(ymd_hm(Year$closest_date[1]))
+
   file_name <- paste0("data-raw/StormEvents_details-ftp_v1.0_d",
-                     year(first_date),
+                     Year,
                     "_c20160223.csv")
+
   storm_data <- suppressWarnings(data.table::fread(file_name,
                             select = c("BEGIN_YEARMONTH", "BEGIN_DAY",
                                        "END_YEARMONTH", "END_DAY",
@@ -48,19 +55,7 @@ find_events <- function(first_date, last_date, ts_only = FALSE,
     tidyr::unite(begin_date, begin_ym, begin_d, sep = "") %>%
     tidyr::unite(end_date, end_ym, end_d, sep = "") %>%
     tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
-    dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
-                  end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
-    dplyr::filter(!is.na(begin_date) &
-                    begin_date %within% lubridate::interval(first_date, last_date)) %>%
     dplyr::tbl_df()
-
-  if (ts_only) {
-    ts_types <- c("Coastal Flood","Flash Flood","Flood","Heavy Rain",
-                  "High Surf","High Wind Hurricane (Typhoon)",
-                  "Storm Surge/Tide","Strong Wind","Thunderstorm Wind",
-                  "Tornado","Tropical Storm","Waterspout")
-    storm_data <- dplyr::filter(storm_data, type %in% ts_types)
-  }
 
   if(!is.null(dist_limit) & !is.null(storm)){
     distance_df <- hurricaneexposure::closest_dist %>%
@@ -69,6 +64,32 @@ find_events <- function(first_date, last_date, ts_only = FALSE,
       dplyr::left_join(distance_df, by = "fips") %>%
       dplyr::filter_(~ !is.na(storm_dist))
   }
+
+
+  if(is.null(first_date) & is.null(last_date)){
+    first_date = min(as.numeric(storm_data$begin_date))
+    last_date = min(as.numeric(storm_data$end_date))
+    storm_data <- dplyr::mutate(storm_data, begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+                  end_date = suppressWarnings(lubridate::ymd(end_date)))
+  } else {
+  storm_data <- storm_data %>%
+    dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+                  end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
+    dplyr::filter(!is.na(begin_date) &
+                  begin_date %within% lubridate::interval(first_date, last_date))
+  }
+
+  if (ts_only) {
+    ts_types <- c("Coastal Flood","Flash Flood" ,"Flood","Heavy Rain",
+                  "High Surf","High Wind Hurricane (Typhoon)",
+                  "Storm Surge/Tide","Strong Wind","Thunderstorm Wind",
+                  "Tornado","Tropical Storm","Waterspout")
+    storm_data <- dplyr::filter(storm_data, type %in% ts_types)
+  }
+
+
+
+
 
   return(storm_data)
 }
@@ -97,7 +118,7 @@ find_events <- function(first_date, last_date, ts_only = FALSE,
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_events <- function(first_date, last_date, ts_only = FALSE, east_only = TRUE,
+map_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE, east_only = TRUE,
                        plot_type = "any events", dist_limit = NULL,
                        storm = NULL, add_tracks = FALSE){
 
@@ -137,7 +158,8 @@ map_events <- function(first_date, last_date, ts_only = FALSE, east_only = TRUE,
   } else if (plot_type == "number of events"){
     map_data <- map_data %>%
       dplyr::group_by(region) %>%
-      dplyr::summarize(value = sum(!is.na(value))) %>%
+      dplyr::summarise(map_data, value = sum(as.numeric(as.character(value))
+                                             , na.rm = TRUE)) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(value = factor(value, levels = 0:max(value)))
   }
