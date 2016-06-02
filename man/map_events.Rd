@@ -4,9 +4,9 @@
 \alias{map_events}
 \title{Map storm events for a date range}
 \usage{
-map_events(first_date, last_date, ts_only = FALSE, east_only = TRUE,
-  plot_type = "any events", dist_limit = NULL, storm = NULL,
-  add_tracks = FALSE)
+map_events(first_date = NULL, last_date = NULL, ts_only = FALSE,
+  east_only = TRUE, plot_type = "any events", dist_limit = NULL,
+  storm = NULL, add_tracks = FALSE)
 }
 \arguments{
 \item{ts_only}{A logical value indicating whether to filter events to only
