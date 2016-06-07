@@ -1,3 +1,31 @@
+#' Find the file name for a specific year
+#'
+#' This function will find the name of the detailed file from Storm Events Database
+#' for a specific year.
+#'
+#' @param year A character string giving the year.
+#'
+#'
+#' @examples
+#' find_file_name(year = 1999)
+#'
+#' find_file_name(year = 2003)
+#'
+#' @export
+#'
+find_file_name <- function(year = NULL) {
+  page <-  XML::readHTMLTable("http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/")
+  file_name <- page[[1]]$Name
+  year <- year
+  file_type <- "details"
+  file_year <- paste0("_d",year,"_")
+  file.name <- grep(file_type, grep(file_year, file_name, value = TRUE), value = TRUE)
+
+
+  return(file.name)
+}
+
+
 #' Find all direct death listings for date range
 #'
 #' This function will find all of the direct deaths in the US for a specified date
@@ -31,52 +59,78 @@ find_direct_deaths <- function(first_date = NULL, last_date = NULL, ts_only = FA
     }
   }
 
-  # file_name <- paste0("/Users/brookeanderson/Documents/CSU2016/hurricaneproject/noaastormevents/",
-  #                     "data-raw/StormEvents_details-ftp_v1.0_d",
-  #                     year(first_date),
-  #                     "_c20160223.csv")
+
   Year <- hurricaneexposure::closest_dist %>%
     dplyr::filter_(~ storm_id == storm)
   Year <-year(ymd_hm(Year$closest_date[1]))
 
-  file_name <- paste0("data-raw/StormEvents_details-ftp_v1.0_d",
-                      Year,
-                      "_c20160223.csv")
+  file_name <- find_file_name(Year)
+  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/",file_name)
 
-  storm_data <- suppressWarnings(data.table::fread(file_name,
-                                                   select = c("BEGIN_YEARMONTH", "BEGIN_DAY",
-                                                              "END_YEARMONTH", "END_DAY",
-                                                              "STATE_FIPS", "CZ_FIPS", "DEATHS_DIRECT"),
-                                                   col.names = c("begin_ym", "begin_d", "end_ym", "end_d",
-                                                                 "st_fips", "ct_fips", "direct_deaths"))) %>%
-    dplyr::mutate(begin_d = sprintf("%02s", begin_d),
-                  end_d = sprintf("%02s", end_d),
-                  ct_fips = sprintf("%03s", ct_fips)) %>%
-    tidyr::unite(begin_date, begin_ym, begin_d, sep = "") %>%
-    tidyr::unite(end_date, end_ym, end_d, sep = "") %>%
-    tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
-    dplyr::tbl_df()
 
-  if(!is.null(dist_limit) & !is.null(storm)){
-    distance_df <- hurricaneexposure::closest_dist %>%
-      dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
-    storm_data <- storm_data %>%
-      dplyr::left_join(distance_df, by = "fips") %>%
-      dplyr::filter_(~ !is.na(storm_dist))
+  if(!exists("lst")) {
+    temp <- tempfile()
+    download.file(path_name, temp)
+    storm_data_full <<- suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
+    unlink(temp)
+  } else if(!file_name %in% lst) {
+    temp <- tempfile()
+    download.file(path_name, temp)
+    storm_data_full <<- suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
+    unlink(temp)
+  }
+
+  if(exists("lst")) {
+    lst <<- c(lst, file_name)
+  } else {
+    lst <<- c(file_name)
   }
 
 
-  if(is.null(first_date) & is.null(last_date)){
-    first_date = min(as.numeric(storm_data$begin_date))
-    last_date = min(as.numeric(storm_data$end_date))
-    storm_data <- dplyr::mutate(storm_data, begin_date = suppressWarnings(lubridate::ymd(begin_date)),
-                                end_date = suppressWarnings(lubridate::ymd(end_date)))
+    storm_data <- storm_data_full %>%
+      dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
+                    END_YEARMONTH, END_DAY,
+                    STATE_FIPS, CZ_FIPS, DEATHS_DIRECT)%>%
+      plyr::rename(c(BEGIN_YEARMONTH="begin_ym",
+                     BEGIN_DAY="begin_d",
+                     END_YEARMONTH="end_ym",
+                     END_DAY="end_d",
+                     STATE_FIPS="st_fips",
+                     DEATHS_DIRECT="direct_deaths",
+                     CZ_FIPS="ct_fips")) %>%
+      dplyr::mutate(begin_d = sprintf("%02s", begin_d),
+                    end_d = sprintf("%02s", end_d),
+                    ct_fips = sprintf("%03s", ct_fips)) %>%
+      tidyr::unite(begin_date, begin_ym, begin_d, sep = "") %>%
+      tidyr::unite(end_date, end_ym, end_d, sep = "") %>%
+      tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
+      dplyr::tbl_df()
+
+  if(!is.null(dist_limit)) {
+    distance_df <- hurricaneexposure::closest_dist %>%
+      dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
   } else {
+    distance_df <- hurricaneexposure::closest_dist %>%
+      dplyr::filter_(~ storm_id == storm)
+  }
+
+  if(!is.null(first_date) & !is.null(last_date)){
     storm_data <- storm_data %>%
       dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
                     end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
       dplyr::filter(!is.na(begin_date) &
-                      begin_date %within% lubridate::interval(first_date, last_date))
+                      begin_date %within% lubridate::interval(ymd(first_date), ymd(last_date))) %>%
+      dplyr::left_join(distance_df,  by = "fips") %>%
+      dplyr::filter_(~ !is.na(storm_dist))
+  } else {
+    first_date <- substr(min(as.numeric(distance_df$closest_date)), 1, 8)
+    last_date <-  substr(max(as.numeric(distance_df$closest_date)), 1, 8)
+    storm_data <- dplyr::mutate(storm_data, begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+                                end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
+      dplyr::filter(!is.na(begin_date) &
+                      begin_date %within% lubridate::interval(ymd(first_date), ymd(last_date))) %>%
+      dplyr::left_join(distance_df, by = "fips") %>%
+      dplyr::filter_(~ !is.na(storm_dist))
   }
 
   if (ts_only) {
@@ -148,7 +202,7 @@ map_direct_deaths <- function(first_date = NULL, last_date = NULL, ts_only = FAL
 
 
 
-  breaks <- c(0,seq(0.99, 201, by = 25))
+  breaks <- c(0, seq(1, 201, by = 25))
   palette_name <- "Reds"
   map_palette <- RColorBrewer::brewer.pal(length(breaks)- 3 , name = palette_name)
 
@@ -159,13 +213,13 @@ map_direct_deaths <- function(first_date = NULL, last_date = NULL, ts_only = FAL
   map_palette <- c("#ffffff", map_palette ,"#1a1a1a")
   map_data <- map_data %>%
     dplyr::mutate_(value = ~ cut(value, breaks = breaks,
-                                 include.lowest = TRUE))
+                                 include.lowest = TRUE, right = F))
   level_names <- levels(map_data$value)
   level_names[length(level_names)] <- ">201"
   map_data$value <- factor(map_data$value,
                            levels = levels(map_data$value),
                            labels = level_names)
-  exposure_palette <- utils::tail(exposure_palette,
+  exposure_palette <- utils::tail(map_palette,
                                   length(unique(map_data$value)))
   out <- choroplethr::CountyChoropleth$new(map_data)
 
