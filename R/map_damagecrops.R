@@ -4,9 +4,9 @@
 #' range.
 #'
 #' @param begin_date A character string giving the date, in the format
-#'    "%Y-%m-%d".
+#'    "\%Y-\%m-\%d".
 #' @param end_date A character string giving the date, in the format
-#'    "%Y-%m-%d". The end date must be in the same year as \code{begin_date}.
+#'    "\%Y-\%m-\%d". The end date must be in the same year as \code{begin_date}.
 #' @param ts_only A logical value indicating whether to filter events to only
 #'    those in tropical storm-related categories.
 #'
@@ -26,29 +26,34 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
   if(!is.null(first_date) & !is.null(last_date)){
     first_date <- lubridate::ymd(first_date)
     last_date <- lubridate::ymd(last_date)
-    if(last_date < first_date | year(first_date) != year(last_date)){
-      stop("The `last_date` must be in the same year as and after the `first_date`.")
+    if(last_date < first_date | lubridate::year(first_date) !=
+       lubridate::year(last_date)){
+      stop(paste0("The `last_date` must be in the same year as and ",
+                  "after the `first_date`."))
     }
   }
 
 
   Year <- hurricaneexposure::closest_dist %>%
     dplyr::filter_(~ storm_id == storm)
-  Year <-year(ymd_hm(Year$closest_date[1]))
+  Year <-lubridate::year(lubridate::ymd_hm(Year$closest_date[1]))
 
   file_name <- find_file_name(Year)
-  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/",file_name)
+  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/","
+                      swdi/stormevents/csvfiles/",file_name)
 
 
   if(!exists("lst")) {
     temp <- tempfile()
-    download.file(path_name, temp)
-    storm_data_full <<- suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
+    utils::download.file(path_name, temp)
+    storm_data_full <<- suppressWarnings(utils::read.csv(gzfile(temp),
+                                                         as.is = TRUE))
     unlink(temp)
   } else if(!file_name %in% lst) {
     temp <- tempfile()
     download.file(path_name, temp)
-    storm_data_full <<- suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
+    storm_data_full <<- suppressWarnings(utils::read.csv(gzfile(temp),
+                                                         as.is = TRUE))
     unlink(temp)
   }
 
@@ -62,7 +67,7 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
       dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
                     END_YEARMONTH, END_DAY,
                     STATE_FIPS, CZ_FIPS, DAMAGE_CROPS)%>%
-      plyr::rename(c(BEGIN_YEARMONTH="begin_ym",
+      dplyr::rename(c(BEGIN_YEARMONTH="begin_ym",
                      BEGIN_DAY="begin_d",
                      END_YEARMONTH="end_ym",
                      END_DAY="end_d",
@@ -114,8 +119,8 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
   }
 
 
-  num.crops = as.numeric(gsub("[^0-9]", "", storm_data$damage_crops))
-  letter.crops = as.numeric(ifelse(grepl("K+", storm_data$damage_crops, perl=TRUE), 1000,
+  num.crops <- as.numeric(gsub("[^0-9]", "", storm_data$damage_crops))
+  letter.crops <- as.numeric(ifelse(grepl("K+", storm_data$damage_crops, perl=TRUE), 1000,
                                       ifelse(grepl("M+", storm_data$damage_crops, perl=TRUE), 1000000,
                                              ifelse(grepl("B+", storm_data$damage_crops, perl=TRUE), 1000000000,
                                                     ifelse(grepl("0+", storm_data$damage_crops, perl=TRUE), 0, " ")))))
