@@ -12,10 +12,10 @@ find_damage_crops(first_date = NULL, last_date = NULL, ts_only = FALSE,
 those in tropical storm-related categories.}
 
 \item{begin_date}{A character string giving the date, in the format
-"%Y-%m-%d".}
+"\%Y-\%m-\%d".}
 
 \item{end_date}{A character string giving the date, in the format
-"%Y-%m-%d". The end date must be in the same year as \code{begin_date}.}
+"\%Y-\%m-\%d". The end date must be in the same year as \code{begin_date}.}
 }
 \description{
 This function will find all of the crops damaged in the US for a specified date
