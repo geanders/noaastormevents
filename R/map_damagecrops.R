@@ -36,7 +36,7 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
 
   Year <- hurricaneexposure::closest_dist %>%
     dplyr::filter_(~ storm_id == storm)
-  Year <-lubridate::year(lubridate::ymd_hm(Year$closest_date[1]))
+  Year <-lubridate::year(lubridate::ymd(Year$closest_date[1]))
 
   file_name <- find_file_name(Year)
   path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/","
