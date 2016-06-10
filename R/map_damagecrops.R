@@ -39,35 +39,27 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
   Year <-lubridate::year(lubridate::ymd(Year$closest_date[1]))
 
   file_name <- find_file_name(Year)
-  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/","
-                      swdi/stormevents/csvfiles/",file_name)
-
+  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/",file_name)
 
   if(!exists("lst")) {
     temp <- tempfile()
-    utils::download.file(path_name, temp)
-    storm_data_full <<- suppressWarnings(utils::read.csv(gzfile(temp),
-                                                         as.is = TRUE))
+    download.file(path_name, temp)
+    lst <<- list()
+    lst[[as.character(Year)]] <<-  suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
     unlink(temp)
-  } else if(!file_name %in% lst) {
+  } else if(is.null(lst[[as.character(Year)]])) {
     temp <- tempfile()
     download.file(path_name, temp)
-    storm_data_full <<- suppressWarnings(utils::read.csv(gzfile(temp),
-                                                         as.is = TRUE))
+    lst[[as.character(Year)]] <<-  suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
     unlink(temp)
   }
 
-  if(exists("lst")) {
-    lst <<- c(lst, file_name)
-  } else {
-    lst <<- c(file_name)
-  }
 
-    storm_data <- storm_data_full %>%
+    storm_data <- lst[[as.character(Year)]] %>%
       dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
                     END_YEARMONTH, END_DAY,
                     STATE_FIPS, CZ_FIPS, DAMAGE_CROPS)%>%
-      dplyr::rename(c(BEGIN_YEARMONTH="begin_ym",
+      plyr::rename(c(BEGIN_YEARMONTH="begin_ym",
                      BEGIN_DAY="begin_d",
                      END_YEARMONTH="end_ym",
                      END_DAY="end_d",
@@ -100,12 +92,12 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
       dplyr::left_join(distance_df,  by = "fips") %>%
       dplyr::filter_(~ !is.na(storm_dist))
   } else {
-    first_date <- substr(min(as.numeric(distance_df$closest_date)), 1, 8)
-    last_date <-  substr(max(as.numeric(distance_df$closest_date)), 1, 8)
+    first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
+    last_date <-  lubridate::ymd(max(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
     storm_data <- dplyr::mutate(storm_data, begin_date = suppressWarnings(lubridate::ymd(begin_date)),
                                 end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
       dplyr::filter(!is.na(begin_date) &
-                      begin_date %within% lubridate::interval(ymd(first_date), ymd(last_date))) %>%
+                      lubridate::ymd(begin_date) %within% lubridate::interval(first_date,last_date)) %>%
       dplyr::left_join(distance_df, by = "fips") %>%
       dplyr::filter_(~ !is.na(storm_dist))
   }
@@ -121,9 +113,9 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
 
   num.crops <- as.numeric(gsub("[^0-9]", "", storm_data$damage_crops))
   letter.crops <- as.numeric(ifelse(grepl("K+", storm_data$damage_crops, perl=TRUE), 1000,
-                                      ifelse(grepl("M+", storm_data$damage_crops, perl=TRUE), 1000000,
-                                             ifelse(grepl("B+", storm_data$damage_crops, perl=TRUE), 1000000000,
-                                                    ifelse(grepl("0+", storm_data$damage_crops, perl=TRUE), 0, " ")))))
+                             ifelse(grepl("M+", storm_data$damage_crops, perl=TRUE), 1000000,
+                             ifelse(grepl("B+", storm_data$damage_crops, perl=TRUE), 1000000000,
+                             ifelse(grepl("0+", storm_data$damage_crops, perl=TRUE), 0, " ")))))
   storm_data$damage_crops <- as.matrix(num.crops * letter.crops)
 
 
