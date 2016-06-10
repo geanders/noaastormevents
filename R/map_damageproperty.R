@@ -181,7 +181,15 @@ map_damage_property <- function(first_date = NULL, last_date = NULL, ts_only = F
   exposure_palette <- RColorBrewer::brewer.pal((9) -2 , name = "Reds")
 
   out <- choroplethr::CountyChoropleth$new(map_data)
-  out$set_zoom(eastern_states)
+
+  if(east_only){
+    out$set_zoom(eastern_states)
+  } else {
+    all_states <- out$get_zoom()
+    continental_states <- all_states[!(all_states %in% c("alaska", "hawaii"))]
+    out$set_zoom(continental_states)
+  }
+
   out$ggplot_scale <- ggplot2::scale_fill_manual(name = "Property Damaged",
                                                  values = exposure_palette)
 
