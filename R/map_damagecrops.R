@@ -39,8 +39,8 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
   Year <-lubridate::year(lubridate::ymd(Year$closest_date[1]))
 
   file_name <- find_file_name(Year)
-  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/","
-                      swdi/stormevents/csvfiles/",file_name)
+  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/",
+                      "swdi/stormevents/csvfiles/",file_name)
 
 
   if(!exists("lst")) {
@@ -67,13 +67,13 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
       dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
                     END_YEARMONTH, END_DAY,
                     STATE_FIPS, CZ_FIPS, DAMAGE_CROPS)%>%
-      dplyr::rename(c(BEGIN_YEARMONTH="begin_ym",
-                     BEGIN_DAY="begin_d",
-                     END_YEARMONTH="end_ym",
-                     END_DAY="end_d",
-                     STATE_FIPS="st_fips",
-                     DAMAGE_CROPS="damage_crops",
-                     CZ_FIPS="ct_fips")) %>%
+      dplyr::rename(begin_ym = BEGIN_YEARMONTH,
+                     begin_d = BEGIN_DAY,
+                     end_ym = END_YEARMONTH,
+                     end_d = END_DAY,
+                     st_fips = STATE_FIPS,
+                     damage_crops = DAMAGE_CROPS,
+                     ct_fips = CZ_FIPS) %>%
       dplyr::mutate(begin_d = sprintf("%02s", begin_d),
                     end_d = sprintf("%02s", end_d),
                     ct_fips = sprintf("%03s", ct_fips)) %>%
@@ -102,10 +102,12 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
   } else {
     first_date <- substr(min(as.numeric(distance_df$closest_date)), 1, 8)
     last_date <-  substr(max(as.numeric(distance_df$closest_date)), 1, 8)
-    storm_data <- dplyr::mutate(storm_data, begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+    storm_data <- dplyr::mutate(storm_data,
+                                begin_date = suppressWarnings(lubridate::ymd(begin_date)),
                                 end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
       dplyr::filter(!is.na(begin_date) &
-                      begin_date %within% lubridate::interval(ymd(first_date), ymd(last_date))) %>%
+                      begin_date %within% lubridate::interval(lubridate::ymd(first_date),
+                                                              lubridate::ymd(last_date))) %>%
       dplyr::left_join(distance_df, by = "fips") %>%
       dplyr::filter_(~ !is.na(storm_dist))
   }
