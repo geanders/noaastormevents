@@ -32,8 +32,13 @@ find_direct_deaths <- function(first_date = NULL, last_date = NULL, ts_only = FA
   }
 
 
-  Year <- hurricaneexposure::closest_dist %>%
-    dplyr::filter_(~ storm_id == storm)
+  if(!is.null(storm)){
+    Year <- hurricaneexposure::closest_dist %>%
+      dplyr::filter_(~ storm_id == storm)
+  } else {
+    Year <- hurricaneexposure::closest_dist %>%
+      dplyr::filter_(~ lubridate::year(closest_date) == lubridate::year(first_date))
+  }
   Year <-lubridate::year(lubridate::ymd(Year$closest_date[1]))
 
   file_name <- find_file_name(Year)
@@ -54,41 +59,62 @@ find_direct_deaths <- function(first_date = NULL, last_date = NULL, ts_only = FA
 
 
 
-    storm_data <- lst[[as.character(Year)]] %>%
-      dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
-                    END_YEARMONTH, END_DAY,
-                    STATE_FIPS, CZ_FIPS, DEATHS_DIRECT)%>%
-      plyr::rename(c(BEGIN_YEARMONTH="begin_ym",
-                     BEGIN_DAY="begin_d",
-                     END_YEARMONTH="end_ym",
-                     END_DAY="end_d",
-                     STATE_FIPS="st_fips",
-                     DEATHS_DIRECT="direct_deaths",
-                     CZ_FIPS="ct_fips")) %>%
-      dplyr::mutate(begin_d = sprintf("%02s", begin_d),
-                    end_d = sprintf("%02s", end_d),
-                    ct_fips = sprintf("%03s", ct_fips)) %>%
-      tidyr::unite(begin_date, begin_ym, begin_d, sep = "") %>%
-      tidyr::unite(end_date, end_ym, end_d, sep = "") %>%
-      tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
-      dplyr::tbl_df()
+  storm_data <- lst[[as.character(Year)]] %>%
+    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
+                  END_YEARMONTH, END_DAY,
+                  STATE_FIPS, CZ_FIPS, DEATHS_DIRECT)%>%
+    plyr::rename(c(BEGIN_YEARMONTH="begin_ym",
+                   BEGIN_DAY="begin_d",
+                   END_YEARMONTH="end_ym",
+                   END_DAY="end_d",
+                   STATE_FIPS="st_fips",
+                   DEATHS_DIRECT="direct_death",
+                   CZ_FIPS="ct_fips")) %>%
+    dplyr::mutate(begin_d = sprintf("%02s", begin_d),
+                  end_d = sprintf("%02s", end_d),
+                  ct_fips = sprintf("%03s", ct_fips),
+                  st_fips = sprintf("%02s", st_fips)) %>%
+    tidyr::unite(begin_date, begin_ym, begin_d, sep = "") %>%
+    tidyr::unite(end_date, end_ym, end_d, sep = "") %>%
+    tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
+    dplyr::tbl_df()
 
-  if(!is.null(dist_limit)) {
+  if(!is.null(dist_limit) & !is.null(storm)) {
     distance_df <- hurricaneexposure::closest_dist %>%
       dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
-  } else {
+  } else if(is.null(dist_limit) & !is.null(storm)){
     distance_df <- hurricaneexposure::closest_dist %>%
       dplyr::filter_(~ storm_id == storm)
+  } else if(!is.null(dist_limit) & is.null(storm)){
+    distance_df <- hurricaneexposure::closest_dist %>%
+      dplyr::filter_(~ storm_dist <= dist_limit)
+  } else {
+    distance_df <- hurricaneexposure::closest_dist
   }
 
+
   if(!is.null(first_date) & !is.null(last_date)){
+    if(!is.null(storm)){
+      storm_first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
+      storm_last_date <-  lubridate::ymd(max(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
+      storm_interval <- interval(storm_first_date, storm_last_date)
+      if(!(first_date %within% storm_interval) & last_date %within% (storm_interval)){
+        first_date <- storm_first_date
+      } else if((first_date %within% storm_interval) & !(last_date %within% storm_interval)) {
+        last_date <- storm_last_date
+      } else if(!(first_date %within% storm_interval) & !(last_date %within% storm_interval)) {
+        first_date <- storm_first_date
+        last_date <- storm_last_date
+      }
+    }
     storm_data <- storm_data %>%
       dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
                     end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
       dplyr::filter(!is.na(begin_date) &
-                      begin_date %within% lubridate::interval(ymd(first_date), ymd(last_date))) %>%
-      dplyr::left_join(distance_df,  by = "fips") %>%
+                      lubridate::ymd(begin_date) %within% interval(first_date,last_date)) %>%
+      dplyr::left_join(distance_df, by = "fips") %>%
       dplyr::filter_(~ !is.na(storm_dist))
+
   } else {
     first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
     last_date <-  lubridate::ymd(max(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
