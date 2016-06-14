@@ -61,29 +61,6 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
   }
 
 
-<<<<<<< HEAD
-    storm_data <- storm_data_full %>%
-      dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
-                    END_YEARMONTH, END_DAY,
-                    STATE_FIPS, CZ_FIPS, DAMAGE_CROPS)%>%
-      dplyr::rename(begin_ym = BEGIN_YEARMONTH,
-                     begin_d = BEGIN_DAY,
-                     end_ym = END_YEARMONTH,
-                     end_d = END_DAY,
-                     st_fips = STATE_FIPS,
-                     damage_crops = DAMAGE_CROPS,
-                     ct_fips = CZ_FIPS) %>%
-      dplyr::mutate(begin_d = sprintf("%02s", begin_d),
-                    end_d = sprintf("%02s", end_d),
-                    ct_fips = sprintf("%03s", ct_fips)) %>%
-      tidyr::unite(begin_date, begin_ym, begin_d, sep = "") %>%
-      tidyr::unite(end_date, end_ym, end_d, sep = "") %>%
-      tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
-      dplyr::tbl_df()
-
-
-  if(!is.null(dist_limit)) {
-=======
   storm_data <- lst[[as.character(Year)]] %>%
     dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
                   END_YEARMONTH, END_DAY,
@@ -105,7 +82,6 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
     dplyr::tbl_df()
 
   if(!is.null(dist_limit) & !is.null(storm)) {
->>>>>>> faa69b20e6e0909625cbff93013d974824c345f2
     distance_df <- hurricaneexposure::closest_dist %>%
       dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
   } else if(is.null(dist_limit) & !is.null(storm)){
@@ -142,23 +118,12 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
       dplyr::filter_(~ !is.na(storm_dist))
 
   } else {
-<<<<<<< HEAD
-    first_date <- substr(min(as.numeric(distance_df$closest_date)), 1, 8)
-    last_date <-  substr(max(as.numeric(distance_df$closest_date)), 1, 8)
-    storm_data <- dplyr::mutate(storm_data,
-                                begin_date = suppressWarnings(lubridate::ymd(begin_date)),
-                                end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
-      dplyr::filter(!is.na(begin_date) &
-                      begin_date %within% lubridate::interval(lubridate::ymd(first_date),
-                                                              lubridate::ymd(last_date))) %>%
-=======
     first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
     last_date <-  lubridate::ymd(max(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
     storm_data <- dplyr::mutate(storm_data, begin_date = suppressWarnings(lubridate::ymd(begin_date)),
                                 end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
       dplyr::filter(!is.na(begin_date) &
                       lubridate::ymd(begin_date) %within% lubridate::interval(first_date,last_date)) %>%
->>>>>>> faa69b20e6e0909625cbff93013d974824c345f2
       dplyr::left_join(distance_df, by = "fips") %>%
       dplyr::filter_(~ !is.na(storm_dist))
   }
@@ -268,41 +233,3 @@ map_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FALS
     return(out$render())
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
