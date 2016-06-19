@@ -44,7 +44,8 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
   Year <-lubridate::year(lubridate::ymd(Year$closest_date[1]))
 
   file_name <- find_file_name(Year)
-  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/",file_name)
+  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/",
+                      "swdi/stormevents/csvfiles/",file_name)
 
   if(!exists("lst")) {
     temp <- tempfile()
@@ -98,7 +99,7 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
     if(!is.null(storm)){
       storm_first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
       storm_last_date <-  lubridate::ymd(max(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
-      storm_interval <- interval(storm_first_date, storm_last_date)
+      storm_interval <- lubridate::interval(storm_first_date, storm_last_date)
       if(!(first_date %within% storm_interval) & last_date %within% (storm_interval)){
         first_date <- storm_first_date
       } else if((first_date %within% storm_interval) & !(last_date %within% storm_interval)) {
@@ -232,41 +233,3 @@ map_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FALS
     return(out$render())
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
