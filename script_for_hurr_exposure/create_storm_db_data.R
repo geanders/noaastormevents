@@ -16,7 +16,7 @@ find_combined_events <- function(first_date = NULL, last_date = NULL, ts_only = 
   }
 
 
-  Year <- hurricaneexposure::closest_dist %>%
+  Year <- hurricaneexposuredata::closest_dist %>%
     dplyr::filter_(~ storm_id == storm)
   Year <-lubridate::year(lubridate::ymd(Year$closest_date[1]))
 
@@ -64,10 +64,10 @@ find_combined_events <- function(first_date = NULL, last_date = NULL, ts_only = 
     dplyr::tbl_df()
 
   if(!is.null(dist_limit)) {
-    distance_df <- hurricaneexposure::closest_dist %>%
+    distance_df <- hurricaneexposuredata::closest_dist %>%
       dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
   } else {
-    distance_df <- hurricaneexposure::closest_dist %>%
+    distance_df <- hurricaneexposuredata::closest_dist %>%
       dplyr::filter_(~ storm_id == storm)
   }
 
@@ -124,7 +124,7 @@ library(lubridate)
 library(dplyr)
 ########################################################################
 #Get 1996-2014 data
-storm_id <- unique(hurricaneexposure::closest_dist$storm_id)
+storm_id <- unique(hurricaneexposuredata::closest_dist$storm_id)
 storm_id <- data.frame(storm_id)
 
 combined_data <- NULL
