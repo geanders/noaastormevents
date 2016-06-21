@@ -241,7 +241,7 @@ map_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE, eas
     map_palette <- utils::tail(map_palette,
                                length(unique(map_data$value)))
     out <- choroplethr::CountyChoropleth$new(map_data)
-    out$ggplot_scale <- ggplot2::scale_fill_manual(name = "# of direct injuries",
+    out$ggplot_scale <- ggplot2::scale_fill_manual(name = "# of events",
                                                    values = map_palette)
   }
 
