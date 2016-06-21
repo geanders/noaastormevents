@@ -33,10 +33,10 @@ find_indirect_injuries <- function(first_date = NULL, last_date = NULL, ts_only 
 
 
   if(!is.null(storm)){
-    Year <- hurricaneexposure::closest_dist %>%
+    Year <- hurricaneexposuredata::closest_dist %>%
       dplyr::filter_(~ storm_id == storm)
   } else {
-    Year <- hurricaneexposure::closest_dist %>%
+    Year <- hurricaneexposuredata::closest_dist %>%
       dplyr::filter_(~ lubridate::year(closest_date) == lubridate::year(first_date))
   }
   Year <-lubridate::year(lubridate::ymd(Year$closest_date[1]))
@@ -45,7 +45,7 @@ find_indirect_injuries <- function(first_date = NULL, last_date = NULL, ts_only 
   path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/",file_name)
 
 
-  Year <- hurricaneexposure::closest_dist %>%
+  Year <- hurricaneexposuredata::closest_dist %>%
     dplyr::filter_(~ storm_id == storm)
   Year <-lubridate::year(lubridate::ymd(Year$closest_date[1]))
 
@@ -87,16 +87,16 @@ find_indirect_injuries <- function(first_date = NULL, last_date = NULL, ts_only 
     dplyr::tbl_df()
 
   if(!is.null(dist_limit) & !is.null(storm)) {
-    distance_df <- hurricaneexposure::closest_dist %>%
+    distance_df <- hurricaneexposuredata::closest_dist %>%
       dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
   } else if(is.null(dist_limit) & !is.null(storm)){
-    distance_df <- hurricaneexposure::closest_dist %>%
+    distance_df <- hurricaneexposuredata::closest_dist %>%
       dplyr::filter_(~ storm_id == storm)
   } else if(!is.null(dist_limit) & is.null(storm)){
-    distance_df <- hurricaneexposure::closest_dist %>%
+    distance_df <- hurricaneexposuredata::closest_dist %>%
       dplyr::filter_(~ storm_dist <= dist_limit)
   } else {
-    distance_df <- hurricaneexposure::closest_dist
+    distance_df <- hurricaneexposuredata::closest_dist
   }
 
 
@@ -242,7 +242,7 @@ map_indirect_injuries <- function(first_date = NULL, last_date = NULL, ts_only =
 
 
   if(add_tracks){
-    tracks_map <- hurricaneexposure::map_tracks(storms = storm,
+    tracks_map <- hurricaneexposuredata::map_tracks(storms = storm,
                                                 plot_object = out$render(),
                                                 plot_points = FALSE,
                                                 color = "black")

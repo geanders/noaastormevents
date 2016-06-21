@@ -18,6 +18,7 @@ Imports:
     choroplethrMaps (>= 1.0.0),
     data.table (>= 1.9.6),
     dplyr (>= 0.4.3),
+    hurricaneexposuredata,
     lubridate (>= 1.5.6),
     tidyr (>= 0.4.1)
 RoxygenNote: 5.0.1

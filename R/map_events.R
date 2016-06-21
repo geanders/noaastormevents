@@ -34,10 +34,10 @@ find_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
   }
 
  if(!is.null(storm)){
-  Year <- hurricaneexposure::closest_dist %>%
+  Year <- hurricaneexposuredata::closest_dist %>%
     dplyr::filter_(~ storm_id == storm)
  } else {
-   Year <- hurricaneexposure::closest_dist %>%
+   Year <- hurricaneexposuredata::closest_dist %>%
      dplyr::filter_(~ lubridate::year(closest_date) == lubridate::year(first_date))
  }
   Year <-lubridate::year(lubridate::ymd(Year$closest_date[1]))
@@ -80,16 +80,16 @@ find_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
     dplyr::tbl_df()
 
   if(!is.null(dist_limit) & !is.null(storm)) {
-    distance_df <- hurricaneexposure::closest_dist %>%
+    distance_df <- hurricaneexposuredata::closest_dist %>%
     dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
   } else if(is.null(dist_limit) & !is.null(storm)){
-    distance_df <- hurricaneexposure::closest_dist %>%
+    distance_df <- hurricaneexposuredata::closest_dist %>%
     dplyr::filter_(~ storm_id == storm)
   } else if(!is.null(dist_limit) & is.null(storm)){
-    distance_df <- hurricaneexposure::closest_dist %>%
+    distance_df <- hurricaneexposuredata::closest_dist %>%
     dplyr::filter_(~ storm_dist <= dist_limit)
   } else {
-    distance_df <- hurricaneexposure::closest_dist
+    distance_df <- hurricaneexposuredata::closest_dist
   }
 
 
