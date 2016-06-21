@@ -1,0 +1,113 @@
+---
+title: "Bibliography"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Annotated Bibliography
+
+#"Lightning Casualties and Damages in the United States from 1959 to 1994"
+#E. Brian Curran, Ronald L. Holle and Raúl E. López 
+    This paper analyzes all 3239 deaths, 9818 injuries, and 19814 property damage reports in Storm Data publication by NCDC due to lightning from 1959 to 1994. It depicts lightning casualties (deaths and injuries combined) and damage reports stratified by state and region of the United States, decade, population, time of year and day, and all other information in Storm Data.
+    
+    
+#"An Enhanced Hail Detection Algorithm for the WSR-88D"
+#Arthur Witt, Michael D. Eilts, Gregory J. Stumpf, J. T. Johnson, E. De Wayne Mitchell, and Kevin W. Thomas 
+    This paper introduces an enhanced hail detection algorithm (HDA) developed for the WSR-88D to replace the original hail algorithm. A new parameter, called the severe hail index (SHI), was developed as the primary predictor variable for severe-size hail. The SHI is a thermally weighted vertical integration of a storm cell’s reflectivity profile.  
+    The Storm Data was used to provide severe hail reports, with ground-truth verification. These reports were then correlated to the algorithm output from running storm cell identification and tracking (SCIT) algorithm and HDA on the radar data. The whole process is intended to determine the utility of SHI as a severe hail predictor, WSR-88D level II data.
+
+#"Spatial and Temporal Analysis of Tornado Fatalities in the United States: 1880–2005"
+#Walker S. Ashley 
+    This study compiles and analyzes a dataset of killer tornadoes spatially in order to assess region-specific vulnerabilities in the United States from 1880 to 2005. 
+    In this study the storm events database, along with a long-term study of U.S. tornadoes by Grazulis (1993, 1997, hereafter Grazulis dataset), provides U.S. tornado fatality information. Storm Data reports from 1959 to 2005 were utilized to supplement the existing record of killer tornado events documented by Grazulis.
+
+
+#"Flood Fatalities in the United States"
+#Sharon T. Ashley and Walker S. Ashley 
+    This study compiles a nationwide database of flood fatalities for the contiguous United States from 1959 to 2005. Assembled data include the location of fatalities, age and gender of victims, activity and/or setting of fatalities, and the type of flood events responsible for each fatality report.
+    The database of 1959–2005 flood-related fatalities was compiled using monthly reports from volumes 1–47 of the National Climatic Data Center’s (NCDC) Storm Data.
+   
+    
+#"Characteristics of U.S. Extreme Rain Events during 1999–2003"    
+#Russ S. Schumacher and Richard H. Johnson 
+    This study examines the characteristics of a large number of extreme rain events over the eastern two-thirds of the United States. The authors used information on flood events from the Storm Events Database to see whether the selected extreme rain events caused flash floods, damage, or injuries. In addition, since flash-flood-producing storms in the past have been associated with other types of severe weather (e.g., Smith et al. 2001; Rogash and Racy 2002), the proximity of severe wind, hail, and tornadoes to extreme rainfall could also be useful information.
+    For each extreme rain event, the storm events database was used to determine if flash flooding occurred at or near the location where the extreme rainfall totals were observed. If tornadoes were reported, the database was then checked to find their Fujita scale ratings. If flash flooding, severe wind, severe hail, tornadoes, or significant tornadoes (F2 or greater) were reported in conjunction with the extreme-rain-producing storm system at approximately the same time as the heavy rainfall was occurring, a “yes” was assigned for that phenomenon for that event.  
+
+
+#"Do people ‘‘personally experience’’ global warming, and if so how, and does it matter?"    
+#Karen Akerlof, Edward W. Maibach, Dennis Fitzgerald, Andrew Y. Cedeno, Amanda Neuman
+    This paper sheds light on what signals of global warming some people believe they are detecting, why, and whether or not it matters. Four related studies were conducted using population survey and climatic data from a single county in Michigan.
+    The Storm Events Database was used to study the research question "are the self-reported local experiences of global warming evident in the local historical data records?" The authors extracted storm event frequenies information for Alger County from the database and compare them to local residents' perceptions of experienced storm event frequencies to see if the self reports were correct.    
+    
+
+#"Effects of Northeaster Storms on Water Level and Turbidity in a Delaware Bay Subestuary"
+#Susanne M. Moskalski & Christopher K. Sommerfield
+    In this research the authors used the information from Storm Events Database to compare to the 11 years (2000-10) of continuous water level and turbidity data for the St. Jones River National Estuarine Research Reserve to determine which types of storms are most effective in flooding the marsh platform with high-turbidity water, a condition conducive for sedimentation.
+    The water-level and turbidity events were referenced to weather events registered in the Storm Events Database. Weather events were classified based on descriptions provided in the database and surface pressure data available through database.
+    
+  
+#"Flooding and Emergency Room Visits for Gastrointestinal Illness in Massachusetts: A Case-Crossover Study"
+#Timothy J. Wade, Cynthia J. Lin, Jyotsna S. Jagai, Elizabeth D. Hilborn
+    In this article the authors used the NOAA Storm Events Database to obtain information on flood events. They wanted to investigate if there is a relationship between flooding and emergency room vists for gastrointestinal illness (ER-GI). 
+    They adopted a time-stratified bi-directional design for control selection, matching on day of the week with two weeks lead or lag time from the ER-GI visit. Fixed effect logistic regression models were used to estimate the risk of ER-GI visits following the flood. Storms with the event types "Coastal Floods", "Flash Floods", and related events occurring in the State of Massachusetts for the time period December 2002 through January 2008 were included in the analysis. Storms from 2002 and 2008 were included to allow for lagged and leading exposures of the 2003 ER visits and control periods.
+
+
+#"Extreme weather events and climate change concern"
+#Konisky, David; Hughes, Llewelyn; Kaylor, Charles
+    This paper examines whether experience of extreme weather events such as excessive heat, droughts, flooding, and hurricanes increases an individual's level concern about climate change. To study this question, the authors bring together micro-level geospatial data on extreme weather events from NOAA's Storm Events Database with public opinion data from multiple years of the Cooperative Congressional Election Study.
+    
+
+#"Spring and Summer Severe Weather Reports over the Midwest as a Function of Convective Mode: A Preliminary Study"    
+#William A. Gallus, Nathan A. Snook, Elise V. Johnson 
+    This study uses Radar data during the period 1 April – 31 August 2002 to classify all convective storms into nine predominant morphologies, and the severe weather reports associated with each morphology were then analyzed.
+    The storm events database was used to produce these severe weather reports and then these reports that occurred over the same time period were recorded, cataloged, and associated with the storm systems that identified from the radar data.
+    
+#"Tornado hazards in the United States"
+#Bryan J. Boruff, Jaime A. Easoz, Steve D. Jones, Heather R. Landry, Jamie D. Mitchem, Susan L. Cutter
+    This paper examines the temporal variability and spatial distribution of tornado hazards in the United States. Tornado hazards are defined very specifically as any reported tornado that resulted in human injury, human fatality, or some amount of economic loss.
+    The Storm Events Database was employed to provide tornado data. These tornado data were incorporated into a geographical information system (GIS) to create a digital map (shapefile) using the touchdown locations (longitude/latitude), which were then put into an Albers equal area projection for mapping and analytical purposes.
+    One thing to notice is that the corrected and verified database was modified to include only tornado segments that resulted in any recorded impact measured as a death, an injury, or economic damage. Tornado segments that did not meet these criteria were deleted.
+    
+    
+#"A REASSESSMENT OF U.S. LIGHTNING MORTALITY"
+# Walker S. Ashley And Christopher W. Gilson
+    This research provides a reassessment of the risks and vulnerabilities that produce fatal lightning events and further illustrates the deficiencies of current post–hazard event data-gathering methods using a comprehensive lightning mortality dataset.
+    The authors collected data from Storm Event Database as well as monthly Storm Data publications from NCDC and and then assessed them for lightning mortality data to get this comprehensive lightning mortality dataset.
+
+
+#"A test of porous pavement effectiveness on clay soils during natural storm events"
+#Walker S. Ashley and Alan W. Black 
+    The purpose of this research is to compile a database for the period 1980-2005 to assess the threat to life in the conterminous United States from nonconvective high-wind events.
+    The Storm Events Database provides casualty data from 1993 to 2005. From 1980 to 1992, data were transcribed from Storm Data publication from NCDC.
+
+
+#"Vulnerability due to Nocturnal Tornadoes"
+#Walker S. Ashley, Andrew J. Krmenec, and Rick Schwantes
+    This study investigates the human vulnerability caused by tornadoes that occurred between sunset and sunrise from 1880 to 2007.
+    In order to get human vulnerability information, the authors utilized the National Climatic Data Center’s publication Storm Data (NCDC 1959–2007), NCDC’s Storm Event Database, and the historical archives of event and fatality data provided by NOAA Prediction Center to acquire historical tornado event and fatality data.
+    
+
+#"A Climatology of Fatal Convective Wind Events by Storm Type"
+#Joseph M. Schoen and Walker S. Ashley 
+    This research illustrates a spatial and temporal analysis of the storm morphological characteristics, or convective mode, of all fatal tornadic and nontornadic convective wind events from 1998 to 2007 using thunderstorm fatality and Weather Surveillance Radar-1988 Doppler (WSR-88D) data.
+    The Storm Events database was utilized to provide the fatality data. These data were used to determine the spatial and temporal information associated with each convective wind–related fatality in the United States from 1998 to 2007.
+    
+    
+#"A Fingerprinting Technique for Major Weather Events"
+#Benjamin Root, Paul Knight, George Young, Steven Greybush, Richard Grumm, Ron Holmes, and Jeremy Ross
+    This paper examines the utility of pattern recognition in assisting the prediction of severe and major weather in the Middle Atlantic region.
+    For objective identification of the patterns associated with major weather events, the authors generated a database from another research and used the Storm Events Database to verify this database. Besides, Storm Events Database also provides fire occurrences information in this research.
+    
+
+#"Climatology of Thunderstorms for North Dakota, 2002–06"
+#Faizul M. Mohee and Craig Miller 
+    This paper aims to obtain the climatology of thunderstorms in the North Dakota by investigating radar and surface thunderstorm data in the state.
+    The Storm Events Database was used to provide information on damages due to thunderstorms and other natural calamities in North Dakota for 1993–2010.
+    
+
+
+
+
