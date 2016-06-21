@@ -243,7 +243,7 @@ data15_16$damage_property <- as.matrix(num.property * letter.property)
 
 
 combined.data <- rbind(combined_data,data15_16)
-write.csv(combined.data, file = "Combined Data 1996-2016.csv")
+write.csv(combined.data, file = "script_for_hurr_exposure/Combined Data 1996-2016.csv")
 
 
 
