@@ -64,5 +64,9 @@ map_events(first_date = "1999-10-16", last_date = "1999-10-18",
      add_tracks = TRUE, plot_type = "number of events")
 ```
 
+Mapping the number of all events that happened under the influence of Hurricane Floyd in 1999, with the hurricane's track added to the plot::
 
+```{r}
+map_events(storm = "Floyd-1999", add_tracks = TRUE, plot_type = "number of events")
+```
 

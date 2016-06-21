@@ -105,14 +105,20 @@ find_direct_injuries <- function(first_date = NULL, last_date = NULL, ts_only = 
         first_date <- storm_first_date
         last_date <- storm_last_date
       }
+      storm_data <- storm_data %>%
+        dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+                      end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
+        dplyr::filter(!is.na(begin_date) &
+                        lubridate::ymd(begin_date) %within% interval(first_date,last_date)) %>%
+        dplyr::left_join(distance_df, by = "fips") %>%
+        dplyr::filter_(~ !is.na(storm_dist))
+    } else {
+      storm_data <- storm_data %>%
+        dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+                      end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
+        dplyr::filter(!is.na(begin_date) &
+                        lubridate::ymd(begin_date) %within% interval(first_date,last_date))
     }
-    storm_data <- storm_data %>%
-      dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
-                    end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
-      dplyr::filter(!is.na(begin_date) &
-                      lubridate::ymd(begin_date) %within% interval(first_date,last_date)) %>%
-      dplyr::left_join(distance_df, by = "fips") %>%
-      dplyr::filter_(~ !is.na(storm_dist))
 
   } else {
     first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
@@ -197,7 +203,7 @@ map_direct_injuries <- function(first_date = NULL, last_date = NULL, ts_only = F
 
     breaks <- c(0,seq(1, 201, by = 25))
     palette_name <- "Reds"
-    map_palette <- RColorBrewer::brewer.pal(length(breaks)- 3 , name = palette_name)
+    map_palette <- RColorBrewer::brewer.pal(length(breaks)- 2 , name = palette_name)
 
     if(max(map_data$value) > max(breaks)){
       breaks <- c(breaks, max(map_data$value))
@@ -212,7 +218,7 @@ map_direct_injuries <- function(first_date = NULL, last_date = NULL, ts_only = F
     map_data$value <- factor(map_data$value,
                              levels = levels(map_data$value),
                              labels = level_names)
-    exposure_palette <- utils::tail(map_palette,
+    map_palette <- utils::tail(map_palette,
                                     length(unique(map_data$value)))
     out <- choroplethr::CountyChoropleth$new(map_data)
 

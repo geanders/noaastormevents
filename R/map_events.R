@@ -106,15 +106,20 @@ find_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
         first_date <- storm_first_date
         last_date <- storm_last_date
       }
-    }
-    storm_data <- storm_data %>%
-      dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+      storm_data <- storm_data %>%
+        dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+                      end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
+        dplyr::filter(!is.na(begin_date) &
+                        lubridate::ymd(begin_date) %within% interval(first_date,last_date)) %>%
+        dplyr::left_join(distance_df, by = "fips") %>%
+        dplyr::filter_(~ !is.na(storm_dist))
+    } else {
+      storm_data <- storm_data %>%
+        dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
                     end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
-      dplyr::filter(!is.na(begin_date) &
-                      lubridate::ymd(begin_date) %within% interval(first_date,last_date)) %>%
-      dplyr::left_join(distance_df, by = "fips") %>%
-      dplyr::filter_(~ !is.na(storm_dist))
-
+        dplyr::filter(!is.na(begin_date) &
+                        lubridate::ymd(begin_date) %within% interval(first_date,last_date))
+    }
   } else {
     first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
     last_date <-  lubridate::ymd(max(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
@@ -201,14 +206,44 @@ map_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE, eas
                                    labels = c("Event(s)", "No Event")))
   } else if (plot_type == "number of events"){
     map_data <- map_data %>%
+      dplyr::mutate(value = ifelse(is.na(value), 0, 1)) %>%
       dplyr::group_by(region) %>%
-      dplyr::summarise(map_data, value = sum(as.numeric(as.character(value))
-                                             , na.rm = TRUE)) %>%
+      dplyr::summarise(value = sum(as.numeric(value))) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(value = factor(value, levels = 0:max(value)))
   }
 
-  out <- choroplethr::CountyChoropleth$new(map_data)
+
+  if(plot_type == "any events"){
+    out$ggplot_scale <- ggplot2::scale_fill_manual(name = "",
+                                                   values = c("#e6550d", "white"))
+  } else if (plot_type == "number of events"){
+    if(length(unique(map_data$value)) > 9) {
+    map_palette <- RColorBrewer::brewer.pal(9 , name = "Reds")
+    map_palette[1] <- "#ffffff"
+    boundary <- as.numeric(as.character(sort(unique(map_data$value))[8]))
+    map_data$value <- as.numeric(as.character(map_data$value))
+    map_data <- map_data %>%
+      dplyr::mutate(value = as.numeric(as.character(value))) %>%
+      dplyr::mutate(value = ifelse(value > boundary, 9999, value)) %>%
+      dplyr::mutate(value = as.factor(value))
+      level_names <- levels(map_data$value)
+      level_names[9:length(level_names)] <- paste0(">",boundary)
+    } else {
+      map_palette <- RColorBrewer::brewer.pal(length(unique(map_data$value)),
+                                              name = "Reds")
+      map_palette[1] <- "#ffffff"
+      level_names <- levels(map_data$value)
+    }
+    map_data$value <- factor(map_data$value,
+                             levels = levels(map_data$value),
+                             labels = level_names)
+    map_palette <- utils::tail(map_palette,
+                               length(unique(map_data$value)))
+    out <- choroplethr::CountyChoropleth$new(map_data)
+    out$ggplot_scale <- ggplot2::scale_fill_manual(name = "# of direct injuries",
+                                                   values = map_palette)
+  }
 
   if(east_only){
     out$set_zoom(eastern_states)
@@ -218,19 +253,8 @@ map_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE, eas
     out$set_zoom(continental_states)
   }
 
-  if(plot_type == "any events"){
-    out$ggplot_scale <- ggplot2::scale_fill_manual(name = "",
-                                                   values = c("#e6550d", "white"))
-  } else if (plot_type == "number of events"){
-    map_palette <- RColorBrewer::brewer.pal(length(levels(map_data$value)),
-                                            "Oranges")
-    map_palette[1] <- "#f7f7f7"
-    out$ggplot_scale <- ggplot2::scale_fill_manual(name = "# of events",
-                                                   values = map_palette)
-  }
-
   if(add_tracks){
-    tracks_map <- hurricaneexposure::map_tracks(storms = storm,
+    tracks_map <- hurricaneexposuredata::map_tracks(storms = storm,
                                                 plot_object = out$render(),
                                                 plot_points = FALSE,
                                                 color = "black")

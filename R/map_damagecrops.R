@@ -99,7 +99,7 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
     if(!is.null(storm)){
       storm_first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
       storm_last_date <-  lubridate::ymd(max(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
-      storm_interval <- lubridate::interval(storm_first_date, storm_last_date)
+      storm_interval <- interval(storm_first_date, storm_last_date)
       if(!(first_date %within% storm_interval) & last_date %within% (storm_interval)){
         first_date <- storm_first_date
       } else if((first_date %within% storm_interval) & !(last_date %within% storm_interval)) {
@@ -108,15 +108,20 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
         first_date <- storm_first_date
         last_date <- storm_last_date
       }
+      storm_data <- storm_data %>%
+        dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+                      end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
+        dplyr::filter(!is.na(begin_date) &
+                        lubridate::ymd(begin_date) %within% interval(first_date,last_date)) %>%
+        dplyr::left_join(distance_df, by = "fips") %>%
+        dplyr::filter_(~ !is.na(storm_dist))
+    } else {
+      storm_data <- storm_data %>%
+        dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
+                      end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
+        dplyr::filter(!is.na(begin_date) &
+                        lubridate::ymd(begin_date) %within% interval(first_date,last_date))
     }
-    storm_data <- storm_data %>%
-      dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
-                    end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
-      dplyr::filter(!is.na(begin_date) &
-                      lubridate::ymd(begin_date) %within% interval(first_date,last_date)) %>%
-      dplyr::left_join(distance_df, by = "fips") %>%
-      dplyr::filter_(~ !is.na(storm_dist))
-
   } else {
     first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
     last_date <-  lubridate::ymd(max(as.numeric(gsub("[^0-9]","",as.character(distance_df$closest_date)))))
