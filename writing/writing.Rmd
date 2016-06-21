@@ -1,18 +1,18 @@
 ---
-title: Capitalized Title Here
+title: noaastormevents-- A package to explore NCDC's database on US storm events and their impacts
 author:
-  - name: Author One
-    affiliation: Affiliation
+  - name: Ziyu Chen
+    affiliation: Colorado State University
     address:
     - line 1
     - line 2
     email:  author1@work
-  - name: Author Two
-    affiliation: Affiliation
+  - name: Brooke Anderson
+    affiliation: Colorado State University
     address:
-    - line 1
-    - line 2
-    email:  author2@work
+    - Lake Street
+    - Fort Collins
+    email:  brooke.anderson@colostate.edu
 abstract: >
   An abstract of less than 150 words.
 preamble: >
