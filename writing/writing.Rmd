@@ -38,6 +38,8 @@ This section may contain a figure such as Figure \ref{figure:rlogo}.
 
 ## Another section
 
+Here is an example reference \citep{Wade2014}. \citet{Wade2014} is another example.
+
 There will likely be several sections, perhaps including code snippets, such as:
 
 ```{r}
