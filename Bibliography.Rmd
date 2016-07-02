@@ -1,6 +1,6 @@
 ---
 title: "Bibliography"
-output: word_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
