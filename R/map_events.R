@@ -215,6 +215,7 @@ map_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE, eas
 
 
   if(plot_type == "any events"){
+    out <- choroplethr::CountyChoropleth$new(map_data)
     out$ggplot_scale <- ggplot2::scale_fill_manual(name = "",
                                                    values = c("#e6550d", "white"))
   } else if (plot_type == "number of events"){
