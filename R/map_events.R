@@ -20,15 +20,13 @@
 #' @importFrom lubridate %within%
 #'
 #' @export
-find_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
+find_events <- function(date_range = c(NULL, NULL), ts_only = FALSE,
                         dist_limit = NULL, storm = NULL){
 
-  storm_data <- get_file(first_date = first_date, last_date = last_date,
-                       storm = storm)
+  storm_data <- get_file(date_range = date_range,  storm = storm)
+
   storm_data <- storm_data %>%
-    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
-                END_YEARMONTH, END_DAY,
-                STATE_FIPS, CZ_FIPS, EVENT_TYPE)%>%
+    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY, STATE_FIPS, CZ_FIPS, EVENT_TYPE)%>%
     plyr::rename(c(BEGIN_YEARMONTH="begin_ym",
                    BEGIN_DAY="begin_d",
                    END_YEARMONTH="end_ym",
@@ -45,9 +43,13 @@ find_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
     tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
     dplyr::tbl_df()
 
+<<<<<<< HEAD
   storm_data <-  adjust_file(first_date = first_date, last_date = last_date,
                              ts_only = ts_only, dist_limit = dist_limit,
                              storm = storm, data = storm_data)
+=======
+  storm_data <-  adjust_file(date_range = date_range, ts_only = ts_only, dist_limit = dist_limit, storm = storm, data = storm_data)
+>>>>>>> e52e9ec667a0d99ed0e347c213b6de87c19b69bf
 
   return(storm_data)
 }
@@ -76,7 +78,7 @@ find_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
+map_events <- function(date_range = c(NULL, NULL), ts_only = FALSE,
                        east_only = TRUE,
                        plot_type = "any events", dist_limit = NULL,
                        storm = NULL, add_tracks = FALSE){
@@ -92,9 +94,7 @@ map_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
                       "tennessee", "texas", "vermont", "virginia",
                       "west virginia", "wisconsin")
 
-  map_data <- find_events(first_date = first_date, last_date = last_date,
-                          storm = storm, dist_limit = dist_limit,
-                          ts_only = ts_only) %>%
+  map_data <- find_events(date_range = date_range, storm = storm, dist_limit = dist_limit, ts_only = ts_only) %>%
     dplyr::mutate(fips = as.numeric(fips)) %>%
     dplyr::rename(region = fips, value = type) %>%
     dplyr::full_join(county.regions, by = "region") %>%

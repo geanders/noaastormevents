@@ -1,7 +1,8 @@
-adjust_file <- function(first_date = NULL, last_date = NULL, ts_only = NULL,
+adjust_file <- function(date_range = c(NULL, NULL), ts_only = NULL,
                         dist_limit = NULL, storm = NULL, data = NULL){
-  first_date <- lubridate::ymd(first_date)
-  last_date <- lubridate::ymd(last_date)
+  first_date <- lubridate::ymd(date_range[1])
+  last_date <- lubridate::ymd(date_range[2])
+
   if(!is.null(dist_limit) & !is.null(storm)) {
     distance_df <- hurricaneexposuredata::closest_dist %>%
       dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
