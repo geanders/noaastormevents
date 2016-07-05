@@ -42,7 +42,8 @@ find_events <- function(date_range = NULL, ts_only = FALSE,
 #'    the eastern half of the United States (default is TRUE).
 #' @param add_tracks A logical value specifying whether to add the tracks of
 #'    a hurricane to the map (default = FALSE).
-#' @inheritParams find_events
+#' @inheritParams create_storm_data
+#' @inheritParams adjust_storm_data
 #'
 #' @examples
 #' map_events(date_range = c("1999-10-15", "1999-10-20"))

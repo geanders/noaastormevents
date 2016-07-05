@@ -13,7 +13,6 @@
 #'    storm = "Floyd-1999", dist_limit = 200)
 #'
 #' @importFrom dplyr %>%
-#' @importFrom lubridate %within%
 #'
 #' @export
 find_damage_crops <- function(date_range = NULL, ts_only = FALSE,
@@ -52,11 +51,9 @@ find_damage_crops <- function(date_range = NULL, ts_only = FALSE,
 #' This function maps all crops damaged listed with a starting date within a
 #' specified date range.
 #'
-#' @param east_only A logical value specifying whether to restrict the map to
-#'    the eastern half of the United States (default is TRUE).
-#' @param add_tracks A logical value specifying whether to add the tracks of
-#'    a hurricane to the map (default = FALSE).
-#' @inheritParams find_damage_crops
+#' @inheritParams map_events
+#' @inheritParams create_storm_data
+#' @inheritParams adjust_storm_data
 #'
 #' @examples
 #' map_damage_crops(date_range = c("1999-10-15", "1999-10-20"))
