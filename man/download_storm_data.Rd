@@ -4,7 +4,7 @@
 \alias{download_storm_data}
 \title{Download storm data file for a given year}
 \usage{
-download_storm_data(year, file_type = "detail")
+download_storm_data(year, file_type = "details")
 }
 \arguments{
 \item{year}{A character string giving the year.}

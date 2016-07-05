@@ -4,8 +4,8 @@
 \alias{find_damage_crops}
 \title{Find all damaged crop listings for date range}
 \usage{
-find_damage_crops(first_date = NULL, last_date = NULL, ts_only = FALSE,
-  dist_limit = NULL, storm = NULL)
+find_damage_crops(date_range = NULL, ts_only = FALSE, dist_limit = NULL,
+  storm = NULL)
 }
 \arguments{
 \item{ts_only}{A logical value indicating whether to filter events to only
@@ -22,9 +22,9 @@ This function will find all of the crops damaged in the US for a specified date
 range.
 }
 \examples{
-find_damage_crops(first_date = "1999-10-15", last_date = "1999-10-20")
+find_damage_crops(date_range = c("1999-10-15", "1999-10-20"))
 
-find_damage_crops(first_date = "1999-10-16", last_date = "1999-10-18",
+find_damage_crops(date_range = c("1999-10-16", "1999-10-18"),
    storm = "Floyd-1999", dist_limit = 200)
 
 }

@@ -4,16 +4,28 @@
 \alias{map_events}
 \title{Map storm events for a date range}
 \usage{
-map_events(date_range = c(NULL, NULL), ts_only = FALSE, east_only = TRUE,
+map_events(date_range = NULL, ts_only = FALSE, east_only = TRUE,
   plot_type = "any events", dist_limit = NULL, storm = NULL,
   add_tracks = FALSE)
 }
 \arguments{
-\item{ts_only}{A logical value indicating whether to filter events to only
-those in tropical storm-related categories.}
+\item{date_range}{A character vector of length two with the start and end
+dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
+
+\item{ts_only}{Specifies if only storm events related to tropical storms
+should be included.}
 
 \item{east_only}{A logical value specifying whether to restrict the map to
 the eastern half of the United States (default is TRUE).}
+
+\item{dist_limit}{If selected, the distance (in kilometers) that a county
+must be from the storm's path to be included.}
+
+\item{storm}{A character string with the name of the storm to pull storm
+events data for. This string must follow the format
+"[storm-name]-[4-digit storm year]" (e.g., \code{"Floyd-1999"}).
+Currently, this functionality only works for storms included in the
+extended hurricane best tracks, which covers 1988 to 2014.}
 
 \item{add_tracks}{A logical value specifying whether to add the tracks of
 a hurricane to the map (default = FALSE).}
@@ -23,14 +35,14 @@ This function maps all storm events listed with a starting date within a
 specified date range.
 }
 \examples{
-map_events(first_date = "1999-10-15", last_date = "1999-10-20")
-map_events(first_date = "1999-10-16", last_date = "1999-10-18",
+map_events(date_range = c("1999-10-15", "1999-10-20"))
+map_events(date_range = c("1999-10-16", "1999-10-18"),
    east_only = FALSE, ts_only = TRUE)
-map_events(first_date = "1999-10-16", last_date = "1999-10-18",
+map_events(date_range = c("1999-10-16", "1999-10-18"),
    plot_type = "number of events")
-map_events(first_date = "1999-10-16", last_date = "1999-10-18",
+map_events(date_range = c("1999-10-16", "1999-10-18"),
    dist_limit = 100, storm = "Floyd-1999",
-    add_tracks = TRUE, plot_type = "number of events")
+   add_tracks = TRUE, plot_type = "number of events")
 
 }
 
