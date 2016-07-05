@@ -37,7 +37,8 @@ download_storm_data <- function(year, file_type = "detail"){
 #' Get storm data based on date range or storm name
 #'
 #' This function pulls storm events data based on a specified date range and /
-#' or storm name.
+#' or storm name. (Note: This function pulls full years' worth of data. Later
+#' functions filter down to the exact date range desired.)
 #'
 #' @param date_range A character vector of length two with the start and end
 #'    dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).
@@ -48,7 +49,8 @@ download_storm_data <- function(year, file_type = "detail"){
 #'    extended hurricane best tracks, which covers 1988 to 2014.
 #'
 #' @examples
-#'
+#' floyd_data <- create_storm_data(date_range = c("1999-10-16", "1999-10-18"))
+#' floyd_data2 <- create_storm_data(storm = "Floyd-1999")
 #'
 #' @export
 create_storm_data <- function(date_range = NULL, storm = NULL,
@@ -96,5 +98,5 @@ create_storm_data <- function(date_range = NULL, storm = NULL,
     stop("You must specify either `date_range` or `storm`.")
   }
 
-  return(data)
+  return(storm_data)
 }
