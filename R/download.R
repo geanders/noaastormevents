@@ -47,6 +47,7 @@ download_storm_data <- function(year, file_type = "detail"){
 #'    "[storm-name]-[4-digit storm year]" (e.g., \code{"Floyd-1999"}).
 #'    Currently, this functionality only works for storms included in the
 #'    extended hurricane best tracks, which covers 1988 to 2014.
+#' @inheritParams find_file_name
 #'
 #' @examples
 #' floyd_data <- create_storm_data(date_range = c("1999-10-16", "1999-10-18"))

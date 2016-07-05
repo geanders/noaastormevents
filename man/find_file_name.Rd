@@ -8,6 +8,9 @@ find_file_name(year = NULL, file_type = "detail")
 }
 \arguments{
 \item{year}{A character string giving the year.}
+
+\item{file_type}{The type of file you would like to pull. Choices include:
+"details" (the default), "fatalities", or "locations".}
 }
 \description{
 This function will find the name of the detailed file from Storm Events Database
@@ -15,8 +18,7 @@ for a specific year.
 }
 \examples{
 find_file_name(year = 1999)
-
-find_file_name(year = 2003)
+find_file_name(year = 2003, file_type = "fatalities")
 
 }
 

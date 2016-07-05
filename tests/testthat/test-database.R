@@ -2,7 +2,8 @@ context("database format")
 
 test_that("The format of the database remains unchanged",{
   file_name <- find_file_name(1996)
-  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/",file_name)
+  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
+                      "stormevents/csvfiles/",file_name)
   temp <- tempfile()
   download.file(path_name, temp)
   data <-  suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))

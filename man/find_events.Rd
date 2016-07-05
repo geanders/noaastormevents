@@ -4,7 +4,7 @@
 \alias{find_events}
 \title{Find all event listings for date range}
 \usage{
-find_events(first_date = NULL, last_date = NULL, ts_only = FALSE,
+find_events(date_range = c(NULL, NULL), ts_only = FALSE,
   dist_limit = NULL, storm = NULL)
 }
 \arguments{
