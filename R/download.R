@@ -12,7 +12,7 @@
 #' session (as long as the R history is not saved at the end of the session).
 #' This saves time if the user uses the storm data from the same year for
 #' several commands.
-download_storm_data <- function(year, file_type = "detail"){
+download_storm_data <- function(year, file_type = "details"){
   file_name <- find_file_name(year = year, file_type = file_type)
   path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/",
                       "csvfiles/",file_name)
@@ -57,28 +57,7 @@ download_storm_data <- function(year, file_type = "detail"){
 create_storm_data <- function(date_range = NULL, storm = NULL,
                               file_type = "details") {
 
-  # Process input arguments and check for input errors
-  if(!is.null(date_range)){
-    date_range <- lubridate::ymd(date_range)
-    date_range_years <- lubridate::year(date_range)
-    if(date_range[2] < date_range[1]){
-      stop(paste0("The second date in `date_range` must",
-                  " be after the first date."))
-    }
-  }
-  if(!is.null(storm)){
-    storm_year <- as.numeric(gsub("[^0-9]", "", storm))
-    if(nchar(storm_year) != 4){
-      stop("`storm` must fall the format `[storm name]-[4-digit storm year]`")
-    }
-  }
-  if(!is.null(date_range) & !is.null(storm)){
-    if(storm_year < date_range_years[1] &
-       storm_year > date_range_years[2]){
-      stop(paste0("If specifying both `date_range` and `storm`, the year of ",
-                  "the storm must be within the date range."))
-    }
-  }
+  date_range_years <- lubridate::year(date_range)
 
   # If the user has included a date range, pull all data within that date range
   if(!is.null(date_range)){

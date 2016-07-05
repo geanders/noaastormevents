@@ -25,3 +25,33 @@ find_file_name <- function(year = NULL, file_type = "detail") {
   }
   return(file_name)
 }
+
+#' Process inputs to main functions
+#'
+#' @inheritParams create_storm_data
+process_input_args <- function(date_range = NULL, storm = NULL){
+
+  if(!is.null(date_range)){
+    date_range <- lubridate::ymd(date_range)
+    date_range_years <- lubridate::year(date_range)
+    if(date_range[2] < date_range[1]){
+      stop(paste0("The second date in `date_range` must",
+                  " be after the first date."))
+    }
+  }
+  if(!is.null(storm)){
+    storm_year <- as.numeric(gsub("[^0-9]", "", storm))
+    if(nchar(storm_year) != 4){
+      stop("`storm` must fall the format `[storm name]-[4-digit storm year]`")
+    }
+  }
+  if(!is.null(date_range) & !is.null(storm)){
+    if(storm_year < date_range_years[1] &
+       storm_year > date_range_years[2]){
+      stop(paste0("If specifying both `date_range` and `storm`, the year of ",
+                  "the storm must be within the date range."))
+    }
+  }
+
+  return(list(date_range = date_range, storm = storm))
+}

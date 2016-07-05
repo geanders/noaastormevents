@@ -11,21 +11,19 @@
 #'    those in tropical storm-related categories.
 #'
 #' @examples
-#' find_damage_crops(first_date = "1999-10-15", last_date = "1999-10-20")
+#' find_damage_crops(date_range = c("1999-10-15", "1999-10-20"))
 #'
-#' find_damage_crops(first_date = "1999-10-16", last_date = "1999-10-18",
+#' find_damage_crops(date_range = c("1999-10-16", "1999-10-18"),
 #'    storm = "Floyd-1999", dist_limit = 200)
 #'
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
 #'
 #' @export
-find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
+find_damage_crops <- function(date_range = NULL, ts_only = FALSE,
                         dist_limit = NULL, storm = NULL){
 
-  storm_data <- get_file(first_date = first_date, last_date = last_date,
-                         storm = storm)
-  storm_data <- storm_data %>%
+  storm_data <- create_storm_data(date_range = date_range, storm = storm) %>%
     dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
                   END_YEARMONTH, END_DAY,
                   STATE_FIPS, CZ_FIPS, DAMAGE_CROPS)%>%
@@ -55,7 +53,6 @@ find_damage_crops <- function(first_date = NULL, last_date = NULL, ts_only = FAL
                              ifelse(grepl("B+", storm_data$damage_crops, perl=TRUE), 1000000000,
                              ifelse(grepl("0+", storm_data$damage_crops, perl=TRUE), 0, " ")))))
   storm_data$damage_crops <- as.matrix(num.crops * letter.crops)
-
 
   return(storm_data)
 }
