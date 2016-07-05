@@ -20,61 +20,14 @@
 #' @importFrom lubridate %within%
 #'
 #' @export
-find_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
+find_events <- function(date_range = c(NULL, NULL), ts_only = FALSE,
                         dist_limit = NULL, storm = NULL){
 
-<<<<<<< HEAD
-  storm_data <- get_file(first_date = first_date, last_date = last_date,
-                       storm = storm)
+
+  storm_data <- get_file(date_range = date_range,  storm = storm)
+
   storm_data <- storm_data %>%
-    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
-=======
-  if(!is.null(first_date) & !is.null(last_date)){
-    first_date <- lubridate::ymd(first_date)
-    last_date <- lubridate::ymd(last_date)
-    if(last_date < first_date |
-       lubridate::year(first_date) != lubridate::year(last_date)){
-      stop(paste0("The `last_date` must be in the same year as and ",
-                  "after the `first_date`."))
-    }
-  }
-
- if(!is.null(storm)){
-  Year <- hurricaneexposuredata::closest_dist %>%
-    dplyr::filter_(~ storm_id == storm)
- } else {
-   Year <- hurricaneexposuredata::closest_dist %>%
-     dplyr::filter_(~ lubridate::year(closest_date) ==
-                      lubridate::year(first_date))
- }
-  Year <-lubridate::year(lubridate::ymd(Year$closest_date[1]))
-
-  file_name <- find_file_name(Year)
-  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
-                      "stormevents/csvfiles/",
-                      file_name)
-
-  if(!exists("lst")) {
-    temp <- tempfile()
-    download.file(path_name, temp)
-    lst <<- list()
-    lst[[as.character(Year)]] <<-  suppressWarnings(read.csv(gzfile(temp),
-                                                             as.is = TRUE))
-    unlink(temp)
-  } else if(is.null(lst[[as.character(Year)]])) {
-    temp <- tempfile()
-    download.file(path_name, temp)
-    lst[[as.character(Year)]] <<-  suppressWarnings(read.csv(gzfile(temp),
-                                                             as.is = TRUE))
-    unlink(temp)
-  }
-
-
-  storm_data <- lst[[as.character(Year)]] %>%
-  dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
->>>>>>> f112fc09b40eec7f3da6421d8e71bd3c2197fcdc
-                END_YEARMONTH, END_DAY,
-                STATE_FIPS, CZ_FIPS, EVENT_TYPE)%>%
+    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY, STATE_FIPS, CZ_FIPS, EVENT_TYPE)%>%
     plyr::rename(c(BEGIN_YEARMONTH="begin_ym",
                    BEGIN_DAY="begin_d",
                    END_YEARMONTH="end_ym",
@@ -91,83 +44,7 @@ find_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
     tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
     dplyr::tbl_df()
 
-<<<<<<< HEAD
-  storm_data <-  adjust_file(first_date = first_date, last_date = last_date,
-                             ts_only = ts_only, dist_limit = dist_limit,
-                             storm = storm, data = storm_data)
-=======
-  if(!is.null(dist_limit) & !is.null(storm)) {
-    distance_df <- hurricaneexposuredata::closest_dist %>%
-    dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
-  } else if(is.null(dist_limit) & !is.null(storm)){
-    distance_df <- hurricaneexposuredata::closest_dist %>%
-    dplyr::filter_(~ storm_id == storm)
-  } else if(!is.null(dist_limit) & is.null(storm)){
-    distance_df <- hurricaneexposuredata::closest_dist %>%
-    dplyr::filter_(~ storm_dist <= dist_limit)
-  } else {
-    distance_df <- hurricaneexposuredata::closest_dist
-  }
-
-
-  if(!is.null(first_date) & !is.null(last_date)){
-    if(!is.null(storm)){
-      storm_first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]", "",
-                                                             as.character(distance_df$closest_date)))))
-      storm_last_date <-  lubridate::ymd(max(as.numeric(gsub("[^0-9]", "",
-                                                             as.character(distance_df$closest_date)))))
-      storm_interval <- interval(storm_first_date, storm_last_date)
-      if(!(first_date %within% storm_interval) &
-         last_date %within% (storm_interval)){
-        first_date <- storm_first_date
-      } else if((first_date %within% storm_interval) &
-                !(last_date %within% storm_interval)) {
-        last_date <- storm_last_date
-      } else if(!(first_date %within% storm_interval) &
-                !(last_date %within% storm_interval)) {
-        first_date <- storm_first_date
-        last_date <- storm_last_date
-      }
-      storm_data <- storm_data %>%
-        dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
-                      end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
-        dplyr::filter(!is.na(begin_date) &
-                        lubridate::ymd(begin_date) %within%
-                        interval(first_date, last_date)) %>%
-        dplyr::left_join(distance_df, by = "fips") %>%
-        dplyr::filter_(~ !is.na(storm_dist))
-    } else {
-      storm_data <- storm_data %>%
-        dplyr::mutate(begin_date = suppressWarnings(lubridate::ymd(begin_date)),
-                    end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
-        dplyr::filter(!is.na(begin_date) &
-                        lubridate::ymd(begin_date) %within%
-                        interval(first_date,last_date))
-    }
-  } else {
-    first_date <- lubridate::ymd(min(as.numeric(gsub("[^0-9]", "",
-                                                     as.character(distance_df$closest_date)))))
-    last_date <-  lubridate::ymd(max(as.numeric(gsub("[^0-9]", "",
-                                                     as.character(distance_df$closest_date)))))
-    storm_data <- dplyr::mutate(storm_data,
-                                begin_date = suppressWarnings(lubridate::ymd(begin_date)),
-                                end_date = suppressWarnings(lubridate::ymd(end_date))) %>%
-      dplyr::filter(!is.na(begin_date) &
-                      lubridate::ymd(begin_date) %within%
-                      lubridate::interval(first_date,last_date)) %>%
-      dplyr::left_join(distance_df, by = "fips") %>%
-      dplyr::filter_(~ !is.na(storm_dist))
-  }
-
-  if (ts_only) {
-    ts_types <- c("Coastal Flood","Flash Flood" ,"Flood","Heavy Rain",
-                  "High Surf","High Wind Hurricane (Typhoon)",
-                  "Storm Surge/Tide","Strong Wind","Thunderstorm Wind",
-                  "Tornado","Tropical Storm","Waterspout")
-    storm_data <- dplyr::filter(storm_data, type %in% ts_types)
-  }
-
->>>>>>> f112fc09b40eec7f3da6421d8e71bd3c2197fcdc
+  storm_data <-  adjust_file(date_range = date_range, ts_only = ts_only, dist_limit = dist_limit, storm = storm, data = storm_data)
 
   return(storm_data)
 }
@@ -196,7 +73,7 @@ find_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
+map_events <- function(date_range = c(NULL, NULL), ts_only = FALSE,
                        east_only = TRUE,
                        plot_type = "any events", dist_limit = NULL,
                        storm = NULL, add_tracks = FALSE){
@@ -212,9 +89,7 @@ map_events <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
                       "tennessee", "texas", "vermont", "virginia",
                       "west virginia", "wisconsin")
 
-  map_data <- find_events(first_date = first_date, last_date = last_date,
-                          storm = storm, dist_limit = dist_limit,
-                          ts_only = ts_only) %>%
+  map_data <- find_events(date_range = date_range, storm = storm, dist_limit = dist_limit, ts_only = ts_only) %>%
     dplyr::mutate(fips = as.numeric(fips)) %>%
     dplyr::rename(region = fips, value = type) %>%
     dplyr::full_join(county.regions, by = "region") %>%

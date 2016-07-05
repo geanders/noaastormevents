@@ -17,7 +17,9 @@ download_file <- function(Year = NULL){
 
 }
 
-get_file <- function(first_date = NULL, last_date = NULL, storm = NULL) {
+get_file <- function(date_range = c(NULL, NULL), storm = NULL) {
+  first_date <-  date_range[1]
+  last_date <- date_range[2]
   if(!is.null(first_date) & !is.null(last_date)){
     first_date <- lubridate::ymd(first_date)
     last_date <- lubridate::ymd(last_date)
