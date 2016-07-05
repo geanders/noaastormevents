@@ -11,41 +11,33 @@
 #'    those in tropical storm-related categories.
 #'
 #' @examples
-#' find_events(first_date = "1999-10-15", last_date = "1999-10-20")
+#' find_events(date_range = c("1999-10-15", "1999-10-20"))
 #'
-#' find_events(first_date = "1999-10-16", last_date = "1999-10-18",
+#' find_events(date_range = c("1999-10-16", "1999-10-18"),
 #'    storm = "Floyd-1999", dist_limit = 200)
 #'
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
 #'
 #' @export
-find_events <- function(date_range = c(NULL, NULL), ts_only = FALSE,
+find_events <- function(date_range = NULL, ts_only = FALSE,
                         dist_limit = NULL, storm = NULL){
 
-  storm_data <- get_file(date_range = date_range,  storm = storm)
-
-  storm_data <- storm_data %>%
-    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY, STATE_FIPS, CZ_FIPS, EVENT_TYPE)%>%
-    plyr::rename(c(BEGIN_YEARMONTH="begin_ym",
-                   BEGIN_DAY="begin_d",
-                   END_YEARMONTH="end_ym",
-                   END_DAY="end_d",
-                   STATE_FIPS="st_fips",
-                   EVENT_TYPE="type",
-                   CZ_FIPS="ct_fips")) %>%
-    dplyr::mutate(begin_d = sprintf("%02s", begin_d),
-                  end_d = sprintf("%02s", end_d),
-                  ct_fips = sprintf("%03s", ct_fips),
-                  st_fips = sprintf("%02s", st_fips)) %>%
-    tidyr::unite(begin_date, begin_ym, begin_d, sep = "") %>%
-    tidyr::unite(end_date, end_ym, end_d, sep = "") %>%
-    tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
+  storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
+    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY,
+                  STATE_FIPS, CZ_FIPS, EVENT_TYPE) %>%
+    dplyr::mutate(BEGIN_DAY = sprintf("%02d", BEGIN_DAY),
+                  END_DAY = sprintf("%02d", END_DAY),
+                  CZ_FIPS = sprintf("%03d", CZ_FIPS)) %>%
+    tidyr::unite_("begin_date", c("BEGIN_YEARMONTH", "BEGIN_DAY"), sep = "") %>%
+    tidyr::unite_("end_date", c("END_YEARMONTH", "END_DAY"), sep = "") %>%
+    tidyr::unite_("fips", c("STATE_FIPS", "CZ_FIPS"), sep = "") %>%
+    dplyr::rename(type = EVENT_TYPE)  %>%
     dplyr::tbl_df()
 
-  storm_data <-  adjust_file(date_range = date_range, ts_only = ts_only,
-                             dist_limit = dist_limit, storm = storm,
-                             data = storm_data)
+  storm_data <-  adjust_file(storm_data,
+                             date_range = date_range, ts_only = ts_only,
+                             dist_limit = dist_limit, storm = storm)
 
   return(storm_data)
 }
