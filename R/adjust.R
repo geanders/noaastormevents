@@ -38,7 +38,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
       dplyr::filter_(~ storm_id == storm)
    storm_closest_interval <- lubridate::interval(min(distance_df$closest_date),
                                                  max(distance_df$closest_date))
-   storm_date <- storm_data %>%
+   storm_data <- storm_data %>%
      dplyr::filter(!is.na(begin_date) &
                      begin_date %within% storm_closest_interval)
   }

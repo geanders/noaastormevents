@@ -3,12 +3,8 @@
 #' This function will find all of the crops damaged in the US for a specified date
 #' range.
 #'
-#' @param begin_date A character string giving the date, in the format
-#'    "\%Y-\%m-\%d".
-#' @param end_date A character string giving the date, in the format
-#'    "\%Y-\%m-\%d". The end date must be in the same year as \code{begin_date}.
-#' @param ts_only A logical value indicating whether to filter events to only
-#'    those in tropical storm-related categories.
+#' @inheritParams create_storm_data
+#' @inheritParams adjust_storm_data
 #'
 #' @examples
 #' find_damage_crops(date_range = c("1999-10-15", "1999-10-20"))

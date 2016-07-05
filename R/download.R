@@ -57,10 +57,9 @@ download_storm_data <- function(year, file_type = "details"){
 create_storm_data <- function(date_range = NULL, storm = NULL,
                               file_type = "details") {
 
-  date_range_years <- lubridate::year(date_range)
-
   # If the user has included a date range, pull all data within that date range
   if(!is.null(date_range)){
+    date_range_years <- lubridate::year(date_range)
     requested_years <- seq(from = date_range_years[1], to = date_range_years[2])
     for(i in 1:length(requested_years)){
       download_storm_data(year = requested_years[i], file_type = file_type)
@@ -72,8 +71,9 @@ create_storm_data <- function(date_range = NULL, storm = NULL,
       }
     }
   } else if (!is.null(storm)){ ## Otherwise, pull for the year of the storm
+    storm_year <- as.numeric(gsub("[^0-9]", "", storm))
     download_storm_data(year = storm_year, file_type = file_type)
-    storm_data <- lst[[as.character(year)]]
+    storm_data <- lst[[as.character(storm_year)]]
   } else {
     stop("You must specify either `date_range` or `storm`.")
   }
