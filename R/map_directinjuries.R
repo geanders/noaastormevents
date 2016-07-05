@@ -3,52 +3,36 @@
 #' This function will find all of the direct injuries in the US for a specified date
 #' range.
 #'
-#' @param begin_date A character string giving the date, in the format
-#'    "%Y-%m-%d".
-#' @param end_date A character string giving the date, in the format
-#'    "%Y-%m-%d". The end date must be in the same year as \code{begin_date}.
-#' @param ts_only A logical value indicating whether to filter events to only
-#'    those in tropical storm-related categories.
+#' @inheritParams create_storm_data
+#' @inheritParams adjust_storm_data
 #'
 #' @examples
-#' find_direct_injuries(first_date = "1999-10-15", last_date = "1999-10-20")
+#' find_direct_injuries(date_range = c("1999-10-15", "1999-10-20"))
 #'
-#' find_direct_injuries(first_date = "1999-10-16", last_date = "1999-10-18",
+#' find_direct_injuries(date_range = c("1999-10-16", "1999-10-18"),
 #'    storm = "Floyd-1999", dist_limit = 200)
+#'
+#' find_direct_injuries(storm = "Floyd-1999")
 #'
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
 #'
 #' @export
-find_direct_injuries <- function(first_date = NULL, last_date = NULL, ts_only = FALSE,
+find_direct_injuries <- function(date_range = NULL, ts_only = FALSE,
                                dist_limit = NULL, storm = NULL){
 
-  storm_data <- get_file(first_date = first_date, last_date = last_date,
-                         storm = storm)
 
-  storm_data <- storm_data %>%
-    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY,
-                  END_YEARMONTH, END_DAY,
-                  STATE_FIPS, CZ_FIPS, INJURIES_DIRECT)%>%
-    plyr::rename(c(BEGIN_YEARMONTH="begin_ym",
-                   BEGIN_DAY="begin_d",
-                   END_YEARMONTH="end_ym",
-                   END_DAY="end_d",
-                   STATE_FIPS="st_fips",
-                   INJURIES_DIRECT="direct_injuries",
-                   CZ_FIPS="ct_fips")) %>%
-    dplyr::mutate(begin_d = sprintf("%02s", begin_d),
-                  end_d = sprintf("%02s", end_d),
-                  ct_fips = sprintf("%03s", ct_fips),
-                  st_fips = sprintf("%02s", st_fips)) %>%
-    tidyr::unite(begin_date, begin_ym, begin_d, sep = "") %>%
-    tidyr::unite(end_date, end_ym, end_d, sep = "") %>%
-    tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
-    dplyr::tbl_df()
+  processed_inputs <- process_input_args(date_range = date_range, storm = storm)
+  date_range <- processed_inputs$date_range
+  storm <- processed_inputs$storm
 
-  storm_data <-  adjust_file(first_date = first_date, last_date = last_date,
-                             ts_only = ts_only, dist_limit = dist_limit,
-                             storm = storm, data = storm_data)
+  storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
+    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY,
+                  STATE_FIPS, CZ_FIPS, EVENT_TYPE, INJURIES_DIRECT) %>%
+    dplyr::rename(type = EVENT_TYPE,
+                  direct_injuries = INJURIES_DIRECT) %>%
+    adjust_storm_data(date_range = date_range, ts_only = ts_only,
+                      dist_limit = dist_limit, storm = storm)
 
   return(storm_data)
 }
@@ -66,18 +50,16 @@ find_direct_injuries <- function(first_date = NULL, last_date = NULL, ts_only = 
 #' @inheritParams find_direct_injuries
 #'
 #' @examples
-#' map_direct_injuries(first_date = "1999-10-15", last_date = "1999-10-20")
-#' map_direct_injuries(first_date = "1999-10-16", last_date = "1999-10-18",
+#' map_direct_injuries(date_range = c("1999-10-15", "1999-10-20"))
+#' map_direct_injuries(date_range = c("1999-10-16", "1999-10-18"),
 #'    east_only = FALSE, ts_only = TRUE)
-#' map_direct_injuries(first_date = "1999-10-16", last_date = "1999-10-18")
-#' map_direct_injuries(first_date = "1999-10-16", last_date = "1999-10-18",
-#'    dist_limit = 100, storm = "Floyd-1999",
-#'     add_tracks = TRUE)
+#' map_direct_injuries(date_range = c("1999-10-16", "1999-10-18"))
+#' map_direct_injuries(storm = "Floyd-1999", add_tracks = TRUE, dist_limit = 250)
 #'
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_direct_injuries <- function(first_date = NULL, last_date = NULL, ts_only = FALSE, east_only = TRUE,
+map_direct_injuries <- function(date_range = NULL, ts_only = FALSE, east_only = TRUE,
                        dist_limit = NULL, storm = NULL, add_tracks = FALSE){
 
   data(county.regions, package = "choroplethrMaps")
@@ -91,7 +73,7 @@ map_direct_injuries <- function(first_date = NULL, last_date = NULL, ts_only = F
                       "tennessee", "texas", "vermont", "virginia",
                       "west virginia", "wisconsin")
 
-  map_data <- find_direct_injuries(first_date = first_date, last_date = last_date,
+  map_data <- find_direct_injuries(date_range = date_range,
                           storm = storm, dist_limit = dist_limit,
                           ts_only = ts_only) %>%
     dplyr::mutate(fips = as.numeric(fips)) %>%
@@ -146,7 +128,7 @@ map_direct_injuries <- function(first_date = NULL, last_date = NULL, ts_only = F
 
 
   if(add_tracks){
-    tracks_map <- hurricaneexposuredata::map_tracks(storms = storm,
+    tracks_map <- hurricaneexposure::map_tracks(storms = storm,
                                                 plot_object = out$render(),
                                                 plot_points = FALSE,
                                                 color = "black")
