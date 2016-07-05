@@ -25,36 +25,47 @@ Here are some examples:
 Mapping all counties that had at least one event over a date range:
 
 ``` r
-map_events(first_date = "1999-10-15", last_date = "1999-10-20")
+map_events(date_range = c("1999-10-15", "1999-10-20"))
 ```
+
+![](README-unnamed-chunk-3-1.png)
 
 Mapping any county with at least one tropical storm-related event, not restricting to only the eastern half of the country:
 
 ``` r
-map_events(first_date = "1999-10-16", last_date = "1999-10-18",
+map_events(date_range = c("1999-10-16", "1999-10-18"),
     east_only = FALSE, ts_only = TRUE)
 ```
+
+![](README-unnamed-chunk-4-1.png)
 
 Mapping the number of events in each county within a certain date range:
 
 ``` r
-map_events(first_date = "1999-10-16", last_date = "1999-10-18",
+map_events(date_range = c("1999-10-16", "1999-10-18"),
     plot_type = "number of events")
 ```
+
+![](README-unnamed-chunk-5-1.png)
 
 Mapping the number of events, but only counting counties that were within 100 kilometers of the track of Hurricane Floyd in 1999, with the hurricane's track added to the plot:
 
 ``` r
-map_events(first_date = "1999-10-16", last_date = "1999-10-18",
-    dist_limit = 100, storm = "Floyd-1999",
-     add_tracks = TRUE, plot_type = "number of events")
+map_events(storm = "Floyd-1999", dist_limit = 100, 
+           date_range = c("1999-10-16", "1999-10-18"),
+           add_tracks = TRUE, plot_type = "number of events")
 ```
+
+![](README-unnamed-chunk-6-1.png)
 
 Mapping the number of all events that happened under the influence of Hurricane Floyd in 1999, with the hurricane's track added to the plot::
 
 ``` r
-map_events(storm = "Floyd-1999", add_tracks = TRUE, plot_type = "number of events")
+map_events(storm = "Floyd-1999", dist_limit = 100, add_tracks = TRUE,
+           plot_type = "number of events")
 ```
+
+![](README-unnamed-chunk-7-1.png)
 
 Details of how the package works
 --------------------------------
