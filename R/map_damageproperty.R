@@ -14,6 +14,8 @@
 #'
 #' find_damage_property(storm = "Floyd-1999")
 #'
+#' find_damage_property(storm = "Floyd-1999", dist_limit = 20)
+#'
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
 #'
@@ -67,9 +69,8 @@ find_damage_property <- function(date_range = NULL, ts_only = FALSE,
 #'    east_only = FALSE, ts_only = TRUE)
 #' map_damage_property(date_range = c("1999-10-16", "1999-10-22"))
 #' map_damage_property(storm = "Floyd-1999")
-#' map_damage_property(first_date = "1999-10-16", last_date = "1999-10-18",
-#'    dist_limit = 100, storm = "Floyd-1999",
-#'     add_tracks = TRUE)
+#' map_damage_property(dist_limit = 100, storm = "Floyd-1999",
+#'                     add_tracks = TRUE)
 #'
 #' @importFrom dplyr %>%
 #'
