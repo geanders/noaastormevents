@@ -4,28 +4,36 @@
 \alias{find_direct_injuries}
 \title{Find all direct injury listings for date range}
 \usage{
-find_direct_injuries(first_date = NULL, last_date = NULL, ts_only = FALSE,
+find_direct_injuries(date_range = NULL, ts_only = FALSE,
   dist_limit = NULL, storm = NULL)
 }
 \arguments{
-\item{ts_only}{A logical value indicating whether to filter events to only
-those in tropical storm-related categories.}
+\item{date_range}{A character vector of length two with the start and end
+dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 
-\item{begin_date}{A character string giving the date, in the format
-"%Y-%m-%d".}
+\item{ts_only}{Specifies if only storm events related to tropical storms
+should be included.}
 
-\item{end_date}{A character string giving the date, in the format
-"%Y-%m-%d". The end date must be in the same year as \code{begin_date}.}
+\item{dist_limit}{If selected, the distance (in kilometers) that a county
+must be from the storm's path to be included.}
+
+\item{storm}{A character string with the name of the storm to pull storm
+events data for. This string must follow the format
+"[storm-name]-[4-digit storm year]" (e.g., \code{"Floyd-1999"}).
+Currently, this functionality only works for storms included in the
+extended hurricane best tracks, which covers 1988 to 2014.}
 }
 \description{
 This function will find all of the direct injuries in the US for a specified date
 range.
 }
 \examples{
-find_direct_injuries(first_date = "1999-10-15", last_date = "1999-10-20")
+find_direct_injuries(date_range = c("1999-10-15", "1999-10-20"))
 
-find_direct_injuries(first_date = "1999-10-16", last_date = "1999-10-18",
+find_direct_injuries(date_range = c("1999-10-16", "1999-10-18"),
    storm = "Floyd-1999", dist_limit = 200)
+
+find_direct_injuries(storm = "Floyd-1999")
 
 }
 
