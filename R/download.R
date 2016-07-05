@@ -21,45 +21,80 @@ download_storm_data <- function(year, file_type = "detail"){
     temp <- tempfile()
     download.file(path_name, temp)
     lst <<- list()
-    lst[[as.character(Year)]] <<-  suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
+    lst[[as.character(year)]] <<-  suppressWarnings(read.csv(gzfile(temp),
+                                                             as.is = TRUE))
     unlink(temp)
-  } else if(is.null(lst[[as.character(Year)]])) {
+  } else if(is.null(lst[[as.character(year)]])) {
     temp <- tempfile()
     download.file(path_name, temp)
-    lst[[as.character(Year)]] <<-  suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
+    lst[[as.character(year)]] <<-  suppressWarnings(read.csv(gzfile(temp),
+                                                             as.is = TRUE))
     unlink(temp)
   }
-
+  return(NULL)
 }
 
-get_file <- function(first_date = NULL, last_date = NULL, storm = NULL) {
+#' Get storm data based on date range or storm name
+#'
+#' This function pulls storm events data based on a specified date range and /
+#' or storm name.
+#'
+#' @param date_range A character vector of length two with the start and end
+#'    dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).
+#' @param storm A character string with the name of the storm to pull storm
+#'    events data for. This string must follow the format
+#'    "[storm-name]-[4-digit storm year]" (e.g., \code{"Floyd-1999"}).
+#'    Currently, this functionality only works for storms included in the
+#'    extended hurricane best tracks, which covers 1988 to 2014.
+#'
+#' @examples
+#'
+#'
+#' @export
+create_storm_data <- function(date_range = NULL, storm = NULL,
+                              file_type = "details") {
 
-  if(!is.null(first_date) & !is.null(last_date)){
-    first_date <- lubridate::ymd(first_date)
-    last_date <- lubridate::ymd(last_date)
-    if(last_date < first_date){
-      stop(paste0("The `last_date` must be after the `first_date`."))
+  # Process input arguments and check for input errors
+  if(!is.null(date_range)){
+    date_range <- lubridate::ymd(date_range)
+    date_range_years <- lubridate::year(date_range)
+    if(date_range[2] < date_range[1]){
+      stop(paste0("The second date in `date_range` must",
+                  " be after the first date."))
+    }
+  }
+  if(!is.null(storm)){
+    storm_year <- as.numeric(gsub("[^0-9]", "", storm))
+    if(nchar(storm_year) != 4){
+      stop("`storm` must fall the format `[storm name]-[4-digit storm year]`")
+    }
+  }
+  if(!is.null(date_range) & !is.null(storm)){
+    if(storm_year < date_range_years[1] &
+       storm_year > date_range_years[2]){
+      stop(paste0("If specifying both `date_range` and `storm`, the year of ",
+                  "the storm must be within the date range."))
     }
   }
 
-  if(!is.null(storm)){
-    storm_year <- gsub("[^0-9]", "", storm)
-    download_storm_data(Year = storm_year)
-    data <- lst[[as.character(Year)]]
-  } else {
-    if(lubridate::year(first_date) == lubridate::year(last_date)) {
-    Year <- lubridate::year(first_date)
-    download_storm_data(Year = Year)
-    data <- lst[[as.character(Year)]]
-    } else {
-      data <- NULL
-      for (Year in
-           as.numeric(as.character(lubridate::year(first_date))):
-           as.numeric(as.character(lubridate::year(last_date)))) {
-      download_storm_data(Year = Year)
-      data <- rbind(data, lst[[as.character(Year)]])
+  # If the user has included a date range, pull all data within that date range
+  if(!is.null(date_range)){
+    requested_years <- seq(from = date_range_years[1], to = date_range_years[2])
+    for(i in 1:length(requested_years)){
+      download_storm_data(year = requested_years[i], file_type = file_type)
+      if(i == 1){
+        storm_data <- lst[[as.character(requested_years[i])]]
+      } else {
+        storm_data <- rbind(storm_data,
+                            lst[[as.character(requested_years[i])]])
       }
     }
+  } else if (!is.null(storm)){ ## Otherwise, pull for the year of the storm
+    download_storm_data(year = storm_year, file_type = file_type)
+    storm_data <- lst[[as.character(year)]]
+  } else {
+    stop("You must specify either `date_range` or `storm`.")
   }
+
   return(data)
 }
