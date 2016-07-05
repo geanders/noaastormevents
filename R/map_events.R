@@ -43,13 +43,9 @@ find_events <- function(date_range = c(NULL, NULL), ts_only = FALSE,
     tidyr::unite(fips, st_fips, ct_fips, sep = "") %>%
     dplyr::tbl_df()
 
-<<<<<<< HEAD
-  storm_data <-  adjust_file(first_date = first_date, last_date = last_date,
-                             ts_only = ts_only, dist_limit = dist_limit,
-                             storm = storm, data = storm_data)
-=======
-  storm_data <-  adjust_file(date_range = date_range, ts_only = ts_only, dist_limit = dist_limit, storm = storm, data = storm_data)
->>>>>>> e52e9ec667a0d99ed0e347c213b6de87c19b69bf
+  storm_data <-  adjust_file(date_range = date_range, ts_only = ts_only,
+                             dist_limit = dist_limit, storm = storm,
+                             data = storm_data)
 
   return(storm_data)
 }
