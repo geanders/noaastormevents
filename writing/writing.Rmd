@@ -24,19 +24,21 @@ output: rticles::rjournal_article
 
 ### Importance of studying impacts of storm events
 
-Risks of mortality from a number of types of storm events have decreased over the past century, including for deaths from lightning \citep{Curran2000}, tornadoes \citep{Ashley2007}, ... . This decrease in part is related to an improved understanding of these risks and the development of better warnings and awareness \citep{Curran2000}.
+Risks of mortality from a number of types of storm events have decreased over the past century, including for deaths from lightning \citep{Curran2000}, tornadoes \citep{Ashley2007}, ... . This decrease in part is related to an improved understanding of these risks and the development of better warnings and awareness \citep{Curran2000, Ashley2007}. This decline in mortality risk may have leveled off recently for some event types (e.g., lightning \citet{Ashley2007}).
 
 While risks of death have decreased, property damage from storm events has increased over the past century [\citet{Curran2000} for lightning damage].
 
 ### Description of the database
 
-This database is put together using a number of different sources, including newspaper reports \citep{Curran2000}, calls to emergency agencies \citep{Curran2000}, ... A main source for the events data in this database is from verifying NWS warnings to determine which warnings were accurate [see Hales and Kelly reference in \citet{Witt1998}].
+This database is put together using a number of different sources, including newspaper reports \citep{Curran2000, Ashley2008flood}, calls to emergency agencies \citep{Curran2000}, law enforcement agencies \citep{Ashley2008flood}, government agencies \citep{Ashley2008flood}, ... . A main source for the events data in this database is from verifying NWS warnings to determine which warnings were accurate [see Hales and Kelly reference in \citet{Witt1998}].
 
-Event times are in local time.
+This database evolved from efforts in the 1950s to record details of tornadoes, then expanded to include other event types, including severe hail, floods, and extreme wind \citep{Ashley2007}. The database officially began as the "Storm Data" database in 1959 \citep{Ashley2008flood}
+
+Event times are in local standard time \citep{Ashley2008flood.
 
 [Degree of missing data]
 
-The database also includes descriptive paragraphs for events ... 
+The database also includes descriptive paragraphs for events ... Information from this descriptive paragraph is sometimes used to varifity other information listed for a storm event (e.g., shelter type for tornado casualties \citet{Ashley2007}). These descriptive paragraphs tend to include more helpful details for more recent database entries than older ones \citep{Ashley2007}.
 
 ### Examples of use of the database in research
 
@@ -46,7 +48,7 @@ In lightning impacts research, this database has been used to identify high-risk
 
 In another study, researchers used events data from this database to use for ground-truth validation of an algorithm for detecting hail \citep{Witt1998}.
 
-Other studies have combined this database with other data sources for studies. Examples include a study of tornado impacts, which combined the Storm Events database with data collected during a long-term study \citep{Ashley2007}.
+Other studies have combined this database with other data sources for studies. Examples include a study of tornado impacts, which combined the Storm Events database with data collected during a long-term study \citep{Ashley2007}. Other example studies used a database generated in part from the Storm Events database [Rappaport dataset, including in \citet{Ashley2008flood}].
 
 ## Overview of the package
 
@@ -79,7 +81,9 @@ While this database offers a wealth of data on severe storm impacts across the U
 
 The full storm database covers a large number of years ([x] to present). However, several elements of the dataset may vary over this period, so care should be taken in using the database for long-term studies. First the coverage of storm events has changed over time, with only ... covered from 1985 until ..., and an expansion to include ... after ... . Further, amounts of missing data for specific storm characteristics has decreased substantially with time from early years covered by the Storm Data database \citep{Curran2000}.
 
-Storm events data tend to be underreported, and the degree of underreporting can vary by event type, with less for large-scale storms like hurricanes and more for very localized events like lightning \citep{Curran2000}. For example, several studies have found evidence that lightning causualties are underreported in the Storm Data database [see Lopez, Mogil, and Cherington references in \citet{Curran2000}]. Another study found that lightning damages are also underreported [Holle reference in \citet{Curran2000}]. Small-scale events like hail \citep{Witt1998} are especially likely to be underreported.
+Storm events data tend to be underreported \citep{Ashley2008flood}, and the degree of underreporting can vary by event type, with less for large-scale storms like hurricanes and large-impact floods \citep{Ashley2008flood} and more for very localized events like lightning \citep{Curran2000}. For example, several studies have found evidence that lightning causualties are underreported in the Storm Data database [see Lopez, Mogil, and Cherington references in \citet{Curran2000}]. Another study found that lightning damages are also underreported [Holle reference in \citet{Curran2000}]. Small-scale events like hail \citep{Witt1998} are especially likely to be underreported.
+
+The underreporting in the Storm Events database can lead to conservative estimates of impactes \citep{Ashley2008flood}.
 
 Underreporting can be correlated with population density, with more underreporting in less populated areas, where fewer people are around to see and report an event \citep{Witt1998, Ashley2007}.
 
@@ -87,15 +91,17 @@ One study calls the percent of severe events reported in the Storm Events databa
 
 Data can be underreported both in terms of number of events reported (i.e., completely missing some reports) and in underreporting impacts of events that are included. For example, one study found that lightning damage reports in the Storm Events database often were lower than insured losses, in part because the Storm Events database missed many losses of $5,000 or less [Holle reference in \citet{Curran2000}].
 
-Specific elements of event data can be particularly problematic. For example, a study of hail events found that around 30% of hail events within a test case had Storm Event listings for times or locations that were incorrect when comparing to radar data (in most of these cases, it appeared that the error was with the time of the event, and that most inaccuracies were an hour or shorter) \citep{Witt1998}. Similarly, elements like hail size can be unreliable, because spatial variations in hail size in an event can be much finer than the resolution of storm observation networks, like spotter networks or hail pads \citep{Witt1998}.
+Years after Hurricane Katrina, the database still did not have a precise estimate for associated fatalities, and was not confident it would in the future \citep{Ashley2008flood}.
+
+Specific elements of event data can be particularly problematic. For example, a study of hail events found that around 30% of hail events within a test case had Storm Event listings for times or locations that were incorrect when comparing to radar data (in most of these cases, it appeared that the error was with the time of the event, and that most inaccuracies were an hour or shorter) \citep{Witt1998}. Similarly, elements like hail size can be unreliable, because spatial variations in hail size in an event can be much finer than the resolution of storm observation networks, like spotter networks or hail pads \citep{Witt1998}. A study of flood-related impacts found a substantial amount of missing data for the setting and activity associated with fatalities, as well as on the age and gender of the victim \cite{Ashley2008flood}. 
 
 Collection of this storm data can be somewhat subjective. In particular, local storm events data is determined and supplied separately by the many different local NWS offices across the US \citep{Curran2000}. This means that observations in different locations are specified by different people. Since there is some level of individual judgement required for creating storm event entries, this could lead in some subjectivity in the data that is regionally clusetered by reporting NWS office, depending on the specific priorities of different offices \citep{Witt1998}. Regional trends in underreporting can also result from differences in observation networks, including severe weather spotter networks \citep{Witt1998}.
 
-Some errors have been found in the database, including some incorrect property damage values in 1989 \citep{Curran2000}, ... . Another study found occasional typographical errors in event locations \citep{Witt1998}.
+Some errors have been found in the database, including some incorrect property damage values in 1989 \citep{Curran2000}, ... . Another study found occasional typographical errors in event locations \citep{Witt1998}. Another study found discrepancies in data on shether type where fatalities occurred between coded data and information in descriptive paragraphs \cite{Ashley2007}.
 
-Researchers have varied in the degree to which they cleaned or modified the databased before using it in research. A study of lightning impacts, for example, only cleaned a few incorrect damage values but otherwise used the database directly \citep{Curran2000}.
+Researchers have varied in the degree to which they cleaned or modified the databased before using it in research. A study of lightning impacts, for example, only cleaned a few incorrect damage values but otherwise used the database directly \citep{Curran2000}. A study of flood-related casualties excluded some observations (e.g., from Hurricane Katrina, because confident estimates were still lacking) prior to analysis \citep{Ashley2008flood}.
 
-Despite these limitations, the Storm Events database is still critical for research, and is often the only available resource to use to study trends in events and impacts at a large spatial and temporal scale. For example, the Storm Events database has a much larger coverage than more specialized storm events data like field project datasets (e.g., NCAR's hail project) \citep{Witt1998}.
+Despite these limitations, the Storm Events database is still critical for research, and is often the only available resource to use to study trends in events and impacts at a large spatial and temporal scale \citep{Ashley2008flood}. For example, the Storm Events database has a much larger coverage than more specialized storm events data like field project datasets (e.g., NCAR's hail project) \citep{Witt1998}.
 
 ## Literature review
 
