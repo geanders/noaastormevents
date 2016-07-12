@@ -17,18 +17,17 @@ download_storm_data <- function(year, file_type = "details"){
   path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/",
                       "csvfiles/",file_name)
 
-  if(!exists("lst")) {
+  if(!exists("noaastormevents_package_env")) {
     temp <- tempfile()
     download.file(path_name, temp)
-    lst <<- list()
-    lst[[as.character(year)]] <<-  suppressWarnings(read.csv(gzfile(temp),
-                                                             as.is = TRUE))
+    noaastormevents_package_env <<- new.env()
+    noaastormevents_package_env$lst <- list()
+    noaastormevents_package_env$lst[[as.character(year)]] <-  suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
     unlink(temp)
-  } else if(is.null(lst[[as.character(year)]])) {
+  } else if(is.null(noaastormevents_package_env$lst[[as.character(year)]])) {
     temp <- tempfile()
     download.file(path_name, temp)
-    lst[[as.character(year)]] <<-  suppressWarnings(read.csv(gzfile(temp),
-                                                             as.is = TRUE))
+    noaastormevents_package_env$lst[[as.character(year)]] <-  suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
     unlink(temp)
   }
   return(NULL)
@@ -64,16 +63,15 @@ create_storm_data <- function(date_range = NULL, storm = NULL,
     for(i in 1:length(requested_years)){
       download_storm_data(year = requested_years[i], file_type = file_type)
       if(i == 1){
-        storm_data <- lst[[as.character(requested_years[i])]]
+        storm_data <- noaastormevents_package_env$lst[[as.character(requested_years[i])]]
       } else {
-        storm_data <- rbind(storm_data,
-                            lst[[as.character(requested_years[i])]])
+        storm_data <- rbind(storm_data, noaastormevents_package_env$lst[[as.character(requested_years[i])]])
       }
     }
   } else if (!is.null(storm)){ ## Otherwise, pull for the year of the storm
     storm_year <- as.numeric(gsub("[^0-9]", "", storm))
     download_storm_data(year = storm_year, file_type = file_type)
-    storm_data <- lst[[as.character(storm_year)]]
+    storm_data <- noaastormevents_package_env$lst[[as.character(storm_year)]]
   } else {
     stop("You must specify either `date_range` or `storm`.")
   }
