@@ -91,23 +91,23 @@ map_indirect_deaths <- function(date_range = NULL, ts_only = FALSE, east_only = 
   decimal <- floor(max_value/10^(floor(log10(max_value))))
 
   if(decimal == 1) {
-    breaks <- c(0,seq(1, ceil, by = ceil/5))
+    breaks <- c(0,seq(1, ceil+1, by = ceil/5))
   } else if(decimal == 2) {
-    breaks <- c(0,seq(1, ceil, by = ceil/5))
+    breaks <- c(0,seq(1, ceil+1, by = ceil/5))
   } else if(decimal == 3) {
-    breaks <- c(0,seq(1, ceil, by = ceil/6))
+    breaks <- c(0,seq(1, ceil+1, by = ceil/6))
   } else if(decimal == 4) {
-    breaks <- c(0,seq(1, ceil, by = ceil/5))
+    breaks <- c(0,seq(1, ceil+1, by = ceil/5))
   } else if(decimal == 5) {
-    breaks <- c(0,seq(1, ceil, by = ceil/5))
+    breaks <- c(0,seq(1, ceil+1, by = ceil/5))
   } else if(decimal == 6) {
-    breaks <- c(0,seq(1, ceil, by = ceil/6))
+    breaks <- c(0,seq(1, ceil+1, by = ceil/6))
   } else if(decimal == 7) {
-    breaks <- c(0,seq(1, ceil, by = ceil/7))
+    breaks <- c(0,seq(1, ceil+1, by = ceil/7))
   } else if(decimal == 8) {
-    breaks <- c(0,seq(1, ceil, by = ceil/5))
+    breaks <- c(0,seq(1, ceil+1, by = ceil/5))
   } else if(decimal == 9) {
-    breaks <- c(0,seq(1, ceil, by = ceil/5))
+    breaks <- c(0,seq(1, ceil+1, by = ceil/5))
   }
 
   palette_name <- "Reds"
