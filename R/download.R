@@ -60,8 +60,9 @@ create_storm_data <- function(date_range = NULL, storm = NULL,
   if(!is.null(date_range)){
     date_range_years <- lubridate::year(date_range)
     requested_years <- seq(from = date_range_years[1], to = date_range_years[2])
+    lapply(requested_years, download_storm_data)
     for(i in 1:length(requested_years)){
-      download_storm_data(year = requested_years[i], file_type = file_type)
+#      download_storm_data(year = requested_years[i], file_type = file_type)
       if(i == 1){
         storm_data <- noaastormevents_package_env$lst[[as.character(requested_years[i])]]
       } else {
