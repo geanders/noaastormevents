@@ -87,9 +87,36 @@ map_indirect_injuries <- function(date_range = NULL, ts_only = FALSE, east_only 
   map_data <- dplyr::summarise(map_data, value = sum(value, na.rm = TRUE))
   map_data <-  dplyr::ungroup(map_data)
 
+  max_value <- max(map_data$value)
+  ceil <- floor(max_value/10^(floor(log10(max_value))))*10^(floor(log10(max_value)))
+  decimal <- floor(max_value/10^(floor(log10(max_value))))
 
+  if(decimal == 1) {
+    breaks <- c(0,seq(1, ceil, by = ceil/5))
+  } else if(decimal == 2) {
+    breaks <- c(0,seq(1, ceil, by = ceil/5))
+  } else if(decimal == 3) {
+    breaks <- c(0,seq(1, ceil, by = ceil/6))
+  } else if(decimal == 4) {
+    breaks <- c(0,seq(1, ceil, by = ceil/5))
+  } else if(decimal == 5) {
+    breaks <- c(0,seq(1, ceil, by = ceil/5))
+  } else if(decimal == 6) {
+    breaks <- c(0,seq(1, ceil, by = ceil/6))
+  } else if(decimal == 7) {
+    breaks <- c(0,seq(1, ceil, by = ceil/7))
+  } else if(decimal == 8) {
+    breaks <- c(0,seq(1, ceil, by = ceil/5))
+  } else if(decimal == 9) {
+    breaks <- c(0,seq(1, ceil, by = ceil/5))
+  }
 
-  breaks <- c(0,seq(1, 211, by = 30))
+  palette_name <- "Reds"
+  map_palette <- RColorBrewer::brewer.pal(length(breaks)  , name = palette_name)
+
+  if(max(map_data$value) > max(breaks)){
+    breaks <- c(breaks, max(map_data$value))
+  }
   palette_name <- "Reds"
   map_palette <- RColorBrewer::brewer.pal(length(breaks)  , name = palette_name)
 
@@ -102,7 +129,7 @@ map_indirect_injuries <- function(date_range = NULL, ts_only = FALSE, east_only 
     dplyr::mutate_(value = ~ cut(value, breaks = breaks,
                                  include.lowest = TRUE, right = F))
   level_names <- levels(map_data$value)
-  level_names[length(level_names)] <- ">201"
+  level_names[length(level_names)] <- paste0(">=", ceil)
   map_data$value <- factor(map_data$value,
                            levels = levels(map_data$value),
                            labels = level_names)

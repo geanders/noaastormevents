@@ -100,12 +100,25 @@ map_damage_crops <- function(date_range = NULL, ts_only = FALSE, east_only = TRU
   map_data <- dplyr::summarise(map_data, value = sum(value, na.rm = TRUE))
   map_data <-  dplyr::ungroup(map_data)
 
-  map_data$value <- ifelse(map_data$value == 0, NA, map_data$value)
+  map_data$value <- ifelse(is.na(map_data$value), 0, map_data$value)
 
+  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000)
+  palette_name <- "Reds"
+  map_palette <- RColorBrewer::brewer.pal(length(breaks)  , name = palette_name)
 
-  exposure_palette <- RColorBrewer::brewer.pal((9) -2 , name = "Reds")
+  if(max(map_data$value) > max(breaks)){
+    breaks <- c(breaks, max(map_data$value))
+  }
 
+  map_palette[1] <- "#ffffff"
+  map_data <- map_data %>%
+    dplyr::mutate_(value = ~ cut(value, breaks = breaks,
+                                 include.lowest = TRUE, right = F))
+  level_names <- levels(map_data$value)
+  level_names[length(level_names)] <- paste0(">=", 1000000000)
+  map_data$value <- factor(map_data$value, levels = levels(map_data$value), labels = level_names)
   out <- choroplethr::CountyChoropleth$new(map_data)
+  out$ggplot_scale <- ggplot2::scale_fill_manual(name = "# of Crops damaged", values = map_palette)
 
   if(east_only){
     out$set_zoom(eastern_states)
@@ -115,8 +128,7 @@ map_damage_crops <- function(date_range = NULL, ts_only = FALSE, east_only = TRU
     out$set_zoom(continental_states)
   }
 
-  out$ggplot_scale <- ggplot2::scale_fill_manual(name = "Crops Damaged",
-                                                 values = exposure_palette)
+
 
 
   if(add_tracks){

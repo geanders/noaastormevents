@@ -74,10 +74,7 @@ find_damage_property <- function(date_range = NULL, ts_only = FALSE,
 #' @export
 map_damage_property <- function(date_range = NULL, ts_only = FALSE,
                                 east_only = TRUE, dist_limit = NULL,
-                                storm = NULL, add_tracks = FALSE)
-
-{
-
+                                storm = NULL, add_tracks = FALSE) {
   data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
                       "district of columbia", "florida", "georgia", "illinois",
@@ -108,14 +105,28 @@ map_damage_property <- function(date_range = NULL, ts_only = FALSE,
   map_data <- dplyr::summarise(map_data, value = sum(value, na.rm = TRUE))
   map_data <-  dplyr::ungroup(map_data)
 
-  map_data$value <- ifelse(map_data$value == 0, NA, map_data$value)
+  map_data$value <- ifelse(is.na(map_data$value), 0, map_data$value)
 
 
-  exposure_palette <- RColorBrewer::brewer.pal((9) -2 , name = "Reds")
+  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000)
+  palette_name <- "Reds"
+  map_palette <- RColorBrewer::brewer.pal(length(breaks)  , name = palette_name)
 
+  if(max(map_data$value) > max(breaks)){
+    breaks <- c(breaks, max(map_data$value))
+  }
+
+  map_palette[1] <- "#ffffff"
+  map_data <- map_data %>%
+    dplyr::mutate_(value = ~ cut(value, breaks = breaks,
+                                 include.lowest = TRUE, right = F))
+  level_names <- levels(map_data$value)
+  level_names[length(level_names)] <- paste0(">=", 1000000000)
+  map_data$value <- factor(map_data$value, levels = levels(map_data$value), labels = level_names)
   out <- choroplethr::CountyChoropleth$new(map_data)
+  out$ggplot_scale <- ggplot2::scale_fill_manual(name = "# of Properties Damaged", values = map_palette)
 
-  if(east_only){
+   if(east_only){
     out$set_zoom(eastern_states)
   } else {
     all_states <- out$get_zoom()
@@ -123,8 +134,6 @@ map_damage_property <- function(date_range = NULL, ts_only = FALSE,
     out$set_zoom(continental_states)
   }
 
-  out$ggplot_scale <- ggplot2::scale_fill_manual(name = "Property Damaged",
-                                                 values = exposure_palette)
 
 
   if(add_tracks){
