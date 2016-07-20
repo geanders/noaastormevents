@@ -25,7 +25,8 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
     tidyr::unite_("end_date", c("END_YEARMONTH", "END_DAY"), sep = "") %>%
     tidyr::unite_("fips", c("STATE_FIPS", "CZ_FIPS"), sep = "") %>%
     dplyr::mutate(begin_date = lubridate::ymd(begin_date),
-                  end_date = lubridate::ymd(end_date))
+                  end_date = lubridate::ymd(end_date)) %>%
+    dplyr::mutate(fips = sprintf("%05s", fips))
 
   # If a date range in include, filter only on that for date
   if(!is.null(date_range)){
@@ -38,9 +39,9 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
       dplyr::filter_(~ storm_id == storm) %>%
       dplyr::mutate(closest_date = lubridate::ymd(closest_date))
    storm_closest_interval <- lubridate::interval(min(distance_df$closest_date) -
-                                                   ddays(2),
+                                                   lubridate::ddays(2),
                                                  max(distance_df$closest_date) +
-                                                   ddays(2))
+                                                   lubridate::ddays(2))
    storm_data <- storm_data %>%
      dplyr::filter(!is.na(begin_date) &
                      begin_date %within% storm_closest_interval)
