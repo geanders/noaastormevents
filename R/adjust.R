@@ -18,6 +18,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
   # A bit more general cleaning of the data
   storm_data <- storm_data %>%
     dplyr::tbl_df() %>%
+    dplyr::filter(CZ_TYPE == "C") %>%
     dplyr::mutate(BEGIN_DAY = sprintf("%02d", BEGIN_DAY),
                   END_DAY = sprintf("%02d", END_DAY),
                   CZ_FIPS = sprintf("%03d", CZ_FIPS)) %>%

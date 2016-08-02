@@ -25,7 +25,7 @@ find_events <- function(date_range = NULL, ts_only = FALSE,
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
     dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY,
-                  STATE_FIPS, CZ_FIPS, EVENT_TYPE) %>%
+                  STATE_FIPS, CZ_FIPS, CZ_TYPE, EVENT_TYPE) %>%
     dplyr::rename(type = EVENT_TYPE) %>%
     adjust_storm_data(date_range = date_range, ts_only = ts_only,
                       dist_limit = dist_limit, storm = storm)
