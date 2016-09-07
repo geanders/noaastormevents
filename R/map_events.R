@@ -45,7 +45,7 @@ find_events <- function(date_range = NULL, ts_only = FALSE,
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
-#' @examples
+#' @examples \dontrun{
 #' map_events(date_range = c("1999-10-15", "1999-10-20"))
 #' map_events(date_range = c("1999-10-16", "1999-10-18"),
 #'    east_only = FALSE, ts_only = TRUE)
@@ -54,6 +54,7 @@ find_events <- function(date_range = NULL, ts_only = FALSE,
 #' map_events(date_range = c("1999-10-16", "1999-10-18"),
 #'    dist_limit = 100, storm = "Floyd-1999",
 #'    add_tracks = TRUE, plot_type = "number of events")
+#' }
 #'
 #' @importFrom dplyr %>%
 #'

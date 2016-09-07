@@ -40,6 +40,7 @@ map_damage_crops(date_range = c("1999-10-15", "1999-10-20"),
 map_damage_crops(date_range = c("1999-10-15", "1999-10-20"))
 map_damage_crops(date_range = c("1999-10-15", "1999-10-20"),
    dist_limit = 100, storm = "Floyd-1999", add_tracks = TRUE)
+map_damage_crops(storm = "Floyd-1999", add_tracks = TRUE)
 
 }
 

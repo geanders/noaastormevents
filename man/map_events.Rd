@@ -6,7 +6,7 @@
 \usage{
 map_events(date_range = NULL, ts_only = FALSE, east_only = TRUE,
   plot_type = "any events", dist_limit = NULL, storm = NULL,
-  add_tracks = FALSE)
+  add_tracks = FALSE, keep.data = FALSE)
 }
 \arguments{
 \item{date_range}{A character vector of length two with the start and end

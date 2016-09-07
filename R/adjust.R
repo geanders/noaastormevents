@@ -22,8 +22,8 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
   # A bit more general cleaning of the data
   storm_data <- storm_data %>%
     dplyr::tbl_df() %>%
-    dplyr::mutate(BEGIN_DAY = sprintf("%02d", BEGIN_DAY),
-                  END_DAY = sprintf("%02d", END_DAY)) %>%
+    dplyr::mutate_(BEGIN_DAY = ~ sprintf("%02d", BEGIN_DAY),
+                  END_DAY = ~ sprintf("%02d", END_DAY)) %>%
     tidyr::unite_("begin_date", c("BEGIN_YEARMONTH", "BEGIN_DAY"), sep = "") %>%
     tidyr::unite_("end_date", c("END_YEARMONTH", "END_DAY"), sep = "") %>%
     tidyr::unite_("state_county_name", c("STATE", "CZ_NAME"), sep = " ") %>%
@@ -31,7 +31,6 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
     dplyr::left_join(county.regions, by = "state_county_name") %>%
     dplyr::mutate(begin_date = lubridate::ymd(begin_date),
                   end_date = lubridate::ymd(end_date)) %>%
-    dplyr::filter(!is.na(region)) %>%
     dplyr::rename(fips = region) %>%
     dplyr::mutate(fips = sprintf("%05s", fips))
 
