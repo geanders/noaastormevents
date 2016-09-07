@@ -23,8 +23,8 @@ find_damage_crops <- function(date_range = NULL, ts_only = FALSE,
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY,
-                  STATE_FIPS, CZ_FIPS, CZ_TYPE, EVENT_TYPE, DAMAGE_CROPS) %>%
+    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY, STATE,
+                  CZ_NAME, EVENT_TYPE, DAMAGE_CROPS) %>%
     dplyr::rename(type = EVENT_TYPE,
                   damage_crops = DAMAGE_CROPS) %>%
     adjust_storm_data(date_range = date_range, ts_only = ts_only,

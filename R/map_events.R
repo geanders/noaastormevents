@@ -24,8 +24,8 @@ find_events <- function(date_range = NULL, ts_only = FALSE,
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY,
-                  STATE_FIPS, CZ_FIPS, CZ_TYPE, EVENT_TYPE) %>%
+    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY, STATE,
+                  CZ_NAME, EVENT_TYPE) %>%
     dplyr::rename(type = EVENT_TYPE) %>%
     adjust_storm_data(date_range = date_range, ts_only = ts_only,
                       dist_limit = dist_limit, storm = storm)
@@ -61,7 +61,7 @@ find_events <- function(date_range = NULL, ts_only = FALSE,
 map_events <- function(date_range = NULL, ts_only = FALSE,
                        east_only = TRUE,
                        plot_type = "any events", dist_limit = NULL,
-                       storm = NULL, add_tracks = FALSE){
+                       storm = NULL, add_tracks = FALSE, keep.data = FALSE){
 
   data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",

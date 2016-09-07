@@ -15,19 +15,26 @@
 adjust_storm_data <- function(storm_data, date_range = NULL,
                         ts_only = FALSE, dist_limit = NULL, storm = NULL){
 
+  data(county.regions, package = "choroplethrMaps")
+  county.regions <- county.regions %>%
+    tidyr::unite_("state_county_name", c("state.name", "county.name"), sep = " ")
+
   # A bit more general cleaning of the data
   storm_data <- storm_data %>%
     dplyr::tbl_df() %>%
-    dplyr::filter(CZ_TYPE == "C") %>%
     dplyr::mutate(BEGIN_DAY = sprintf("%02d", BEGIN_DAY),
-                  END_DAY = sprintf("%02d", END_DAY),
-                  CZ_FIPS = sprintf("%03d", CZ_FIPS)) %>%
+                  END_DAY = sprintf("%02d", END_DAY)) %>%
     tidyr::unite_("begin_date", c("BEGIN_YEARMONTH", "BEGIN_DAY"), sep = "") %>%
     tidyr::unite_("end_date", c("END_YEARMONTH", "END_DAY"), sep = "") %>%
-    tidyr::unite_("fips", c("STATE_FIPS", "CZ_FIPS"), sep = "") %>%
+    tidyr::unite_("state_county_name", c("STATE", "CZ_NAME"), sep = " ") %>%
+    dplyr::mutate(state_county_name = tolower(state_county_name)) %>%
+    dplyr::left_join(county.regions, by = "state_county_name") %>%
     dplyr::mutate(begin_date = lubridate::ymd(begin_date),
                   end_date = lubridate::ymd(end_date)) %>%
+    dplyr::filter(!is.na(region)) %>%
+    dplyr::rename(fips = region) %>%
     dplyr::mutate(fips = sprintf("%05s", fips))
+
 
   # If a date range in include, filter only on that for date
   if(!is.null(date_range)){
