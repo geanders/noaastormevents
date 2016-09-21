@@ -27,10 +27,10 @@ find_damage_property <- function(date_range = NULL, ts_only = FALSE,
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select(BEGIN_YEARMONTH, BEGIN_DAY, END_YEARMONTH, END_DAY, STATE,
-                  CZ_NAME, EVENT_TYPE, DAMAGE_PROPERTY) %>%
-    dplyr::rename(type = EVENT_TYPE,
-                  damage_property = DAMAGE_PROPERTY) %>%
+    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE,
+                  ~ CZ_NAME, ~ EVENT_TYPE, ~ DAMAGE_PROPERTY) %>%
+    dplyr::rename_(type = ~ EVENT_TYPE,
+                  damage_property = ~ DAMAGE_PROPERTY) %>%
     adjust_storm_data(date_range = date_range, ts_only = ts_only,
                       dist_limit = dist_limit, storm = storm)
 
@@ -41,12 +41,12 @@ find_damage_property <- function(date_range = NULL, ts_only = FALSE,
                             stringsAsFactors = FALSE)
 
   storm_data <- storm_data %>%
-    dplyr::mutate(num_prop = stringr::str_extract(damage_property, "[0-9]+"),
-                  num_prop = as.numeric(num_prop),
-                  letter_prop = stringr::str_extract(damage_property, "[A-Z]+")) %>%
+    dplyr::mutate_(num_prop = ~ stringr::str_extract(damage_property, "[0-9]+"),
+                  num_prop = ~ as.numeric(num_prop),
+                  letter_prop = ~ stringr::str_extract(damage_property, "[A-Z]+")) %>%
     dplyr::left_join(value_table, by = "letter_prop") %>%
-    dplyr::mutate(damage_property = num_prop * value_prop) %>%
-    dplyr::select(-num_prop, -letter_prop, -value_prop)
+    dplyr::mutate_(damage_property = ~ num_prop * value_prop) %>%
+    dplyr::select_(~ -num_prop, ~ -letter_prop, ~ -value_prop)
 
   return(storm_data)
 }
@@ -89,20 +89,20 @@ map_damage_property <- function(date_range = NULL, ts_only = FALSE,
   map_data <- find_damage_property(date_range = date_range,
                                 storm = storm, dist_limit = dist_limit,
                                 ts_only = ts_only) %>%
-    dplyr::mutate(fips = as.numeric(fips)) %>%
-    dplyr::rename(region = fips, value = damage_property) %>%
+    dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
+    dplyr::rename_(region = ~ fips, value = ~ damage_property) %>%
     dplyr::full_join(county.regions, by = "region") %>%
-    dplyr::filter(!is.na(county.name))
+    dplyr::filter_(~ !is.na(county.name))
 
   if(east_only){
-    map_data <- dplyr::filter(map_data, state.name %in% eastern_states)
+    map_data <- dplyr::filter_(map_data, ~ state.name %in% eastern_states)
   }
 
-  map_data <- map_data %>% dplyr::select(region, value)
+  map_data <- map_data %>% dplyr::select_(region, value)
   map_data$value <- as.numeric(as.character(map_data$value))
 
-  map_data <- map_data %>% dplyr::group_by(region)
-  map_data <- dplyr::summarise(map_data, value = sum(value, na.rm = TRUE))
+  map_data <- map_data %>% dplyr::group_by_(~ region)
+  map_data <- dplyr::summarise_(map_data, ~ value = sum(value, na.rm = TRUE))
   map_data <-  dplyr::ungroup(map_data)
 
   map_data$value <- ifelse(is.na(map_data$value), 0, map_data$value)
