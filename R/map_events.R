@@ -6,12 +6,13 @@
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
-#' @examples
+#' @examples \dontrun{
+#' # Events by date range
 #' find_events(date_range = c("1999-10-15", "1999-10-20"))
 #'
-#' find_events(date_range = c("1999-10-16", "1999-10-18"),
-#'    storm = "Floyd-1999", dist_limit = 200)
-#'
+#' # Events within a certain distance and time range of a tropical storm
+#' find_events(storm = "Floyd-1999", dist_limit = 200)
+#'}
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
 #'
@@ -23,7 +24,7 @@ find_events <- function(date_range = NULL, ts_only = FALSE,
   date_range <- processed_inputs$date_range
   storm <- processed_inputs$storm
 
-  storm_data00 <- create_storm_data(date_range = date_range,  storm = storm) %>%
+  storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
     dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE,
                   ~ CZ_NAME, ~ EVENT_TYPE) %>%
     dplyr::rename_(type = ~ EVENT_TYPE) %>%
