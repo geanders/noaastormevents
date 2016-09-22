@@ -35,6 +35,7 @@ This function maps all storm events listed with a starting date within a
 specified date range.
 }
 \examples{
+\dontrun{
 map_events(date_range = c("1999-10-15", "1999-10-20"))
 map_events(date_range = c("1999-10-16", "1999-10-18"),
    east_only = FALSE, ts_only = TRUE)
@@ -43,6 +44,7 @@ map_events(date_range = c("1999-10-16", "1999-10-18"),
 map_events(date_range = c("1999-10-16", "1999-10-18"),
    dist_limit = 100, storm = "Floyd-1999",
    add_tracks = TRUE, plot_type = "number of events")
+}
 
 }
 
