@@ -20,7 +20,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
     tidyr::unite_("state_county_name", c("state.name", "county.name"), sep = " ")
 
   # A bit more general cleaning of the data
-  storm_data <- storm_data00 %>%
+  storm_data <- storm_data %>%
     dplyr::tbl_df() %>%
     dplyr::mutate_(BEGIN_DAY = ~ sprintf("%02d", BEGIN_DAY),
                   END_DAY = ~ sprintf("%02d", END_DAY)) %>%
@@ -61,7 +61,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
                                                               date_range[2]))
   } else { ## Otherwise, use the storm dates from "closest_dates" to pick dates
     distance_df <- hurricaneexposuredata::closest_dist %>%
-      dplyr::filter_(storm_id == storm) %>%
+      dplyr::filter_(~ storm_id == storm) %>%
       dplyr::mutate_(closest_date = ~ lubridate::ymd(closest_date))
    storm_closest_interval <- lubridate::interval(min(distance_df$closest_date) -
                                                    lubridate::ddays(2),
@@ -78,7 +78,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
       stop("To use `dist_limit`, `storm` must be specified.")
     }
     distance_df <- hurricaneexposuredata::closest_dist %>%
-      dplyr::filter_(storm_id == ~ storm & storm_dist <= dist_limit)
+      dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
     storm_data <- storm_data %>%
       dplyr::filter_(~ fips %in% distance_df$fips)
   }
