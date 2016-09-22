@@ -25,38 +25,115 @@ Here are some examples:
 Mapping all counties that had at least one event over a date range:
 
 ``` r
-map_events(date_range = c("1999-10-15", "1999-10-20"))
+map_events(date_range = c("1999-09-14", "1999-09-18"))
 ```
 
 ![](README-unnamed-chunk-3-1.png)
 
+Creating a dataframe of all events within a date range:
+
+``` r
+oct_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
+head(oct_1999_events)
+#> # A tibble: 6 × 5
+#>   begin_date   end_date  fips CZ_TYPE        type
+#>       <date>     <date> <chr>   <chr>       <chr>
+#> 1 1999-09-16 1999-09-17 25011       C  Heavy Rain
+#> 2 1999-09-16 1999-09-17 25001       C  Heavy Rain
+#> 3 1999-09-16 1999-09-17 25015       C  Heavy Rain
+#> 4 1999-09-17 1999-09-17 99113       C       Flood
+#> 5 1999-09-18 1999-09-18 12081       C  Waterspout
+#> 6 1999-09-16 1999-09-16 24025       C Flash Flood
+```
+
+Creating a dataframe of all events within a certain time and distance from a hurricane track:
+
+``` r
+floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 200)
+head(floyd_events)
+#> # A tibble: 6 × 5
+#>   begin_date   end_date  fips CZ_TYPE        type
+#>       <date>     <date> <chr>   <chr>       <chr>
+#> 1 1999-09-16 1999-09-17 25011       C  Heavy Rain
+#> 2 1999-09-16 1999-09-17 25001       C  Heavy Rain
+#> 3 1999-09-16 1999-09-17 25015       C  Heavy Rain
+#> 4 1999-09-16 1999-09-16 24025       C Flash Flood
+#> 5 1999-09-16 1999-09-16 24005       C Flash Flood
+#> 6 1999-09-16 1999-09-16 24510       C Flash Flood
+```
+
+Here is an example summary of this data:
+
+``` r
+floyd_events %>%
+  group_by(type) %>%
+  summarize(n = n()) %>%
+  arrange(desc(n)) %>%
+  knitr::kable(colnames = c("Event type", "Number of events"),
+               caption = "NOAA Storm Events within 200 km and [x] days of Hurricane Floyd.")
+```
+
+| type              |    n|
+|:------------------|----:|
+| Flash Flood       |  207|
+| Heavy Rain        |   26|
+| Tornado           |   17|
+| Storm Surge/Tide  |    5|
+| Funnel Cloud      |    2|
+| Thunderstorm Wind |    2|
+| Waterspout        |    1|
+
+Here is another example summary:
+
+``` r
+floyd_events %>%
+  group_by(fips) %>%
+  summarize(n = n(),
+            events = paste(type, collapse = ", ")) %>%
+  arrange(desc(n)) %>%
+  slice(1:10) %>%
+  knitr::kable()
+```
+
+| fips  |    n| events                                                                     |
+|:------|----:|:---------------------------------------------------------------------------|
+| 37137 |    7| Flash Flood, Tornado, Tornado, Funnel Cloud, Tornado, Tornado, Flash Flood |
+| 37031 |    6| Flash Flood, Tornado, Tornado, Flash Flood, Tornado, Thunderstorm Wind     |
+| 09003 |    4| Flash Flood, Flash Flood, Heavy Rain, Flash Flood                          |
+| 37133 |    4| Flash Flood, Flash Flood, Funnel Cloud, Tornado                            |
+| 37013 |    3| Flash Flood, Waterspout, Flash Flood                                       |
+| 37049 |    3| Flash Flood, Flash Flood, Tornado                                          |
+| 37117 |    3| Flash Flood, Flash Flood, Flash Flood                                      |
+| 37129 |    3| Tornado, Tornado, Flash Flood                                              |
+| 37147 |    3| Flash Flood, Tornado, Flash Flood                                          |
+| 37187 |    3| Flash Flood, Flash Flood, Tornado                                          |
+
 Mapping any county with at least one tropical storm-related event, not restricting to only the eastern half of the country:
 
 ``` r
-map_events(date_range = c("1999-10-16", "1999-10-18"),
-    east_only = FALSE, ts_only = TRUE)
+map_events(storm = "Floyd-1999", dist_limit = 200,
+           east_only = FALSE, ts_only = TRUE)
 ```
 
-![](README-unnamed-chunk-4-1.png)
+![](README-unnamed-chunk-8-1.png)
 
 Mapping the number of events in each county within a certain date range:
 
 ``` r
-map_events(date_range = c("1999-10-16", "1999-10-18"),
-    plot_type = "number of events")
+map_events(storm = "Floyd-1999", dist_limit = 200,
+           plot_type = "number of events")
 ```
 
-![](README-unnamed-chunk-5-1.png)
+![](README-unnamed-chunk-9-1.png)
 
 Mapping the number of events, but only counting counties that were within 100 kilometers of the track of Hurricane Floyd in 1999, with the hurricane's track added to the plot:
 
 ``` r
 map_events(storm = "Floyd-1999", dist_limit = 100, 
-           date_range = c("1999-10-16", "1999-10-18"),
            add_tracks = TRUE, plot_type = "number of events")
 ```
 
-![](README-unnamed-chunk-6-1.png)
+![](README-unnamed-chunk-10-1.png)
 
 Mapping the number of all events that happened under the influence of Hurricane Floyd in 1999, with the hurricane's track added to the plot::
 
@@ -65,7 +142,7 @@ map_events(storm = "Floyd-1999", dist_limit = 100, add_tracks = TRUE,
            plot_type = "number of events")
 ```
 
-![](README-unnamed-chunk-7-1.png)
+![](README-unnamed-chunk-11-1.png)
 
 Details of how the package works
 --------------------------------
