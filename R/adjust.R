@@ -62,7 +62,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
   } else { ## Otherwise, use the storm dates from "closest_dates" to pick dates
     distance_df <- hurricaneexposuredata::closest_dist %>%
       dplyr::filter_(storm_id == storm) %>%
-      dplyr::mutate_(~ closest_date = lubridate::ymd(closest_date))
+      dplyr::mutate_(closest_date = ~ lubridate::ymd(closest_date))
    storm_closest_interval <- lubridate::interval(min(distance_df$closest_date) -
                                                    lubridate::ddays(2),
                                                  max(distance_df$closest_date) +

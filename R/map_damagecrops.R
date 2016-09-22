@@ -97,7 +97,7 @@ map_damage_crops <- function(date_range = NULL, ts_only = FALSE, east_only = TRU
   map_data$value <- as.numeric(as.character(map_data$value))
 
   map_data <- map_data %>% dplyr::group_by_(~ region)
-  map_data <- dplyr::summarise_(map_data, ~ value = sum(value, na.rm = TRUE))
+  map_data <- dplyr::summarise_(map_data, value = ~ sum(value, na.rm = TRUE))
   map_data <-  dplyr::ungroup(map_data)
 
   map_data$value <- ifelse(is.na(map_data$value), 0, map_data$value)
