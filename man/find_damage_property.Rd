@@ -4,15 +4,14 @@
 \alias{find_damage_property}
 \title{Find all damaged property listings for date range}
 \usage{
-find_damage_property(date_range = NULL, ts_only = FALSE,
+find_damage_property(date_range = NULL, event_type = NULL,
   dist_limit = NULL, storm = NULL)
 }
 \arguments{
 \item{date_range}{A character vector of length two with the start and end
 dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 
-\item{ts_only}{Specifies if only storm events related to tropical storms
-should be included.}
+\item{event_type}{Specifies the types of storm events should be included.}
 
 \item{dist_limit}{If selected, the distance (in kilometers) that a county
 must be from the storm's path to be included.}
@@ -28,7 +27,8 @@ This function will find all of the property damaged in the US for a specified da
 range.
 }
 \examples{
-find_damage_property(date_range = c("1999-10-15", "1999-10-20"))
+\dontrun{
+find_damage_property(date_range = c("1999-09-01", "1999-09-30"))
 
 find_damage_property(date_range = c("1999-10-16", "1999-10-18"),
    storm = "Floyd-1999", dist_limit = 200)
@@ -36,6 +36,7 @@ find_damage_property(date_range = c("1999-10-16", "1999-10-18"),
 find_damage_property(storm = "Floyd-1999")
 
 find_damage_property(storm = "Floyd-1999", dist_limit = 20)
+}
 
 }
 

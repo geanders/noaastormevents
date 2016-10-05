@@ -4,15 +4,14 @@
 \alias{map_direct_deaths}
 \title{Map direct deaths for a date range}
 \usage{
-map_direct_deaths(date_range = NULL, ts_only = FALSE, east_only = TRUE,
+map_direct_deaths(date_range = NULL, event_type = NULL, east_only = TRUE,
   dist_limit = NULL, storm = NULL, add_tracks = FALSE)
 }
 \arguments{
 \item{date_range}{A character vector of length two with the start and end
 dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 
-\item{ts_only}{Specifies if only storm events related to tropical storms
-should be included.}
+\item{event_type}{Specifies the types of storm events should be included.}
 
 \item{east_only}{A logical value specifying whether to restrict the map to
 the eastern half of the United States (default is TRUE).}
@@ -34,14 +33,16 @@ This function maps all direct deaths listed with a starting date within a
 specified date range.
 }
 \examples{
-map_direct_deaths(date_range = c("1999-10-15", "1999-10-20"))
-map_direct_deaths(date_range = c("1999-10-16", "1999-10-18"),
-   east_only = FALSE, ts_only = TRUE)
-map_direct_deaths(date_range = c("1999-10-16", "1999-10-18"))
-map_direct_deaths(date_range = c("1999-10-16", "1999-10-18"),
+\dontrun{
+map_direct_deaths(date_range = c("1999-09-01", "1999-09-30"))
+map_direct_deaths(date_range = c("1999-09-20", "1999-09-30"),
+   east_only = FALSE, event_type = c("Flood","Flash Flood"))
+map_direct_deaths(date_range = c("1999-09-01", "1999-09-30"))
+map_direct_deaths(date_range = c("1999-09-01", "1999-09-30"),
    dist_limit = 100, storm = "Floyd-1999",
     add_tracks = TRUE)
 map_direct_deaths(storm = "Floyd-1999", dist_limit = 250, add_tracks = TRUE)
+}
 
 }
 

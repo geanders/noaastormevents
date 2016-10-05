@@ -4,17 +4,16 @@
 \alias{adjust_storm_data}
 \title{Adjust storm data}
 \usage{
-adjust_storm_data(storm_data, date_range = NULL, ts_only = FALSE,
+adjust_storm_data(storm_data, date_range = NULL, event_type = NULL,
   dist_limit = NULL, storm = NULL)
 }
 \arguments{
-\item{storm_data}{A dataset of storm data}
+\item{storm_data}{A dataset of storm data.}
 
 \item{date_range}{A character vector of length two with the start and end
 dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 
-\item{ts_only}{Specifies if only storm events related to tropical storms
-should be included.}
+\item{event_type}{Specifies the types of storm events should be included.}
 
 \item{dist_limit}{If selected, the distance (in kilometers) that a county
 must be from the storm's path to be included.}
