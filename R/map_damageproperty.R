@@ -6,8 +6,8 @@
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
-#' @examples
-#' find_damage_property(date_range = c("1999-10-15", "1999-10-20"))
+#' @examples \dontrun{
+#' find_damage_property(date_range = c("1999-09-01", "1999-09-30"))
 #'
 #' find_damage_property(date_range = c("1999-10-16", "1999-10-18"),
 #'    storm = "Floyd-1999", dist_limit = 200)
@@ -15,11 +15,12 @@
 #' find_damage_property(storm = "Floyd-1999")
 #'
 #' find_damage_property(storm = "Floyd-1999", dist_limit = 20)
+#' }
 #'
 #' @importFrom dplyr %>%
 #'
 #' @export
-find_damage_property <- function(date_range = NULL, ts_only = FALSE,
+find_damage_property <- function(date_range = NULL, event_type = NULL,
                               dist_limit = NULL, storm = NULL){
 
   processed_inputs <- process_input_args(date_range = date_range, storm = storm)
@@ -27,11 +28,11 @@ find_damage_property <- function(date_range = NULL, ts_only = FALSE,
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE,
-                  ~ CZ_NAME, ~ EVENT_TYPE, ~ DAMAGE_PROPERTY) %>%
+    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE, ~ CZ_TYPE,
+                   ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ DAMAGE_PROPERTY) %>%
     dplyr::rename_(type = ~ EVENT_TYPE,
                   damage_property = ~ DAMAGE_PROPERTY) %>%
-    adjust_storm_data(date_range = date_range, ts_only = ts_only,
+    adjust_storm_data(date_range = date_range, event_type = event_type,
                       dist_limit = dist_limit, storm = storm)
 
 
@@ -61,10 +62,10 @@ find_damage_property <- function(date_range = NULL, ts_only = FALSE,
 #' @inheritParams adjust_storm_data
 #'
 #' @examples
-#' map_damage_property(date_range = c("1999-10-15", "1999-10-20"))
-#' map_damage_property(date_range = c("1999-10-16", "1999-10-18"),
-#'    east_only = FALSE, ts_only = TRUE)
-#' map_damage_property(date_range = c("1999-10-16", "1999-10-22"))
+#' map_damage_property(date_range = c("1999-09-10", "1999-09-30"))
+#' map_damage_property(date_range = c("1999-09-01", "1999-09-30"),
+#'    east_only = FALSE, event_type = c("Flood","Flash Flood"))
+#' map_damage_property(date_range = c("1999-09-10", "1999-09-30"))
 #' map_damage_property(storm = "Floyd-1999")
 #' map_damage_property(dist_limit = 100, storm = "Floyd-1999",
 #'                     add_tracks = TRUE)
@@ -72,7 +73,7 @@ find_damage_property <- function(date_range = NULL, ts_only = FALSE,
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_damage_property <- function(date_range = NULL, ts_only = FALSE,
+map_damage_property <- function(date_range = NULL, event_type = NULL,
                                 east_only = TRUE, dist_limit = NULL,
                                 storm = NULL, add_tracks = FALSE) {
   data(county.regions, package = "choroplethrMaps")
@@ -88,7 +89,7 @@ map_damage_property <- function(date_range = NULL, ts_only = FALSE,
 
   map_data <- find_damage_property(date_range = date_range,
                                 storm = storm, dist_limit = dist_limit,
-                                ts_only = ts_only) %>%
+                                event_type = event_type) %>%
     dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
     dplyr::rename_(region = ~ fips, value = ~ damage_property) %>%
     dplyr::full_join(county.regions, by = "region") %>%
@@ -98,12 +99,12 @@ map_damage_property <- function(date_range = NULL, ts_only = FALSE,
     map_data <- dplyr::filter_(map_data, ~ state.name %in% eastern_states)
   }
 
-  map_data <- map_data %>% dplyr::select_(region, value)
+  map_data <- map_data %>% dplyr::select_(~ region, ~ value)
   map_data$value <- as.numeric(as.character(map_data$value))
 
   map_data <- map_data %>% dplyr::group_by_(~ region)
   map_data <- dplyr::summarise_(map_data, value = ~ sum(value, na.rm = TRUE))
-  map_data <-  dplyr::ungroup(map_data)
+  map_data <- dplyr::ungroup(map_data)
 
   map_data$value <- ifelse(is.na(map_data$value), 0, map_data$value)
 

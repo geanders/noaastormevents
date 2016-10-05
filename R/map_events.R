@@ -8,7 +8,7 @@
 #'
 #' @examples \dontrun{
 #' # Events by date range
-#' find_events(date_range = c("1999-10-15", "1999-10-20"))
+#' find_events(date_range = c("1999-09-10", "1999-09-30"))
 #'
 #' # Events within a certain distance and time range of a tropical storm
 #' find_events(storm = "Floyd-1999", dist_limit = 200)
@@ -17,7 +17,7 @@
 #' @importFrom lubridate %within%
 #'
 #' @export
-find_events <- function(date_range = NULL, ts_only = FALSE,
+find_events <- function(date_range = NULL, event_type = NULL,
                         dist_limit = NULL, storm = NULL){
 
   processed_inputs <- process_input_args(date_range = date_range, storm = storm)
@@ -25,10 +25,10 @@ find_events <- function(date_range = NULL, ts_only = FALSE,
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE,
-                  ~ CZ_NAME, ~ EVENT_TYPE) %>%
+    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE, ~ CZ_TYPE,
+                  ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS) %>%
     dplyr::rename_(type = ~ EVENT_TYPE) %>%
-    adjust_storm_data(date_range = date_range, ts_only = ts_only,
+    adjust_storm_data(date_range = date_range, event_type = event_type,
                       dist_limit = dist_limit, storm = storm)
 
   return(storm_data)
@@ -47,12 +47,12 @@ find_events <- function(date_range = NULL, ts_only = FALSE,
 #' @inheritParams adjust_storm_data
 #'
 #' @examples \dontrun{
-#' map_events(date_range = c("1999-10-15", "1999-10-20"))
-#' map_events(date_range = c("1999-10-16", "1999-10-18"),
-#'    east_only = FALSE, ts_only = TRUE)
-#' map_events(date_range = c("1999-10-16", "1999-10-18"),
+#' map_events(date_range = c("1999-09-10", "1999-09-30"))
+#' map_events(date_range = c("1999-09-01", "1999-09-30"),
+#'    east_only = FALSE, event_type = c("Flood","Flash Flood"))
+#' map_events(date_range = c("1999-09-10", "1999-09-30"),
 #'    plot_type = "number of events")
-#' map_events(date_range = c("1999-10-16", "1999-10-18"),
+#' map_events(date_range = c("1999-09-10", "1999-09-30"),
 #'    dist_limit = 100, storm = "Floyd-1999",
 #'    add_tracks = TRUE, plot_type = "number of events")
 #' }
@@ -60,7 +60,7 @@ find_events <- function(date_range = NULL, ts_only = FALSE,
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_events <- function(date_range = NULL, ts_only = FALSE,
+map_events <- function(date_range = NULL, event_type = NULL,
                        east_only = TRUE,
                        plot_type = "any events", dist_limit = NULL,
                        storm = NULL, add_tracks = FALSE, keep.data = FALSE){
@@ -77,9 +77,9 @@ map_events <- function(date_range = NULL, ts_only = FALSE,
                       "west virginia", "wisconsin")
 
   map_data <- find_events(date_range = date_range, storm = storm,
-                          dist_limit = dist_limit, ts_only = ts_only) %>%
+                          dist_limit = dist_limit, event_type = event_type) %>%
     dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
-    dplyr::rename_(region = ~ fips, value = type) %>%
+    dplyr::rename_(region = ~ fips, value = ~ type) %>%
     dplyr::full_join(county.regions, by = "region") %>%
     dplyr::filter_(~ !is.na(county.name))
 

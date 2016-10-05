@@ -6,29 +6,30 @@
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
-#' @examples
-#' find_indirect_deaths(date_range = c("1999-10-15", "1999-10-20"))
+#' @examples \dontrun{
+#' find_indirect_deaths(date_range = c("1999-09-10", "1999-09-30"))
 #'
-#' find_indirect_deaths(date_range = c("1999-10-16", "1999-10-18"),
+#' find_indirect_deaths(date_range = c("1999-09-10", "1999-09-30"),
 #'    storm = "Floyd-1999", dist_limit = 200)
+#' }
 #'
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
 #'
 #' @export
-find_indirect_deaths <- function(date_range = NULL, ts_only = FALSE,
-                               dist_limit = NULL, storm = NULL){
+find_indirect_deaths <- function(date_range = NULL, event_type = NULL,
+                                 dist_limit = NULL, storm = NULL){
 
   processed_inputs <- process_input_args(date_range = date_range, storm = storm)
   date_range <- processed_inputs$date_range
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE,
-                  ~ CZ_NAME, ~ EVENT_TYPE, ~ DEATHS_INDIRECT) %>%
+    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE, ~ CZ_TYPE,
+                   ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ DEATHS_INDIRECT) %>%
     dplyr::rename_(type = ~ EVENT_TYPE,
-                  indirect_deaths = ~ DEATHS_INDIRECT) %>%
-    adjust_storm_data(date_range = date_range, ts_only = ts_only,
+                   indirect_deaths = ~ DEATHS_INDIRECT) %>%
+    adjust_storm_data(date_range = date_range, event_type = event_type,
                       dist_limit = dist_limit, storm = storm)
 
   return(storm_data)
@@ -43,18 +44,19 @@ find_indirect_deaths <- function(date_range = NULL, ts_only = FALSE,
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
-#' @examples
-#' map_indirect_deaths(date_range = c("1999-10-15", "1999-10-20"))
-#' map_indirect_deaths(date_range = c("1999-10-16", "1999-10-18"),
-#'    east_only = FALSE, ts_only = TRUE)
-#' map_indirect_deaths(date_range = c("1999-10-16", "1999-10-18"))
+#' @examples \dontrun{
+#' map_indirect_deaths(date_range = c("1999-09-10", "1999-09-30"))
+#' map_indirect_deaths(date_range = c("1999-09-01", "1999-09-30"),
+#'    east_only = FALSE, event_type = c("Flood","Flash Flood"))
+#' map_indirect_deaths(date_range = c("1999-09-10", "1999-09-30"))
 #' map_indirect_deaths(storm = "Floyd-1999", add_tracks = TRUE)
+#' }
 #'
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_indirect_deaths <- function(date_range = NULL, ts_only = FALSE, east_only = TRUE,
-                              dist_limit = NULL, storm = NULL, add_tracks = FALSE){
+map_indirect_deaths <- function(date_range = NULL, event_type = NULL, east_only = TRUE,
+                                dist_limit = NULL, storm = NULL, add_tracks = FALSE){
 
   data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
@@ -67,9 +69,8 @@ map_indirect_deaths <- function(date_range = NULL, ts_only = FALSE, east_only = 
                       "tennessee", "texas", "vermont", "virginia",
                       "west virginia", "wisconsin")
 
-  map_data <- find_indirect_deaths(date_range = date_range,
-                                 storm = storm, dist_limit = dist_limit,
-                                 ts_only = ts_only) %>%
+  map_data <- find_indirect_deaths(date_range = date_range, storm = storm,
+                                 dist_limit = dist_limit,event_type = event_type) %>%
     dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
     dplyr::rename_(region = ~ fips, value = ~ indirect_deaths) %>%
     dplyr::full_join(county.regions, by = "region") %>%
@@ -84,7 +85,7 @@ map_indirect_deaths <- function(date_range = NULL, ts_only = FALSE, east_only = 
 
   map_data <- map_data %>%
     dplyr::group_by_(~ region) %>%
-    dplyr::summarise_(value = sum(~ value, na.rm = TRUE)) %>%
+    dplyr::summarise_(value = ~ sum(value, na.rm = TRUE)) %>%
     dplyr::ungroup() %>%
     dplyr::mutate_(value = ~ factor(value, levels = 0:max(value)))
 
@@ -127,7 +128,7 @@ map_indirect_deaths <- function(date_range = NULL, ts_only = FALSE, east_only = 
     level_names <- levels(map_data$value)
     level_names[length(level_names)] <- paste0(">=", ceil)
   } else {
-    map_palette <- RColorBrewer::brewer.pal(length(unique(map_data$value)), name = "Reds")
+    map_palette <- suppressWarnings(RColorBrewer::brewer.pal(length(unique(map_data$value)), name = "Reds"))
     map_palette[1] <- "#ffffff"
     level_names <- levels(map_data$value)
   }

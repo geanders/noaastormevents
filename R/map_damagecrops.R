@@ -7,27 +7,28 @@
 #' @inheritParams adjust_storm_data
 #'
 #' @examples
-#' find_damage_crops(date_range = c("1999-10-15", "1999-10-20"))
+#' find_damage_crops(date_range = c("1999-09-10", "1999-09-30"))
 #'
-#' find_damage_crops(date_range = c("1999-10-16", "1999-10-18"),
+#' find_damage_crops(date_range = c("1999-09-01", "1999-09-30"),
 #'    storm = "Floyd-1999", dist_limit = 200)
 #'
 #' @importFrom dplyr %>%
 #'
 #' @export
-find_damage_crops <- function(date_range = NULL, ts_only = FALSE,
-                        dist_limit = NULL, storm = NULL){
+find_damage_crops <- function(date_range = NULL, event_type = NULL,
+                              dist_limit = NULL, storm = NULL){
 
   processed_inputs <- process_input_args(date_range = date_range, storm = storm)
   date_range <- processed_inputs$date_range
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE,
-                  ~ CZ_NAME, ~ EVENT_TYPE, ~ DAMAGE_CROPS) %>%
+    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE, ~ CZ_TYPE,
+                   ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ DAMAGE_CROPS) %>%
     dplyr::rename_(type = ~ EVENT_TYPE,
-                  damage_crops = ~ DAMAGE_CROPS) %>%
-    adjust_storm_data(date_range = date_range, ts_only = ts_only,
+                   damage_crops = ~ DAMAGE_CROPS)
+  %>%
+    adjust_storm_data(date_range = date_range, event_type = event_type,
                       dist_limit = dist_limit, storm = storm)
 
   # Convert crop values (e.g., from "5K" to 5000)
@@ -55,19 +56,20 @@ find_damage_crops <- function(date_range = NULL, ts_only = FALSE,
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
-#' @examples
-#' map_damage_crops(date_range = c("1999-10-15", "1999-10-20"))
-#' map_damage_crops(date_range = c("1999-10-15", "1999-10-20"),
-#'    east_only = FALSE, ts_only = TRUE)
-#' map_damage_crops(date_range = c("1999-10-15", "1999-10-20"))
-#' map_damage_crops(date_range = c("1999-10-15", "1999-10-20"),
+#' @examples \dontrun{
+#' map_damage_crops(date_range = c("1999-09-10", "1999-09-30"))
+#' map_damage_crops(date_range = c("1999-09-01", "1999-09-30"),
+#'    east_only = FALSE, event_type = c("Flood","Flash Flood"))
+#' map_damage_crops(date_range = c("1999-09-10", "1999-09-30"))
+#' map_damage_crops(date_range = c("1999-09-10", "1999-09-30"),
 #'    dist_limit = 100, storm = "Floyd-1999", add_tracks = TRUE)
 #' map_damage_crops(storm = "Floyd-1999", add_tracks = TRUE)
+#' }
 #'
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_damage_crops <- function(date_range = NULL, ts_only = FALSE, east_only = TRUE,
+map_damage_crops <- function(date_range = NULL, event_type = NULL, east_only = TRUE,
                                 dist_limit = NULL, storm = NULL, add_tracks = FALSE){
 
   data(county.regions, package = "choroplethrMaps")
@@ -83,9 +85,9 @@ map_damage_crops <- function(date_range = NULL, ts_only = FALSE, east_only = TRU
 
   map_data <- find_damage_crops(date_range = date_range,
                                    storm = storm, dist_limit = dist_limit,
-                                   ts_only = ts_only) %>%
+                                event_type = event_type) %>%
     dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
-    dplyr::rename_(region = ~ fips, value = damage_crops) %>%
+    dplyr::rename_(region = ~ fips, value = ~ damage_crops) %>%
     dplyr::full_join(county.regions, by = "region") %>%
     dplyr::filter_(~ !is.na(county.name))
 
