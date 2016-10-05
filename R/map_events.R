@@ -63,7 +63,7 @@ find_events <- function(date_range = NULL, event_type = NULL,
 map_events <- function(date_range = NULL, event_type = NULL,
                        east_only = TRUE,
                        plot_type = "any events", dist_limit = NULL,
-                       storm = NULL, add_tracks = FALSE, keep.data = FALSE){
+                       storm = NULL, add_tracks = FALSE){
 
   data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
