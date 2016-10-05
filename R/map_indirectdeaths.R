@@ -1,7 +1,7 @@
 #' Find all indirect death listings for date range
 #'
-#' This function will find all of the indirect deaths in the US for a specified date
-#' range.
+#' This function will find all of the indirect deaths in the US for a specified
+#' date range.
 #'
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
@@ -25,8 +25,9 @@ find_indirect_deaths <- function(date_range = NULL, event_type = NULL,
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE, ~ CZ_TYPE,
-                   ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ DEATHS_INDIRECT) %>%
+    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
+                   ~ STATE, ~ CZ_TYPE, ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
+                   ~ CZ_FIPS, ~ DEATHS_INDIRECT) %>%
     dplyr::rename_(type = ~ EVENT_TYPE,
                    indirect_deaths = ~ DEATHS_INDIRECT) %>%
     adjust_storm_data(date_range = date_range, event_type = event_type,
@@ -55,8 +56,9 @@ find_indirect_deaths <- function(date_range = NULL, event_type = NULL,
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_indirect_deaths <- function(date_range = NULL, event_type = NULL, east_only = TRUE,
-                                dist_limit = NULL, storm = NULL, add_tracks = FALSE){
+map_indirect_deaths <- function(date_range = NULL, event_type = NULL,
+                                east_only = TRUE, dist_limit = NULL,
+                                storm = NULL, add_tracks = FALSE){
 
   data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
@@ -91,31 +93,32 @@ map_indirect_deaths <- function(date_range = NULL, event_type = NULL, east_only 
 
   if(length(unique(map_data$value)) > 9) {
     max_value <- max(as.numeric(as.character(map_data$value)))
-    ceil <- floor(max_value/10^(floor(log10(max_value))))*10^(floor(log10(max_value)))
-    decimal <- floor(max_value/10^(floor(log10(max_value))))
+    ceil <- floor(max_value / 10 ^ (floor(log10(max_value))))*
+      10 ^ (floor(log10(max_value)))
+    decimal <- floor(max_value / 10 ^ (floor(log10(max_value))))
 
     if(decimal == 1) {
-      breaks <- c(0,seq(1, ceil+1, by = ceil/5))
+      breaks <- c(0, seq(1, ceil + 1, by = ceil / 5))
     } else if(decimal == 2) {
-      breaks <- c(0,seq(1, ceil+1, by = ceil/5))
+      breaks <- c(0, seq(1, ceil + 1, by = ceil / 5))
     } else if(decimal == 3) {
-      breaks <- c(0,seq(1, ceil+1, by = ceil/6))
+      breaks <- c(0, seq(1, ceil + 1, by = ceil / 6))
     } else if(decimal == 4) {
-      breaks <- c(0,seq(1, ceil+1, by = ceil/5))
+      breaks <- c(0, seq(1, ceil + 1, by = ceil / 5))
     } else if(decimal == 5) {
-      breaks <- c(0,seq(1, ceil+1, by = ceil/5))
+      breaks <- c(0, seq(1, ceil + 1, by = ceil / 5))
     } else if(decimal == 6) {
-      breaks <- c(0,seq(1, ceil+1, by = ceil/6))
+      breaks <- c(0, seq(1, ceil + 1, by = ceil / 6))
     } else if(decimal == 7) {
-      breaks <- c(0,seq(1, ceil+1, by = ceil/7))
+      breaks <- c(0, seq(1, ceil + 1, by = ceil / 7))
     } else if(decimal == 8) {
-      breaks <- c(0,seq(1, ceil+1, by = ceil/5))
+      breaks <- c(0, seq(1, ceil + 1, by = ceil / 5))
     } else if(decimal == 9) {
-      breaks <- c(0,seq(1, ceil+1, by = ceil/5))
+      breaks <- c(0, seq(1, ceil + 1, by = ceil / 5))
     }
 
     palette_name <- "Reds"
-    map_palette <- RColorBrewer::brewer.pal(length(breaks)  , name = palette_name)
+    map_palette <- RColorBrewer::brewer.pal(length(breaks), name = palette_name)
 
     if(max_value > max(breaks)){
       breaks <- c(breaks, max_value)
@@ -128,7 +131,8 @@ map_indirect_deaths <- function(date_range = NULL, event_type = NULL, east_only 
     level_names <- levels(map_data$value)
     level_names[length(level_names)] <- paste0(">=", ceil)
   } else {
-    map_palette <- suppressWarnings(RColorBrewer::brewer.pal(length(unique(map_data$value)), name = "Reds"))
+    map_palette <- suppressWarnings(RColorBrewer::brewer.pal(
+      length(unique(map_data$value)), name = "Reds"))
     map_palette[1] <- "#ffffff"
     level_names <- levels(map_data$value)
   }

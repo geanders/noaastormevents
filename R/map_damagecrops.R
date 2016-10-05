@@ -1,7 +1,7 @@
 #' Find all damaged crop listings for date range
 #'
-#' This function will find all of the crops damaged in the US for a specified date
-#' range.
+#' This function will find all of the crops damaged in the US for a specified
+#' date range.
 #'
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
@@ -23,8 +23,9 @@ find_damage_crops <- function(date_range = NULL, event_type = NULL,
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE, ~ CZ_TYPE,
-                   ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ DAMAGE_CROPS) %>%
+    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
+                   ~ STATE, ~ CZ_TYPE, ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
+                   ~ CZ_FIPS, ~ DAMAGE_CROPS) %>%
     dplyr::rename_(type = ~ EVENT_TYPE,
                    damage_crops = ~ DAMAGE_CROPS)%>%
     adjust_storm_data(date_range = date_range, event_type = event_type,
@@ -38,7 +39,8 @@ find_damage_crops <- function(date_range = NULL, event_type = NULL,
   storm_data <- storm_data %>%
     dplyr::mutate_(num_crops = ~ stringr::str_extract(damage_crops, "[0-9]+"),
                   num_crops = ~ as.numeric(num_crops),
-                  letter_crops = ~ stringr::str_extract(damage_crops, "[A-Z]+")) %>%
+                  letter_crops = ~ stringr::str_extract(damage_crops,
+                                                        "[A-Z]+")) %>%
     dplyr::left_join(value_table, by = "letter_crops") %>%
     dplyr::mutate_(damage_crops = ~ num_crops * value_crops) %>%
     dplyr::select_(~ -num_crops, ~ -letter_crops, ~ -value_crops)
@@ -68,8 +70,9 @@ find_damage_crops <- function(date_range = NULL, event_type = NULL,
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_damage_crops <- function(date_range = NULL, event_type = NULL, east_only = TRUE,
-                                dist_limit = NULL, storm = NULL, add_tracks = FALSE){
+map_damage_crops <- function(date_range = NULL, event_type = NULL,
+                             east_only = TRUE, dist_limit = NULL, storm = NULL,
+                             add_tracks = FALSE){
 
   data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
@@ -103,9 +106,11 @@ map_damage_crops <- function(date_range = NULL, event_type = NULL, east_only = T
 
   map_data$value <- ifelse(is.na(map_data$value), 0, map_data$value)
 
-  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000)
+  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 100000000,
+              1000000000)
   palette_name <- "Reds"
-  map_palette <- RColorBrewer::brewer.pal(length(breaks)  , name = palette_name)
+  map_palette <- RColorBrewer::brewer.pal(length(breaks),
+                                          name = palette_name)
 
   if(max(map_data$value) > max(breaks)){
     breaks <- c(breaks, max(map_data$value))
@@ -117,9 +122,11 @@ map_damage_crops <- function(date_range = NULL, event_type = NULL, east_only = T
                                  include.lowest = TRUE, right = F))
   level_names <- levels(map_data$value)
   level_names[length(level_names)] <- paste0(">=", 1000000000)
-  map_data$value <- factor(map_data$value, levels = levels(map_data$value), labels = level_names)
+  map_data$value <- factor(map_data$value, levels = levels(map_data$value),
+                           labels = level_names)
   out <- choroplethr::CountyChoropleth$new(map_data)
-  out$ggplot_scale <- ggplot2::scale_fill_manual(name = "# of Crops damaged", values = map_palette)
+  out$ggplot_scale <- ggplot2::scale_fill_manual(name = "# of Crops damaged",
+                                                 values = map_palette)
 
   if(east_only){
     out$set_zoom(eastern_states)
