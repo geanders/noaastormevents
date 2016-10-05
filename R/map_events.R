@@ -43,6 +43,8 @@ find_events <- function(date_range = NULL, event_type = NULL,
 #'    the eastern half of the United States (default is TRUE).
 #' @param add_tracks A logical value specifying whether to add the tracks of
 #'    a hurricane to the map (default = FALSE).
+#' @param plot_type Specifies the type of plot wanted. It can be either "any
+#'    events" or "number of events".
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
@@ -65,7 +67,7 @@ map_events <- function(date_range = NULL, event_type = NULL,
                        plot_type = "any events", dist_limit = NULL,
                        storm = NULL, add_tracks = FALSE){
 
-  data(county.regions, package = "choroplethrMaps")
+  utils::data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
                       "district of columbia", "florida", "georgia", "illinois",
                       "indiana", "iowa", "kansas", "kentucky", "louisiana",

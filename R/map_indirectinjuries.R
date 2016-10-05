@@ -59,7 +59,7 @@ find_indirect_injuries <- function(date_range = NULL, event_type = NULL,
 map_indirect_injuries <- function(date_range = NULL, event_type = NULL, east_only = TRUE,
                                   dist_limit = NULL, storm = NULL, add_tracks = FALSE){
 
-  data(county.regions, package = "choroplethrMaps")
+  utils::data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
                       "district of columbia", "florida", "georgia", "illinois",
                       "indiana", "iowa", "kansas", "kentucky", "louisiana",

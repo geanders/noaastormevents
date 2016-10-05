@@ -14,7 +14,7 @@
 adjust_storm_data <- function(storm_data, date_range = NULL,
                               event_type = NULL, dist_limit = NULL, storm = NULL) {
 
-  data(county.regions, package = "choroplethrMaps")
+  utils::data(county.regions, package = "choroplethrMaps")
   county.regions <- county.regions %>%
     tidyr::unite_("state_county_name", c("state.name", "county.name"), sep = " ")
 
@@ -46,7 +46,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
     dplyr::select_(~ -region, ~ -state.fips.character) %>%
     dplyr::rename_(fips = ~ county.fips.character)
 
-  storm_data <- storm_data %>%
+  storm_data <- suppressMessages(storm_data %>%
     dplyr::tbl_df() %>%
     dplyr::filter_(~ CZ_TYPE == "C") %>%
     tidyr::unite_("state_county_name", c("STATE", "CZ_NAME"), sep = " ") %>%
@@ -62,7 +62,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
     dplyr::mutate_(begin_date = ~ lubridate::ymd(begin_date),
                    end_date = ~ lubridate::ymd(end_date))%>%
     dplyr::select_(~ -STATE_FIPS, ~ -CZ_FIPS, ~ -state.abb) %>%
-    dplyr::filter_(~ !is.na(fips))
+    dplyr::filter_(~ !is.na(fips)))
 
   # If a date range in include, filter only on that for date
   if(!is.null(date_range)){

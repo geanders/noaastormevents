@@ -6,12 +6,10 @@
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
-#' @examples \dontrun {
+#' @examples \dontrun{
 #' find_direct_deaths(date_range = c("1999-09-01", "1999-09-30"))
-#'
 #' find_direct_deaths(date_range = c("1999-09-20", "1999-09-30"),
 #'    storm = "Floyd-1999", dist_limit = 200)
-#'
 #' find_direct_deaths(storm = "Floyd-1999", dist_limit = 50)
 #' }
 #'
@@ -63,7 +61,7 @@ find_direct_deaths <- function(date_range = NULL, event_type = NULL,
 map_direct_deaths <- function(date_range = NULL, event_type = NULL, east_only = TRUE,
                                 dist_limit = NULL, storm = NULL, add_tracks = FALSE){
 
-  data(county.regions, package = "choroplethrMaps")
+  utils::data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
                       "district of columbia", "florida", "georgia", "illinois",
                       "indiana", "iowa", "kansas", "kentucky", "louisiana",
