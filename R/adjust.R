@@ -3,9 +3,8 @@
 #' This function adjusts a set of storm data based on user selections on
 #' date range, distance limit to a storm, etc.
 #'
-#' @param storm_data A dataset of storm data
-#' @param ts_only Specifies if only storm events related to tropical storms
-#'    should be included.
+#' @param storm_data A dataset of storm data.
+#' @param event_type Specifies the types of storm events should be included.
 #' @param dist_limit If selected, the distance (in kilometers) that a county
 #'    must be from the storm's path to be included.
 #' @inheritParams create_storm_data
@@ -13,19 +12,16 @@
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
 adjust_storm_data <- function(storm_data, date_range = NULL,
-                        ts_only = FALSE, dist_limit = NULL, storm = NULL){
+                              event_type = NULL, dist_limit = NULL, storm = NULL) {
 
   data(county.regions, package = "choroplethrMaps")
   county.regions <- county.regions %>%
     tidyr::unite_("state_county_name", c("state.name", "county.name"), sep = " ")
 
   # A bit more general cleaning of the data
-  storm_data <- storm_data %>%
+  storm_data_Z <- storm_data %>%
     dplyr::tbl_df() %>%
-    dplyr::mutate_(BEGIN_DAY = ~ sprintf("%02d", BEGIN_DAY),
-                  END_DAY = ~ sprintf("%02d", END_DAY)) %>%
-    tidyr::unite_("begin_date", c("BEGIN_YEARMONTH", "BEGIN_DAY"), sep = "") %>%
-    tidyr::unite_("end_date", c("END_YEARMONTH", "END_DAY"), sep = "") %>%
+    dplyr::filter_(~ CZ_TYPE == "Z") %>%
     tidyr::unite_("state_county_name", c("STATE", "CZ_NAME"), sep = " ") %>%
     dplyr::mutate_(state_county_name = ~ tolower(state_county_name),
                    state_county_name = ~ gsub(" eastern ", " ",state_county_name),
@@ -47,11 +43,26 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
                    state_county_name = ~ gsub(" interior ", " ",state_county_name),
                    state_county_name = ~ gsub(" /.*$", " ", state_county_name)) %>%
     dplyr::left_join(county.regions, by = "state_county_name") %>%
-    dplyr::mutate_(begin_date = ~ lubridate::ymd(begin_date),
-                  end_date = ~ lubridate::ymd(end_date)) %>%
-    dplyr::rename_(fips = ~ region) %>%
-    dplyr::mutate_(fips = ~ sprintf("%05s", fips))
+    dplyr::select_(~ -region, ~ -state.fips.character) %>%
+    dplyr::rename_(fips = ~ county.fips.character)
 
+  storm_data <- storm_data %>%
+    dplyr::tbl_df() %>%
+    dplyr::filter_(~ CZ_TYPE == "C") %>%
+    tidyr::unite_("state_county_name", c("STATE", "CZ_NAME"), sep = " ") %>%
+    dplyr::mutate_(state_county_name = ~ tolower(state_county_name)) %>%
+    dplyr::mutate_(CZ_FIPS = ~ sprintf("%03d", CZ_FIPS)) %>%
+    dplyr::mutate_(STATE_FIPS = ~ sprintf("%02d", STATE_FIPS)) %>%
+    tidyr::unite_("fips", c("STATE_FIPS","CZ_FIPS"), sep = "") %>%
+    dplyr::full_join(storm_data_Z) %>%
+    dplyr::mutate_(BEGIN_DAY =  ~ sprintf("%02d", BEGIN_DAY),
+                   END_DAY =  ~ sprintf("%02d", END_DAY)) %>%
+    tidyr::unite_("begin_date", c("BEGIN_YEARMONTH", "BEGIN_DAY"), sep = "") %>%
+    tidyr::unite_("end_date", c("END_YEARMONTH", "END_DAY"), sep = "") %>%
+    dplyr::mutate_(begin_date = ~ lubridate::ymd(begin_date),
+                   end_date = ~ lubridate::ymd(end_date))%>%
+    dplyr::select_(~ -STATE_FIPS, ~ -CZ_FIPS, ~ -state.abb) %>%
+    dplyr::filter_(~ !is.na(fips))
 
   # If a date range in include, filter only on that for date
   if(!is.null(date_range)){
@@ -83,15 +94,11 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
       dplyr::filter_(~ fips %in% distance_df$fips)
   }
 
-  # Limit to event types linked to tropical storms if requested
-  if(ts_only) {
-    ts_types <- c("Coastal Flood","Flash Flood" ,"Flood","Heavy Rain",
-                  "High Surf","High Wind Hurricane (Typhoon)",
-                  "Storm Surge/Tide","Strong Wind","Thunderstorm Wind",
-                  "Tornado","Tropical Storm","Waterspout")
-    storm_data <- storm_data %>%
-      dplyr::filter_(~ type %in% ts_types)
+  # If the event_type is specified, filter by that
+  if(!is.null(event_type)) {
+    storm_data <- suppressWarnings(dplyr::filter_(storm_data, ~ tolower(type) == tolower(event_type)))
   }
+
 
   return(storm_data)
 }
