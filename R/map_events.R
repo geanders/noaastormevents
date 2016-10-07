@@ -13,6 +13,7 @@
 #' # Events within a certain distance and time range of a tropical storm
 #' find_events(storm = "Floyd-1999", dist_limit = 200)
 #'}
+#'
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
 #'
@@ -25,8 +26,9 @@ find_events <- function(date_range = NULL, event_type = NULL,
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE, ~ CZ_TYPE,
-                  ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS) %>%
+    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
+                   ~ STATE, ~ CZ_TYPE, ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
+                   ~ CZ_FIPS) %>%
     dplyr::rename_(type = ~ EVENT_TYPE) %>%
     adjust_storm_data(date_range = date_range, event_type = event_type,
                       dist_limit = dist_limit, storm = storm)

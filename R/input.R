@@ -1,7 +1,7 @@
 #' Find the file name for a specific year
 #'
-#' This function will find the name of the detailed file from Storm Events Database
-#' for a specific year.
+#' This function will find the name of the detailed file from Storm Events
+#' Database for a specific year.
 #'
 #' @param year A character string giving the year.
 #' @param file_type The type of file you would like to pull. Choices include:

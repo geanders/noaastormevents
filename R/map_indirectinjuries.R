@@ -25,8 +25,9 @@ find_indirect_injuries <- function(date_range = NULL, event_type = NULL,
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE, ~ CZ_TYPE,
-                   ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ INJURIES_INDIRECT) %>%
+    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
+                   ~ STATE, ~ CZ_TYPE,~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
+                   ~ CZ_FIPS, ~ INJURIES_INDIRECT) %>%
     dplyr::rename_(type = ~ EVENT_TYPE,
                    indirect_injuries = ~ INJURIES_INDIRECT) %>%
     adjust_storm_data(date_range = date_range, event_type = event_type,

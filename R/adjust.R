@@ -96,7 +96,9 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 
   # If the event_type is specified, filter by that
   if(!is.null(event_type)) {
-    storm_data <- suppressWarnings(dplyr::filter_(storm_data, ~ tolower(type) == tolower(event_type)))
+    storm_data <- suppressWarnings(dplyr::filter_(storm_data,
+                                                  ~ tolower(type) ==
+                                                    tolower(event_type)))
   }
 
 

@@ -22,13 +22,15 @@ download_storm_data <- function(year, file_type = "details"){
     utils::download.file(path_name, temp)
     noaastormevents_package_env <<- new.env()
     noaastormevents_package_env$lst <- list()
-    noaastormevents_package_env$lst[[as.character(year)]] <-  suppressWarnings(utils::read.csv(gzfile(temp), as.is = TRUE))
+
+    noaastormevents_package_env$lst[[as.character(year)]] <-
+    suppressWarnings(utils::read.csv(gzfile(temp), as.is = TRUE))
     unlink(temp)
-    utils::globalVariables("noaastormevents_package_env")
   } else if(is.null(noaastormevents_package_env$lst[[as.character(year)]])) {
     temp <- tempfile()
     utils::download.file(path_name, temp)
-    noaastormevents_package_env$lst[[as.character(year)]] <-  suppressWarnings(utils::read.csv(gzfile(temp), as.is = TRUE))
+    noaastormevents_package_env$lst[[as.character(year)]] <-
+    suppressWarnings(utils::read.csv(gzfile(temp), as.is = TRUE))
     unlink(temp)
   }
   return(NULL)
@@ -65,10 +67,13 @@ create_storm_data <- function(date_range = NULL, storm = NULL,
     requested_years <- seq(from = date_range_years[1], to = date_range_years[2])
     lapply(requested_years, download_storm_data)
     for(i in 1:length(requested_years)){
+#      download_storm_data(year = requested_years[i], file_type = file_type)
+      requested_year <- as.character(requested_years[i])
       if(i == 1){
-        storm_data <- noaastormevents_package_env$lst[[as.character(requested_years[i])]]
+        storm_data <- noaastormevents_package_env$lst[[requested_year]]
       } else {
-        storm_data <- rbind(storm_data, noaastormevents_package_env$lst[[as.character(requested_years[i])]])
+        storm_data <- rbind(storm_data,
+                            noaastormevents_package_env$lst[[requested_year]])
       }
     }
   } else if (!is.null(storm)){ ## Otherwise, pull for the year of the storm

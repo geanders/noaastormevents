@@ -1,7 +1,7 @@
 #' Find all damaged property listings for date range
 #'
-#' This function will find all of the property damaged in the US for a specified date
-#' range.
+#' This function will find all of the property damaged in the US for a specified
+#' date range.
 #'
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
@@ -28,8 +28,9 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
   storm <- processed_inputs$storm
 
   storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY, ~ STATE, ~ CZ_TYPE,
-                   ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ DAMAGE_PROPERTY) %>%
+    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
+                   ~ STATE, ~ CZ_TYPE, ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
+                   ~ CZ_FIPS, ~ DAMAGE_PROPERTY) %>%
     dplyr::rename_(type = ~ EVENT_TYPE,
                   damage_property = ~ DAMAGE_PROPERTY) %>%
     adjust_storm_data(date_range = date_range, event_type = event_type,
@@ -44,7 +45,8 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
   storm_data <- storm_data %>%
     dplyr::mutate_(num_prop = ~ stringr::str_extract(damage_property, "[0-9]+"),
                   num_prop = ~ as.numeric(num_prop),
-                  letter_prop = ~ stringr::str_extract(damage_property, "[A-Z]+")) %>%
+                  letter_prop = ~ stringr::str_extract(damage_property,
+                                                       "[A-Z]+")) %>%
     dplyr::left_join(value_table, by = "letter_prop") %>%
     dplyr::mutate_(damage_property = ~ num_prop * value_prop) %>%
     dplyr::select_(~ -num_prop, ~ -letter_prop, ~ -value_prop)
@@ -61,7 +63,7 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
-#' @examples
+#' @examples \dontrun{
 #' map_damage_property(date_range = c("1999-09-10", "1999-09-30"))
 #' map_damage_property(date_range = c("1999-09-01", "1999-09-30"),
 #'    east_only = FALSE, event_type = c("Flood","Flash Flood"))
@@ -69,6 +71,7 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
 #' map_damage_property(storm = "Floyd-1999")
 #' map_damage_property(dist_limit = 100, storm = "Floyd-1999",
 #'                     add_tracks = TRUE)
+#' }
 #'
 #' @importFrom dplyr %>%
 #'
@@ -109,7 +112,8 @@ map_damage_property <- function(date_range = NULL, event_type = NULL,
   map_data$value <- ifelse(is.na(map_data$value), 0, map_data$value)
 
 
-  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000)
+  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 100000000,
+              1000000000)
   palette_name <- "Reds"
   map_palette <- RColorBrewer::brewer.pal(length(breaks)  , name = palette_name)
 
@@ -123,9 +127,11 @@ map_damage_property <- function(date_range = NULL, event_type = NULL,
                                  include.lowest = TRUE, right = F))
   level_names <- levels(map_data$value)
   level_names[length(level_names)] <- paste0(">=", 1000000000)
-  map_data$value <- factor(map_data$value, levels = levels(map_data$value), labels = level_names)
+  map_data$value <- factor(map_data$value, levels = levels(map_data$value),
+                           labels = level_names)
   out <- choroplethr::CountyChoropleth$new(map_data)
-  out$ggplot_scale <- ggplot2::scale_fill_manual(name = "# of Properties Damaged", values = map_palette)
+  out$ggplot_scale <- ggplot2::scale_fill_manual(name = "# of Properties Damaged",
+                                                 values = map_palette)
 
    if(east_only){
     out$set_zoom(eastern_states)
