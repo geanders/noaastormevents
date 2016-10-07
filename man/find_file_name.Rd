@@ -13,8 +13,8 @@ find_file_name(year = NULL, file_type = "detail")
 "details" (the default), "fatalities", or "locations".}
 }
 \description{
-This function will find the name of the detailed file from Storm Events Database
-for a specific year.
+This function will find the name of the detailed file from Storm Events
+Database for a specific year.
 }
 \examples{
 find_file_name(year = 1999)
