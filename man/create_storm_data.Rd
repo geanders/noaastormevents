@@ -25,8 +25,10 @@ or storm name. (Note: This function pulls full years' worth of data. Later
 functions filter down to the exact date range desired.)
 }
 \examples{
+\dontrun{
 floyd_data <- create_storm_data(date_range = c("1999-10-16", "1999-10-18"))
 floyd_data2 <- create_storm_data(storm = "Floyd-1999")
+}
 
 }
 

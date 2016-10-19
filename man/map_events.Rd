@@ -6,7 +6,7 @@
 \usage{
 map_events(date_range = NULL, event_type = NULL, east_only = TRUE,
   plot_type = "any events", dist_limit = NULL, storm = NULL,
-  add_tracks = FALSE, keep.data = FALSE)
+  add_tracks = FALSE)
 }
 \arguments{
 \item{date_range}{A character vector of length two with the start and end
@@ -16,6 +16,9 @@ dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 
 \item{east_only}{A logical value specifying whether to restrict the map to
 the eastern half of the United States (default is TRUE).}
+
+\item{plot_type}{Specifies the type of plot wanted. It can be either "any
+events" or "number of events".}
 
 \item{dist_limit}{If selected, the distance (in kilometers) that a county
 must be from the storm's path to be included.}

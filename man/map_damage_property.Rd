@@ -33,6 +33,7 @@ This function maps all property damaged listed with a starting date within a
 specified date range.
 }
 \examples{
+\dontrun{
 map_damage_property(date_range = c("1999-09-10", "1999-09-30"))
 map_damage_property(date_range = c("1999-09-01", "1999-09-30"),
    east_only = FALSE, event_type = c("Flood","Flash Flood"))
@@ -40,6 +41,7 @@ map_damage_property(date_range = c("1999-09-10", "1999-09-30"))
 map_damage_property(storm = "Floyd-1999")
 map_damage_property(dist_limit = 100, storm = "Floyd-1999",
                     add_tracks = TRUE)
+}
 
 }
 

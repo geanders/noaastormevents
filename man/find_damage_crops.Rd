@@ -23,14 +23,16 @@ Currently, this functionality only works for storms included in the
 extended hurricane best tracks, which covers 1988 to 2014.}
 }
 \description{
-This function will find all of the crops damaged in the US for a specified date
-range.
+This function will find all of the crops damaged in the US for a specified
+date range.
 }
 \examples{
+\dontrun{
 find_damage_crops(date_range = c("1999-09-10", "1999-09-30"))
 
 find_damage_crops(date_range = c("1999-09-01", "1999-09-30"),
    storm = "Floyd-1999", dist_limit = 200)
+}
 
 }
 

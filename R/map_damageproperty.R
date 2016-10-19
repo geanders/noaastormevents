@@ -51,6 +51,19 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
     dplyr::mutate_(damage_property = ~ num_prop * value_prop) %>%
     dplyr::select_(~ -num_prop, ~ -letter_prop, ~ -value_prop)
 
+  storm_data_NONA <- storm_data %>%
+    dplyr::group_by_(~ STATE) %>%
+    dplyr::filter_(~ !is.na(damage_property)) %>%
+    dplyr::mutate_(damage_property = ~ ifelse(sum(damage_property) - damage_property <
+                                              damage_property,NA ,damage_property)) %>%
+    dplyr::ungroup()
+
+  storm_data <- storm_data %>%
+    dplyr::filter_(~ is.na(damage_property)) %>%
+    dplyr::full_join(storm_data_NONA, by = c("STATE","begin_date", "end_date", "state_county_name",
+                                             "CZ_TYPE", "type", "fips", "damage_property"))
+
+
   return(storm_data)
 }
 
@@ -63,7 +76,7 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
-#' @examples
+#' @examples \dontrun{
 #' map_damage_property(date_range = c("1999-09-10", "1999-09-30"))
 #' map_damage_property(date_range = c("1999-09-01", "1999-09-30"),
 #'    east_only = FALSE, event_type = c("Flood","Flash Flood"))
@@ -71,6 +84,7 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
 #' map_damage_property(storm = "Floyd-1999")
 #' map_damage_property(dist_limit = 100, storm = "Floyd-1999",
 #'                     add_tracks = TRUE)
+#' }
 #'
 #' @importFrom dplyr %>%
 #'
@@ -78,7 +92,7 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
 map_damage_property <- function(date_range = NULL, event_type = NULL,
                                 east_only = TRUE, dist_limit = NULL,
                                 storm = NULL, add_tracks = FALSE) {
-  data(county.regions, package = "choroplethrMaps")
+  utils::data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
                       "district of columbia", "florida", "georgia", "illinois",
                       "indiana", "iowa", "kansas", "kentucky", "louisiana",
@@ -111,7 +125,7 @@ map_damage_property <- function(date_range = NULL, event_type = NULL,
   map_data$value <- ifelse(is.na(map_data$value), 0, map_data$value)
 
 
-  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 100000000,
+  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 999999999,
               1000000000)
   palette_name <- "Reds"
   map_palette <- RColorBrewer::brewer.pal(length(breaks)  , name = palette_name)

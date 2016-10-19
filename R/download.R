@@ -19,17 +19,18 @@ download_storm_data <- function(year, file_type = "details"){
 
   if(!exists("noaastormevents_package_env")) {
     temp <- tempfile()
-    download.file(path_name, temp)
+    utils::download.file(path_name, temp)
     noaastormevents_package_env <<- new.env()
     noaastormevents_package_env$lst <- list()
+
     noaastormevents_package_env$lst[[as.character(year)]] <-
-      suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
+    suppressWarnings(utils::read.csv(gzfile(temp), as.is = TRUE))
     unlink(temp)
   } else if(is.null(noaastormevents_package_env$lst[[as.character(year)]])) {
     temp <- tempfile()
-    download.file(path_name, temp)
+    utils::download.file(path_name, temp)
     noaastormevents_package_env$lst[[as.character(year)]] <-
-      suppressWarnings(read.csv(gzfile(temp), as.is = TRUE))
+    suppressWarnings(utils::read.csv(gzfile(temp), as.is = TRUE))
     unlink(temp)
   }
   return(NULL)
@@ -50,14 +51,16 @@ download_storm_data <- function(year, file_type = "details"){
 #'    extended hurricane best tracks, which covers 1988 to 2014.
 #' @inheritParams find_file_name
 #'
-#' @examples
+#' @examples \dontrun{
 #' floyd_data <- create_storm_data(date_range = c("1999-10-16", "1999-10-18"))
 #' floyd_data2 <- create_storm_data(storm = "Floyd-1999")
+#' }
 #'
 #' @export
 create_storm_data <- function(date_range = NULL, storm = NULL,
                               file_type = "details") {
 
+  utils::globalVariables("noaastormevents_package_env")
   # If the user has included a date range, pull all data within that date range
   if(!is.null(date_range)){
     date_range_years <- lubridate::year(date_range)
