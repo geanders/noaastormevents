@@ -51,6 +51,19 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
     dplyr::mutate_(damage_property = ~ num_prop * value_prop) %>%
     dplyr::select_(~ -num_prop, ~ -letter_prop, ~ -value_prop)
 
+  storm_data_NONA <- storm_data %>%
+    dplyr::group_by_(~ STATE) %>%
+    dplyr::filter_(~ !is.na(damage_property)) %>%
+    dplyr::mutate_(damage_property = ~ ifelse(sum(damage_property) - damage_property <
+                                              damage_property,NA ,damage_property)) %>%
+    dplyr::ungroup()
+
+  storm_data <- storm_data %>%
+    dplyr::filter_(~ is.na(damage_property)) %>%
+    dplyr::full_join(storm_data_NONA, by = c("STATE","begin_date", "end_date", "state_county_name",
+                                             "CZ_TYPE", "type", "fips", "damage_property"))
+
+
   return(storm_data)
 }
 
@@ -112,7 +125,7 @@ map_damage_property <- function(date_range = NULL, event_type = NULL,
   map_data$value <- ifelse(is.na(map_data$value), 0, map_data$value)
 
 
-  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 100000000,
+  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 999999999,
               1000000000)
   palette_name <- "Reds"
   map_palette <- RColorBrewer::brewer.pal(length(breaks)  , name = palette_name)

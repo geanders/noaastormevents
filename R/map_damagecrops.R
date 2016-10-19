@@ -28,7 +28,7 @@ find_damage_crops <- function(date_range = NULL, event_type = NULL,
                    ~ STATE, ~ CZ_TYPE, ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
                    ~ CZ_FIPS, ~ DAMAGE_CROPS) %>%
     dplyr::rename_(type = ~ EVENT_TYPE,
-                   damage_crops = ~ DAMAGE_CROPS)%>%
+                   damage_crops = ~ DAMAGE_CROPS) %>%
     adjust_storm_data(date_range = date_range, event_type = event_type,
                       dist_limit = dist_limit, storm = storm)
 
@@ -45,6 +45,18 @@ find_damage_crops <- function(date_range = NULL, event_type = NULL,
     dplyr::left_join(value_table, by = "letter_crops") %>%
     dplyr::mutate_(damage_crops = ~ num_crops * value_crops) %>%
     dplyr::select_(~ -num_crops, ~ -letter_crops, ~ -value_crops)
+
+  storm_data_NONA <- storm_data %>%
+    dplyr::group_by_(~ STATE) %>%
+    dplyr::filter_(~ !is.na(damage_crops)) %>%
+    dplyr::mutate_(damage_crops = ~ ifelse(sum(damage_crops) - damage_crops <
+                                           damage_crops, NA, damage_crops)) %>%
+    dplyr::ungroup()
+
+  storm_data <- storm_data %>%
+    dplyr::filter_(~ is.na(damage_crops)) %>%
+    dplyr::full_join(storm_data_NONA, by = c("STATE","begin_date", "end_date", "state_county_name",
+                                             "CZ_TYPE", "type", "fips", "damage_crops"))
 
   return(storm_data)
 }
@@ -107,7 +119,7 @@ map_damage_crops <- function(date_range = NULL, event_type = NULL,
 
   map_data$value <- ifelse(is.na(map_data$value), 0, map_data$value)
 
-  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 100000000,
+  breaks <- c(0, 1, 1000, 10000, 100000, 1000000, 10000000, 999999999,
               1000000000)
   palette_name <- "Reds"
   map_palette <- RColorBrewer::brewer.pal(length(breaks),
