@@ -7,6 +7,7 @@ output: github_document
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
+  error = TRUE,
   comment = "#>",
   fig.path = "README-"
 )
@@ -14,6 +15,8 @@ library(noaastormevents)
 library(hurricaneexposuredata)
 library(lubridate)
 library(tidyverse)
+library(ggplot2)
+library(scales)
 ```
 
 ## Loading the package
@@ -108,6 +111,101 @@ Mapping the number of all events that happened under the influence of Hurricane 
 map_events(storm = "Floyd-1999", dist_limit = 100, add_tracks = TRUE,
            plot_type = "number of events")
 ```
+
+## Pulling and mapping other values
+
+### Damage
+
+- Property damage
+- Crop damage
+
+```{r message = FALSE, warning = FALSE}
+floyd_prop_damage <- find_damage_property(storm = "Floyd-1999",
+                                         dist_limit = 500)
+floyd_prop_damage %>%
+  select(type, fips, damage_property) %>%
+  filter(!is.na(damage_property))
+
+floyd_prop_damage %>%
+  select(type, fips, damage_property) %>%
+  filter(!is.na(damage_property)) %>%
+  group_by(type) %>%
+  summarize(n = n(),
+            mean_prop_damage = mean(damage_property)) %>%
+  arrange(desc(mean_prop_damage))
+```
+
+Here is a histogram of reported county-level property damage associated with Hurricane Floyd:
+
+```{r warning = FALSE, message = FALSE, fig.width = 4, fig.height = 2.5, fig.align = "center"}
+ggplot(floyd_prop_damage, aes(x = damage_property)) + 
+  geom_histogram() + 
+  scale_x_log10(label = dollar) + 
+  xlab("Property damage") + 
+  ylab("# of counties") + 
+  theme_bw()
+```
+
+Here is a map of property damage associated with Floyd:
+
+```{r}
+map_damage_property(storm = "Floyd-1999", dist = 500)
+```
+
+Here are the counties with the most property damage in terms of cost: 
+
+```{r error = TRUE}
+floyd_prop_damage %>%
+  filter(damage_property == max(damage_property, na.rm = TRUE))
+colnames(floyd_prop_damage)
+floyd_prop_damage %>%
+  group_by(state_county_name) %>%
+  summarize(damage_property = sum(damage_property),
+            fips = first(fips),
+            CZ_TYPE = first(CZ_TYPE), type = first(type)) %>%
+  arrange(desc(damage_property)) %>%
+  select(state_county_name, CZ_TYPE, type, damage_property, fips) %>%
+  slice(1:10)
+```
+
+Some of the multiple counts for a county have the same property damage value: 
+
+```{r error = TRUE}
+floyd_prop_damage %>%
+  filter(!is.na(damage_property)) %>%
+  group_by(state_county_name) %>%
+  mutate(n = n()) %>%
+  filter(n > 1) %>%
+  select(type, damage_property) %>%
+  slice(1:5)
+```
+
+It looks like some events are given by day. For example, for Duval County, FL, it looks like there are separate events for Sept. 14 and Sept. 15 for "Thunderstorm Wind". We may want to make sure that it makes sense to add these county-level values together to get a county total for damage. 
+
+```{r error = TRUE}
+floyd_prop_damage %>%
+  filter(state_county_name == "florida duval") %>%
+  as.data.frame()
+```
+
+In other counties (e.g., Litchfield County, CT), it looks like there is a repeat listing (both listings for "High Wind" cover the same two days and have the same property damage values). In this case, should we only include one of these two listings in determining total property damage?
+
+```{r error = TRUE}
+floyd_prop_damage %>%
+  filter(state_county_name == "connecticut litchfield") %>%
+  as.data.frame()
+```
+
+
+### Injuries
+
+- Direct injuries
+- Indirect injuries
+
+### Deaths
+
+- Direct deaths
+- Indirect deaths
 
 ## Details of how the package works
 
