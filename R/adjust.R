@@ -22,7 +22,8 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
   storm_data_Z <- storm_data %>%
     dplyr::tbl_df() %>%
     dplyr::filter_(~ CZ_TYPE == "Z") %>%
-    tidyr::unite_("state_county_name", c("STATE", "CZ_NAME"), sep = " ") %>%
+    dplyr::mutate_(state = ~ STATE) %>%
+    tidyr::unite_("state_county_name", c("state", "CZ_NAME"), sep = " ") %>%
     dplyr::mutate_(state_county_name = ~ tolower(state_county_name),
                    state_county_name = ~ gsub(" eastern ", " ",state_county_name),
                    state_county_name = ~ gsub(" southern ", " ",state_county_name),
@@ -43,26 +44,31 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
                    state_county_name = ~ gsub(" interior ", " ",state_county_name),
                    state_county_name = ~ gsub(" /.*$", " ", state_county_name)) %>%
     dplyr::left_join(county.regions, by = "state_county_name") %>%
-    dplyr::select_(~ -region, ~ -state.fips.character) %>%
-    dplyr::rename_(fips = ~ county.fips.character)
+    dplyr::rename_(fips = ~ county.fips.character) %>%
+    dplyr::select_(~ STATE, ~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
+                   ~ CZ_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ state_county_name,
+                   ~ type, ~ fips)
 
-  storm_data <- suppressMessages(storm_data %>%
+  storm_data <- storm_data %>%
     dplyr::tbl_df() %>%
     dplyr::filter_(~ CZ_TYPE == "C") %>%
-    tidyr::unite_("state_county_name", c("STATE", "CZ_NAME"), sep = " ") %>%
+    dplyr::mutate_(state = ~ STATE) %>%
+    tidyr::unite_("state_county_name", c("state", "CZ_NAME"), sep = " ") %>%
     dplyr::mutate_(state_county_name = ~ tolower(state_county_name)) %>%
     dplyr::mutate_(CZ_FIPS = ~ sprintf("%03d", CZ_FIPS)) %>%
     dplyr::mutate_(STATE_FIPS = ~ sprintf("%02d", STATE_FIPS)) %>%
     tidyr::unite_("fips", c("STATE_FIPS","CZ_FIPS"), sep = "") %>%
-    dplyr::full_join(storm_data_Z) %>%
+    dplyr::full_join(storm_data_Z, by = c("STATE","BEGIN_YEARMONTH", "BEGIN_DAY", "END_YEARMONTH",
+                                          "END_DAY", "state_county_name", "CZ_TYPE",
+                                          "type", "fips")) %>%
     dplyr::mutate_(BEGIN_DAY =  ~ sprintf("%02d", BEGIN_DAY),
                    END_DAY =  ~ sprintf("%02d", END_DAY)) %>%
     tidyr::unite_("begin_date", c("BEGIN_YEARMONTH", "BEGIN_DAY"), sep = "") %>%
     tidyr::unite_("end_date", c("END_YEARMONTH", "END_DAY"), sep = "") %>%
     dplyr::mutate_(begin_date = ~ lubridate::ymd(begin_date),
                    end_date = ~ lubridate::ymd(end_date))%>%
-    dplyr::select_(~ -STATE_FIPS, ~ -CZ_FIPS, ~ -state.abb) %>%
-    dplyr::filter_(~ !is.na(fips)))
+    dplyr::select_(~ -STATE_FIPS, ~ -CZ_FIPS) %>%
+    dplyr::filter_(~ !is.na(fips))
 
   # If a date range in include, filter only on that for date
   if(!is.null(date_range)){
