@@ -5,3 +5,4 @@
 *.tex
 *.pdf
 writing/writing_files
+inst/doc
