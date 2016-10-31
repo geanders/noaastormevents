@@ -1,5 +1,4 @@
 skip_on_cran()
-
 context("database format")
 
 test_that("The format of the database remains unchanged",{

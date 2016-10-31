@@ -1,5 +1,4 @@
 skip_on_cran()
-
 context("finding filename from NOAA webpage")
 
 test_that("Can find filename for 1999", {
