@@ -1,6 +1,6 @@
 ---
 title: "noaastormevents"
-author: "Ziyu Chen"
+author: "Ziyu Chen", "Brooke Anderson"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
