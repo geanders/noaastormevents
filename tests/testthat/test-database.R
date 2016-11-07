@@ -1,6 +1,7 @@
 context("database format")
 
 test_that("The format of the database remains unchanged",{
+  skip_on_cran()
   file_name <- find_file_name(1996)
   path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
                       "stormevents/csvfiles/",file_name)
