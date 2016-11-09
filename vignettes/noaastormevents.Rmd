@@ -4,7 +4,7 @@ author: "Ziyu Chen", "Brooke Anderson"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{noaastormevents}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -45,6 +45,11 @@ Here are some examples:
 Mapping all counties that had at least one event over a date range:
 
 ```{r}
+my_data <- find_events(date_range = c("1999-09-14", "1999-09-18"))
+save(my_data, file = "vignettes/data/my_data.RData")  
+load("vignettes/data/my_data.RData")  
+names(my_data)
+
 map_events(date_range = c("1999-09-14", "1999-09-18"))
 ```
 
@@ -52,6 +57,10 @@ Creating a dataframe of all events within a date range:
 
 ```{r}
 oct_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
+save(oct_1999_events, file = "vignettes/data/oct_1999_events.RData")  
+load("vignettes/data/oct_1999_events.RData")  
+names(oct_1999_events)
+  
 head(oct_1999_events)
 ```
 
@@ -59,6 +68,10 @@ Creating a dataframe of all events within a certain time and distance from a hur
 
 ```{r}
 floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 200)
+save(floyd_events, file = "vignettes/data/floyd_events.RData")  
+load("vignettes/data/floyd_events.RData")  
+names(floyd_events)  
+  
 head(floyd_events)
 ```
 
