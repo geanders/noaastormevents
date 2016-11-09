@@ -1,10 +1,10 @@
 ---
-title: "noaastormevents"
-author: "Ziyu Chen", "Brooke Anderson"
+title: "Overview of noaastormevents"
+author: "Ziyu Chen, Brooke Anderson"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Overview of noaastormevents}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,11 +16,15 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.path = "README-"
 )
+```
+
+```{r echo = FALSE, error = FALSE, message = FALSE}
 library(noaastormevents)
 library(hurricaneexposuredata)
 library(lubridate)
 library(tidyverse)
 ```
+
 
 ## Loading the package
 
@@ -87,11 +91,11 @@ floyd_events %>%
 ```
 
 
-Mapping any county with at least one tropical storm-related event, not restricting to only the eastern half of the country:
+Mapping any county with at least one event, not restricting to only the eastern half of the country:
 
 ```{r}
 map_events(storm = "Floyd-1999", dist_limit = 200,
-           east_only = FALSE, ts_only = TRUE)
+           east_only = FALSE)
 ```
 
 Mapping the number of events in each county within a certain date range:
