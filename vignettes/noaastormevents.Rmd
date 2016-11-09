@@ -25,7 +25,6 @@ library(lubridate)
 library(tidyverse)
 ```
 
-
 ## Loading the package
 
 The package currently exists in [a development version](https://github.com/zailchen/noaastormevents) on GitHub. You can use the following code to load it:
@@ -54,8 +53,10 @@ map_events(date_range = c("1999-09-14", "1999-09-18"))
 
 Creating a dataframe of all events within a date range:
 
-```{r}
+```{r eval = 3:4, echo = c(1, 4)}
 oct_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
+save(oct_1999_events, file = "data/oct_1999_events.RData")
+load("data/oct_1999_events.RData")
 head(oct_1999_events)
 ```
 
