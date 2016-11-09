@@ -60,7 +60,7 @@ download_storm_data <- function(year, file_type = "details"){
 create_storm_data <- function(date_range = NULL, storm = NULL,
                               file_type = "details") {
 
-  utils::globalVariables("noaastormevents_package_env")
+  # utils::globalVariables("noaastormevents_package_env")
   # If the user has included a date range, pull all data within that date range
   if(!is.null(date_range)){
     date_range_years <- lubridate::year(date_range)
