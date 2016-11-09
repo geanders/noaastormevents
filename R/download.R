@@ -67,7 +67,6 @@ create_storm_data <- function(date_range = NULL, storm = NULL,
     requested_years <- seq(from = date_range_years[1], to = date_range_years[2])
     lapply(requested_years, download_storm_data)
     for(i in 1:length(requested_years)){
-#      download_storm_data(year = requested_years[i], file_type = file_type)
       requested_year <- as.character(requested_years[i])
       if(i == 1){
         storm_data <- noaastormevents_package_env$lst[[requested_year]]
