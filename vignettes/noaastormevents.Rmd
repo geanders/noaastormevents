@@ -4,11 +4,7 @@ author: "Ziyu Chen, Brooke Anderson"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-<<<<<<< HEAD
-  %\VignetteIndexEntry{noaastormevents}
-=======
   %\VignetteIndexEntry{Overview of noaastormevents}
->>>>>>> c9a5ad590518ab93716dbe7bf717f5f0be75127b
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
