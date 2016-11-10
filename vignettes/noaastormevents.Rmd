@@ -74,7 +74,7 @@ floyd_events %>%
   group_by(type) %>%
   summarize(n = n()) %>%
   arrange(desc(n)) %>%
-  knitr::kable(colnames = c("Event type", "Number of events"),
+  knitr::kable(col.names = c("Event type", "Number of events"),
                caption = "NOAA Storm Events within 200 km and [x] days of Hurricane Floyd.")
   
 ```
