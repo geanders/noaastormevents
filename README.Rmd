@@ -301,7 +301,9 @@ all_1999_events %>% group_by(CZ_TYPE) %>% summarize(frequency = n())
 
 [double check-- is this after filtering out some of the forecast zone observations?]
 
-When the package pulls storm events, any that are identified based on a county FIPS code are directly linked to a single county with the code. For storm 
+When the package pulls storm events, any that are identified based on a county FIPS code are directly linked to a single county with the code. For storm events identified by forecast zone, the package tries to match it to the correct county. It takes the following steps to try to do that: 
+
+[Steps for trying to match up forecast zone events to counties]
 
 
 
