@@ -14,9 +14,10 @@
 #' @export
 #'
 find_file_name <- function(year = NULL, file_type = "detail") {
-  page <-  XML::readHTMLTable(paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
-                                     "stormevents/csvfiles/"))
-  all_file_names <- page[[1]]$Name
+  url <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
+                "stormevents/csvfiles/")
+  page <- htmltab::htmltab(doc = url, which = 1, rm_nodata_cols = FALSE)
+  all_file_names <- page$Name
   file_year <- paste0("_d",year,"_")
   file_name <- grep(file_type, grep(file_year, all_file_names, value = TRUE),
                     value = TRUE)
