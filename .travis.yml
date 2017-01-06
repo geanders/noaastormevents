@@ -5,8 +5,8 @@ sudo: false
 cache: packages
 
 r_github_packages:
-  - geanders/hurricaneexposure
   - geanders/hurricaneexposuredata
+  - geanders/hurricaneexposure
 
 r_binary_packages:
   - Hmisc
