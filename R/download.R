@@ -14,7 +14,7 @@
 #' several commands.
 download_storm_data <- function(year, file_type = "details"){
   file_name <- find_file_name(year = year, file_type = file_type)
-  path_name <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/",
+  path_name <- paste0("https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/",
                       "csvfiles/",file_name)
 
   if(!exists("noaastormevents_package_env")) {
