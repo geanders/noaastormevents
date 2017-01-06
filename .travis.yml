@@ -4,5 +4,9 @@ language: R
 sudo: false
 cache: packages
 
+r_github_packages:
+  - geanders/hurricaneexposure
+  - geanders/hurricaneexposuredata
+
 r_binary_packages:
   - Hmisc

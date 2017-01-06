@@ -20,6 +20,8 @@ Imports:
     dplyr (>= 0.4.3),
     ggplot2 (>= 2.1.0),
     htmltab (>= 0.7.1),
+    hurricaneexposure,
+    hurricaneexposuredata,
     lubridate (>= 1.5.6),
     plyr (>= 1.8.4),
     RColorBrewer (>= 1.1.2),
@@ -34,3 +36,4 @@ Suggests: knitr,
     testthat,
     tidyverse (>= 1.0.0)
 VignetteBuilder: knitr
+Additional_repositories: http://geanders.github.io/drat
