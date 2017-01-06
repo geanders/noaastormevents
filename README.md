@@ -1,4 +1,6 @@
 
+[![Build Status](https://travis-ci.org/zailchen/noaastormevents.svg?branch=master)](https://travis-ci.org/zailchen/noaastormevents)
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 Loading the package
 -------------------
@@ -42,42 +44,11 @@ All of these functions require you to specify a subset of the Storm Database to 
 -   Specifying a range of dates
 -   Specifying a specific Atlantic tropical storm, in which case the function will identify events near in time and space to the storm's track (this functionality currently works for storms from 1988 to 2015)
 
-At least one of these two methods must be used to specify events to pull. In addition, the user can further filter events to one or a few event types.
+At least one of these two methods must be used to specify events to pull. In addition, the user can further filter events to one or a few event types. Here is a list of all events listed in 1999, in order of frequency:
 
-Here is a list of some of the dozen most common event types in 1999 within the Storm Events data. For more on event type definitions, see NOAA's documentation on this database \[link to NOAA documentation\].
+    #> Error in loadNamespace(name): there is no package called 'pander'
 
-| Event type        | Number of events in 1999 |
-|:------------------|:-------------------------|
-| Thunderstorm Wind | 10,347                   |
-| Hail              | 10,146                   |
-| Drought           | 2,542                    |
-| Winter Storm      | 2,533                    |
-| Flash Flood       | 2,495                    |
-| Heat              | 1,819                    |
-| High Wind         | 1,653                    |
-| Heavy Snow        | 1,534                    |
-| Tornado           | 1,520                    |
-| Flood             | 1,518                    |
-| Winter Weather    | 1,099                    |
-| Lightning         | 862                      |
-
-Here is a list of all events listed in 1999, in order of frequency:
-
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th align="center">Event type</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="center">Thunderstorm Wind, Hail, Drought, Winter Storm, Flash Flood, Heat, High Wind, Heavy Snow, Tornado, Flood, Winter Weather, Lightning, Strong Wind, Heavy Rain, Dense Fog, Ice Storm, Cold/Wind Chill, Funnel Cloud, Wildfire, Waterspout, Hurricane (Typhoon), Blizzard, High Surf, Coastal Flood, Tropical Storm, Sleet, Rip Current, Lake-Effect Snow, Storm Surge/Tide, Frost/Freeze, Dust Devil, Freezing Fog, Volcanic Ash, Dust Storm, Marine High Wind, Seiche</td>
-</tr>
-</tbody>
-</table>
+For more on event type definitions, see NOAA's documentation on this database \[link to NOAA documentation\].
 
 If the user runs one of the `find_*` functions, the output is a dataframe of all matching events. This dataframe includes information about the location of the event (state, county name or other location specifier) as well as information on the beginning and ending dates of the event. The `map_*` functions directly create a map of the specified subset of events.
 
@@ -90,9 +61,11 @@ Mapping all counties that had at least one event over a date range:
 
 ``` r
 map_events(date_range = c("1999-09-14", "1999-09-18"))
+#> Warning: `panel.margin` is deprecated. Please use `panel.spacing` property
+#> instead
 ```
 
-![](README-unnamed-chunk-5-1.png)
+![](README-unnamed-chunk-4-1.png)
 
 Creating a dataframe of all events within a date range:
 
@@ -193,27 +166,33 @@ Mapping the number of events in each county within a certain date range:
 ``` r
 map_events(storm = "Floyd-1999", dist_limit = 200,
            plot_type = "number of events")
+#> Warning: `panel.margin` is deprecated. Please use `panel.spacing` property
+#> instead
 ```
 
-![](README-unnamed-chunk-11-1.png)
+![](README-unnamed-chunk-10-1.png)
 
 Mapping the number of events, but only counting counties that were within 100 kilometers of the track of Hurricane Floyd in 1999, with the hurricane's track added to the plot:
 
 ``` r
 map_events(storm = "Floyd-1999", dist_limit = 100, 
            add_tracks = TRUE, plot_type = "number of events")
+#> Warning: `panel.margin` is deprecated. Please use `panel.spacing` property
+#> instead
 ```
 
-![](README-unnamed-chunk-12-1.png)
+![](README-unnamed-chunk-11-1.png)
 
 Mapping the number of all events that happened under the influence of Hurricane Floyd in 1999, with the hurricane's track added to the plot::
 
 ``` r
 map_events(storm = "Floyd-1999", dist_limit = 100, add_tracks = TRUE,
            plot_type = "number of events")
+#> Warning: `panel.margin` is deprecated. Please use `panel.spacing` property
+#> instead
 ```
 
-![](README-unnamed-chunk-13-1.png)
+![](README-unnamed-chunk-12-1.png)
 
 Pulling and mapping other values
 --------------------------------
@@ -272,15 +251,17 @@ ggplot(floyd_prop_damage, aes(x = damage_property)) +
   theme_bw()
 ```
 
-<img src="README-unnamed-chunk-15-1.png" style="display: block; margin: auto;" />
+<img src="README-unnamed-chunk-14-1.png" style="display: block; margin: auto;" />
 
 Here is a map of property damage associated with Floyd:
 
 ``` r
 map_damage_property(storm = "Floyd-1999", dist = 500)
+#> Warning: `panel.margin` is deprecated. Please use `panel.spacing` property
+#> instead
 ```
 
-![](README-unnamed-chunk-16-1.png)
+![](README-unnamed-chunk-15-1.png)
 
 Here are the counties with the most property damage in terms of cost:
 
@@ -424,3 +405,24 @@ find_file_name(year = 1999, file_type = "fatalities")
 ```
 
 Files are compressed using gzip compression.
+
+### Additional data cleaning
+
+The `noaastormevents` package does a bit of additional cleaning once it pulls storm event data.
+
+First, while many storm events are listed by county, with identification by a 5-digit Federal Information Processing Standard (FIPS) code, some events are instead listed by a forecast zone identifier. In the original data, these are listed with the value "Z" for the `CZ_TYPE` variable. In 1999, about 35% of listed storm events were listed by forecast zone rather than county:
+
+``` r
+all_1999_events %>% group_by(CZ_TYPE) %>% summarize(frequency = n())
+#> # A tibble: 2 × 2
+#>   CZ_TYPE frequency
+#>     <chr>     <int>
+#> 1       C     27362
+#> 2       Z     15357
+```
+
+\[double check-- is this after filtering out some of the forecast zone observations?\]
+
+When the package pulls storm events, any that are identified based on a county FIPS code are directly linked to a single county with the code. For storm events identified by forecast zone, the package tries to match it to the correct county. It takes the following steps to try to do that:
+
+\[Steps for trying to match up forecast zone events to counties\]
