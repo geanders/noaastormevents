@@ -1,6 +1,6 @@
 ---
 title: "Overview of noaastormevents"
-author: "Ziyu Chen, Brooke Anderson"
+author: "Brooke Anderson, Ziyu Chen"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -9,55 +9,54 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "README-"
-)
-```
-
-```{r echo = FALSE, error = FALSE, message = FALSE}
-library(noaastormevents)
-library(lubridate)
-library(tidyverse)
-```
-
-## Loading the package
-
-The package currently exists in [a development version](https://github.com/zailchen/noaastormevents) on GitHub. You can use the following code to load it:
-
-```{r eval = FALSE}
-library(devtools)
-install_github("zailchen/noaastormevents")
 library(noaastormevents)
 ```
 
-As a caveat, however, this package is in early development and relies on other packages that are in development on GitHub, so it may take some doing to get the package set up at the moment. 
+## Description of package
+
+This package can be used to explore and map data from [NOAA's Storm Events Database](https://www.ncdc.noaa.gov/stormevents/). This storm event database ... [description]. It has aggregated storm event lisings for [tornados, ...] since [year] and for additional event types (e.g., [...]) since ... . This database has been used either alone or in conjunction with other data for a number of scientific studies (e.g., [...]). It is available for downloading at https://www.ncdc.noaa.gov/stormevents/ftp.jsp, with three files (one with event details, one with fatality details, and with with location details) available per year. 
+
+While the online database does not have a structured API, this package uses regular expressions to search the listings of available files to identify the filename for a queried year and download that year's data to a user's R session. The package functions then filter the downloaded storm event listings based to the dates, locations, event types, and other search limitations specified by the user. In particular, this package can be used to identify storm event listings that were close in location and time to Atlantic basin tropical storm tracks. 
+
+Several types of events can be queried and mapped with this package: 
+
+- **Storm events:** (package functions `find_events` and `map_events`)
+- **Direct deaths:** (package functions `find_direct_deaths` and `map_direct_deaths`)
+- **Direct injuries:** (package functions `find_direct_injuries` and `map_direct_injuries`)
+- **Indirect deaths:** (package functions `find_indirect_deaths` and `map_indirect_deaths`)
+- **Indirect injuries:** (package functions `find_indirect_injuries` and `map_indirect_injuries`)
+- **Property damage:** (package functions `find_damage_property` and `map_damage_property`)
+- **Crop damage:** (package functions `find_damage_crops` and `map_damage_crops`)
+
+Some events are listed in the original database by forecast zone rather than county. For these observations, the package functions attempts to match the observation with the appropriate county. However, there are some events listed by forecast zone that cannot be matched to county, and so are excluded from results returned by this package. Further, there may be occasional errors in this matching, so we include a marker returned datasets indicating which events were listed by forecast zone rather than county, to allow further quality control checks by the user for his or her specific applications of the package. 
+
+It is important for users to note that there are limitations to this storm events database. In particular, listings can be somewhat subjective. A lack of event listing in the database should not be considered definitive proof that storm conditions did not exist at a location at a certain time. Further, the database has changed over time in terms of which types of events are included. R users should review the Storm Event Database's documentation, which is available at [the database's website](https://www.ncdc.noaa.gov/stormevents/), to be sure they understand how to use and interpret event listings from the database. 
 
 ## Simple example
 
-This package can be used to explore and map data from [NOAA's Storm Events Database](https://www.ncdc.noaa.gov/stormevents/). We are currently developing the package using only data from a single year, 1999. 
+### Creating a storm events dataset
 
-The storm has a number of functions for mapping different data points from this database. For example, the `map_events` function allows you to map all events in the database with a starting date within a specified range. It also has some options specific to tropical storm research, including mapping only events with tropical storm-related tags or only events that happened in counties within a certain distance of the track of a specific tropical storm. 
+The package has two main types of functionalities. First, it has a number of functions (the `find_*` family of functions in the package) that can be used to create dataframes of event listings. These functions differ only in the type of event listing (storm events, direct deaths, property damage, etc.). Second, the package has a number of functions (the `map_*` family of functions) that can be used to map storm event listings; again, these functions differ only in the type of event listing they query.
 
-Here are some examples: 
-
-Mapping all counties that had at least one event over a date range:
-
-```{r}
-map_events(date_range = c("1999-09-14", "1999-09-18"))
-```
-
-Creating a dataframe of all events within a date range:
+For example, the `find_events` function will create a dataframe with all storm event listings within a specified time frame. For example, the following code creates a dataframe with all events from the NOAA Storm Events Database listed as beginning between September 14 and 18, 1999 (a time window relevant for Hurricane Floyd, which caused extensive damage, especially from flooding):
 
 ```{r eval = 3:4, echo = c(1, 4)}
-oct_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
-save(oct_1999_events, file = "data/oct_1999_events.RData")
-load("data/oct_1999_events.RData")
-head(oct_1999_events)
+sept_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
+save(sept_1999_events, file = "data/sept_1999_events.RData")
+load("data/sept_1999_events.RData")
+head(sept_1999_events)
 ```
+
+The code call returns a data frame with a subset of data from the Storm Events Database for 1999. Each event listing with a start data between September 14 and 18 is included. The data frame has the following columns: 
+
+- `begin_date`: The date the event began
+- `end_date`: The date the event ended
+- `STATE`: The state in which the event occurred
+- `CZ_TYPE`: Whether the event was listed by county or by forecast zone (Where possible, events that are listed by forecast zone are linked to the appropriate county FIPS code and therefore not excluded from this returned dataframe. However, this column is included to allow users to perform quality control on events listed by forecast zone (`CZ_TYPE` of "Z").)
+- `state_county_name`: The state and county in which the event occurred. If the event was listed by forecast zone, the county name included for this column is based on the most appropriate county to link to the given forecast zone. 
+- `type`: Event type (e.g., "Flood", "Lightning", "Tornado", "Wildfire"). See [the NOAA Storm Events documentation](https://www.ncdc.noaa.gov/stormevents/pd01016005curr.pdf) for definitions of these event types
+- `fips`: Five-digit county (Federal Information Processing Standard) FIPS code. This code uniquely identifies each U.S. county.
 
 Creating a dataframe of all events within a certain time and distance from a hurricane track:
 
@@ -68,7 +67,8 @@ head(floyd_events)
 
 Here is an example summary of this data:
 
-```{r}
+```{r message = FALSE, warning = FALSE}
+library(dplyr)
 floyd_events %>%
   group_by(type) %>%
   summarize(n = n()) %>%
@@ -90,6 +90,16 @@ floyd_events %>%
   knitr::kable()
 ```
 
+### Mapping storm events
+
+The package has a number of functions for mapping storm event listings from this database. For example, the `map_events` function allows you to map all events in the database with a starting date within a specified range. It also has some options specific to tropical storm research, including mapping only events with tropical storm-related tags or only events that happened in counties within a certain distance of the track of a specific tropical storm. 
+Here are some examples: 
+
+Mapping all counties that had at least one event over a date range:
+
+```{r}
+map_events(date_range = c("1999-09-14", "1999-09-18"))
+```
 
 Mapping any county with at least one event, not restricting to only the eastern half of the country:
 
