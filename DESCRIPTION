@@ -7,7 +7,8 @@ Authors@R: c(person("Brooke", "Anderson",
     email = "brooke.anderson@colostate.edu", role = c("aut", "cre")),
     person("Ziyu", "Chen",
     email = "zailchen17@icloud.com", role = "aut"))
-Description: Allows users to explore and plot data from NOAA's 
+Description: Allows users to explore and plot data from the
+    National Oceanic and Atmospheric Administration (NOAA) 
     Storm Events database through R for United States counties. 
     Functionality includes matching storm event listings by time and 
     location to hurricane best tracks data. This work was 
@@ -35,9 +36,10 @@ Imports:
 RoxygenNote: 5.0.1
 Depends:
     R (>= 2.10)
-Suggests: knitr,
-    rmarkdown,
-    testthat,
-    tidyverse (>= 1.0.0)
+Suggests: 
+    dplyr (>= 0.5.0),
+    knitr (>= 1.15.1),
+    rmarkdown (>= 1.3.0),
+    testthat (>= 1.0.2)
 VignetteBuilder: knitr
 Additional_repositories: http://geanders.github.io/drat
