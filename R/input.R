@@ -29,16 +29,20 @@ find_file_name <- function(year = NULL, file_type = "detail") {
 
 #' Process inputs to main functions
 #'
+#' Processes some of the user's inputs for arguments for main
+#' package functions, looks for any errors in input, and determines
+#' elements like the year or years of storm data needed based on
+#' user inputs.
+#'
+#' @return A list with date ranges and storm identification based on
+#'    user inputs to arguments in a main package function.
+#'
 #' @inheritParams create_storm_data
 process_input_args <- function(date_range = NULL, storm = NULL){
 
   if(!is.null(date_range)){
-    date_range <- lubridate::ymd(date_range)
+    date_range <- sort(lubridate::ymd(date_range))
     date_range_years <- lubridate::year(date_range)
-    if(date_range[2] < date_range[1]){
-      stop(paste0("The second date in `date_range` must",
-                  " be after the first date."))
-    }
   }
   if(!is.null(storm)){
     storm_year <- as.numeric(gsub("[^0-9]", "", storm))
