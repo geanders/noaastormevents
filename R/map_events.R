@@ -21,17 +21,19 @@
 find_events <- function(date_range = NULL, event_type = NULL,
                         dist_limit = NULL, storm = NULL){
 
-  processed_inputs <- process_input_args(date_range = date_range, storm = storm)
-  date_range <- processed_inputs$date_range
-  storm <- processed_inputs$storm
+  processed_inputs <- process_input_args(date_range = date_range,
+                                         storm = storm)
 
-  storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
+  storm_data <- create_storm_data(date_range = processed_inputs$date_range,
+                                  storm = processed_inputs$storm) %>%
     dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
-                   ~ STATE, ~ CZ_TYPE, ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
-                   ~ CZ_FIPS) %>%
-    dplyr::rename_(type = ~ EVENT_TYPE) %>%
-    adjust_storm_data(date_range = date_range, event_type = event_type,
-                      dist_limit = dist_limit, storm = storm)
+                   ~ EPISODE_ID, ~EVENT_ID, ~ STATE, ~ CZ_TYPE, ~ CZ_NAME,
+                   ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~SOURCE,
+                   ~ EPISODE_NARRATIVE, ~ EVENT_NARRATIVE) %>%
+    setNames(tolower(names(.))) %>%
+    adjust_storm_data(date_range = processed_inputs$date_range,
+                      event_type = event_type, dist_limit = dist_limit,
+                      storm = processed_inputs$storm)
 
   return(storm_data)
 }

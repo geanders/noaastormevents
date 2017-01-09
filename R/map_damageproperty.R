@@ -31,8 +31,7 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
     dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
                    ~ STATE, ~ CZ_TYPE, ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
                    ~ CZ_FIPS, ~ DAMAGE_PROPERTY) %>%
-    dplyr::rename_(type = ~ EVENT_TYPE,
-                  damage_property = ~ DAMAGE_PROPERTY) %>%
+    setNames(tolower(names(.))) %>%
     adjust_storm_data(date_range = date_range, event_type = event_type,
                       dist_limit = dist_limit, storm = storm)
 
