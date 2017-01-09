@@ -3,6 +3,14 @@
 #' This function will find all of the events in the US for a specified date
 #' range.
 #'
+#' @param include_narratives A logical value for whether the final data
+#'    data frame should include columns for episode and event narratives
+#'    (TRUE) or not (FALSE, the default)
+#' @param include_ids A logical value for whether the final data frame
+#'    should include columns for event and episode IDs (TRUE) or not
+#'    (FALSE, the default). If included, these IDs could be used in some
+#'    cases to link events to data in the "fatalities" or "locations"
+#'    files available through the NOAA Storm Events database.
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
@@ -19,7 +27,9 @@
 #'
 #' @export
 find_events <- function(date_range = NULL, event_type = NULL,
-                        dist_limit = NULL, storm = NULL){
+                        dist_limit = NULL, storm = NULL,
+                        include_narratives = FALSE,
+                        include_ids = FALSE){
 
   processed_inputs <- process_input_args(date_range = date_range,
                                          storm = storm)
@@ -28,12 +38,22 @@ find_events <- function(date_range = NULL, event_type = NULL,
                                   storm = processed_inputs$storm) %>%
     dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
                    ~ EPISODE_ID, ~EVENT_ID, ~ STATE, ~ CZ_TYPE, ~ CZ_NAME,
-                   ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~SOURCE,
+                   ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ SOURCE,
                    ~ EPISODE_NARRATIVE, ~ EVENT_NARRATIVE) %>%
     setNames(tolower(names(.))) %>%
     adjust_storm_data(date_range = processed_inputs$date_range,
                       event_type = event_type, dist_limit = dist_limit,
                       storm = processed_inputs$storm)
+
+  if(!include_narratives){
+    storm_data <- storm_data %>%
+      dplyr::select_(~ -event_narrative, ~ -episode_narrative)
+  }
+
+  if(!include_ids){
+    storm_data <- storm_data %>%
+      dplyr::select_(~ -event_id, ~ -episode_id)
+  }
 
   return(storm_data)
 }

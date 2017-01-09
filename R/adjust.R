@@ -10,7 +10,6 @@
 #' @inheritParams create_storm_data
 #'
 #' @importFrom dplyr %>%
-#' @importFrom lubridate %within%
 adjust_storm_data <- function(storm_data, date_range = NULL,
                               event_type = NULL, dist_limit = NULL,
                               storm = NULL) {
@@ -19,7 +18,8 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
   county.regions <- county.regions %>%
     tidyr::unite_("state_county_name", c("state.name", "county.name"), sep = " ")
 
-  # A bit more general cleaning of the data
+  # Clean up storm events reported by forecast zone rather than county
+  # (cz_type == "Z")
   storm_data_Z <- storm_data %>%
     dplyr::tbl_df() %>%
     dplyr::filter_(~ cz_type == "Z") %>%
@@ -48,9 +48,11 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
     dplyr::left_join(county.regions, by = "state_county_name") %>%
     dplyr::rename_(fips = ~ county.fips.character,
                    type = ~ event_type) %>%
-    dplyr::select_(~ state, ~ begin_yearmonth, ~ begin_day, ~ end_yearmonth,
-                   ~ end_day, ~ cz_type, ~ state_fips, ~ cz_fips,
-                   ~ state_county_name, ~ type, ~ fips)
+    dplyr::select_(~ begin_yearmonth, ~ begin_day, ~ end_yearmonth,
+                   ~ end_day, ~ episode_id, ~ event_id,
+                   ~ state_county_name, ~ state, ~ cz_type,
+                   ~ type, ~ fips, ~ source, ~ episode_narrative,
+                   ~ event_narrative)
 
   storm_data <- storm_data %>%
     dplyr::tbl_df() %>%
@@ -63,36 +65,39 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
     dplyr::mutate_(cz_fips = ~ sprintf("%03d", cz_fips)) %>%
     dplyr::mutate_(state_fips = ~ sprintf("%02d", state_fips)) %>%
     tidyr::unite_("fips", c("state_fips","cz_fips"), sep = "") %>%
-    dplyr::full_join(storm_data_Z, by = c("state","begin_yearmonth",
-                                          "begin_day", "end_yearmonth",
-                                          "end_day", "state_county_name",
-                                          "cz_type", "type", "fips")) %>%
+    dplyr::bind_rows(storm_data_Z) %>%
     dplyr::mutate_(begin_day =  ~ sprintf("%02d", begin_day),
                    end_day =  ~ sprintf("%02d", end_day)) %>%
     tidyr::unite_("begin_date", c("begin_yearmonth", "begin_day"), sep = "") %>%
     tidyr::unite_("end_date", c("end_yearmonth", "end_day"), sep = "") %>%
     dplyr::mutate_(begin_date = ~ lubridate::ymd(begin_date),
                    end_date = ~ lubridate::ymd(end_date))%>%
-    dplyr::select_(~ -state_fips, ~ -cz_fips) %>%
-    dplyr::filter_(~ !is.na(fips))
+    dplyr::filter_(~ !is.na(fips)) %>%
+    dplyr::arrange_(~ begin_date)
 
-  # If a date range in include, filter only on that for date
+  # Pull closest distance data if the storm is provided
+  if(!is.null(storm)){
+    distance_df <- hurricaneexposuredata::closest_dist %>%
+      dplyr::filter_(~ storm_id == storm) %>%
+      dplyr::select_(~ -closest_time_utc, ~ -local_time) %>%
+      dplyr::mutate_(closest_date = ~ lubridate::ymd(closest_date),
+                     earliest_date = ~ closest_date - lubridate::ddays(2),
+                     latest_date = ~ closest_date + lubridate::ddays(2))
+    storm_data <- storm_data %>%
+      dplyr::left_join(distance_df, by = "fips")
+  }
+
+  # If a date range is included, filter only on that for date
   if(!is.null(date_range)){
     storm_data <- storm_data %>%
       dplyr::filter_(~ !is.na(begin_date) &
                       begin_date %within% lubridate::interval(date_range[1],
                                                               date_range[2]))
-  } else { ## Otherwise, use the storm dates from "closest_dates" to pick dates
-    distance_df <- hurricaneexposuredata::closest_dist %>%
-      dplyr::filter_(~ storm_id == storm) %>%
-      dplyr::mutate_(closest_date = ~ lubridate::ymd(closest_date))
-   storm_closest_interval <- lubridate::interval(min(distance_df$closest_date) -
-                                                   lubridate::ddays(2),
-                                                 max(distance_df$closest_date) +
-                                                   lubridate::ddays(2))
+  } else if (!is.null(storm)){ ## Otherwise, if possible use the storm dates from "closest_dates" to pick dates
    storm_data <- storm_data %>%
-     dplyr::filter_(~ !is.na(begin_date) &
-                     begin_date %within% storm_closest_interval)
+     dplyr::filter_(~ !is.na(begin_date)) %>%
+     dplyr::filter_(~ earliest_date <= begin_date &
+                      begin_date <= latest_date)
   }
 
   # If a distance limit is specified, filter by that
@@ -100,10 +105,15 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
     if(is.null(storm)){
       stop("To use `dist_limit`, `storm` must be specified.")
     }
-    distance_df <- hurricaneexposuredata::closest_dist %>%
-      dplyr::filter_(~ storm_id == storm & storm_dist <= dist_limit)
     storm_data <- storm_data %>%
-      dplyr::filter_(~ fips %in% distance_df$fips)
+      dplyr::filter_(~ storm_dist <= dist_limit)
+  }
+
+  # Clean up some extras put in `storm_data` to filter by time and location
+  if(!is.null(storm)){
+    storm_data <- storm_data %>%
+      dplyr::select_(~ -storm_dist, ~ -closest_date, ~ -earliest_date,
+                     ~ -latest_date)
   }
 
   # If the event_type is specified, filter by that
@@ -112,6 +122,9 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
                                                   ~ tolower(type) ==
                                                     tolower(event_type)))
   }
+
+  storm_data <- storm_data %>%
+    dplyr::mutate_(state = ~ stringr::str_to_title(state))
 
 
   return(storm_data)

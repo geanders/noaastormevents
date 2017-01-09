@@ -5,7 +5,7 @@
 \title{Find all event listings for date range}
 \usage{
 find_events(date_range = NULL, event_type = NULL, dist_limit = NULL,
-  storm = NULL)
+  storm = NULL, include_narratives = FALSE, include_ids = FALSE)
 }
 \arguments{
 \item{date_range}{A character vector of length two with the start and end
@@ -21,6 +21,16 @@ events data for. This string must follow the format
 "[storm-name]-[4-digit storm year]" (e.g., \code{"Floyd-1999"}).
 Currently, this functionality only works for storms included in the
 extended hurricane best tracks, which covers 1988 to 2014.}
+
+\item{include_narratives}{A logical value for whether the final data
+data frame should include columns for episode and event narratives
+(TRUE) or not (FALSE, the default)}
+
+\item{include_ids}{A logical value for whether the final data frame
+should include columns for event and episode IDs (TRUE) or not
+(FALSE, the default). If included, these IDs could be used in some
+cases to link events to data in the "fatalities" or "locations"
+files available through the NOAA Storm Events database.}
 }
 \description{
 This function will find all of the events in the US for a specified date

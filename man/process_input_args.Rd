@@ -16,7 +16,14 @@ events data for. This string must follow the format
 Currently, this functionality only works for storms included in the
 extended hurricane best tracks, which covers 1988 to 2014.}
 }
+\value{
+A list with date ranges and storm identification based on
+   user inputs to arguments in a main package function.
+}
 \description{
-Process inputs to main functions
+Processes some of the user's inputs for arguments for main
+package functions, looks for any errors in input, and determines
+elements like the year or years of storm data needed based on
+user inputs.
 }
 

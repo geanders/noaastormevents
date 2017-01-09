@@ -41,8 +41,11 @@ The package has two main types of functionalities. First, it has a number of fun
 
 For example, the `find_events` function will create a dataframe with all storm event listings within a specified time frame. For example, the following code creates a dataframe with all events from the NOAA Storm Events Database listed as beginning between September 14 and 18, 1999 (a time window relevant for Hurricane Floyd, which caused extensive damage, especially from flooding):
 
-```{r eval = 3:4, echo = c(1, 4)}
+```{r eval = FALSE}
 sept_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
+```
+
+```{r eval = 2:3, echo = c(3)}
 save(sept_1999_events, file = "data/sept_1999_events.RData")
 load("data/sept_1999_events.RData")
 head(sept_1999_events)
@@ -52,20 +55,42 @@ The code call returns a data frame with a subset of data from the Storm Events D
 
 - `begin_date`: The date the event began
 - `end_date`: The date the event ended
-- `STATE`: The state in which the event occurred
-- `CZ_TYPE`: Whether the event was listed by county or by forecast zone (Where possible, events that are listed by forecast zone are linked to the appropriate county FIPS code and therefore not excluded from this returned dataframe. However, this column is included to allow users to perform quality control on events listed by forecast zone (`CZ_TYPE` of "Z").)
 - `state_county_name`: The state and county in which the event occurred. If the event was listed by forecast zone, the county name included for this column is based on the most appropriate county to link to the given forecast zone. 
+- `state`: The state in which the event occurred
+- `cz_type`: Whether the event was listed by county or by forecast zone (Where possible, events that are listed by forecast zone are linked to the appropriate county FIPS code and therefore not excluded from this returned dataframe. However, this column is included to allow users to perform quality control on events listed by forecast zone (`CZ_TYPE` of "Z").)
 - `type`: Event type (e.g., "Flood", "Lightning", "Tornado", "Wildfire"). See [the NOAA Storm Events documentation](https://www.ncdc.noaa.gov/stormevents/pd01016005curr.pdf) for definitions of these event types
 - `fips`: Five-digit county (Federal Information Processing Standard) FIPS code. This code uniquely identifies each U.S. county.
+- `source`: The source of the storm event listing (e.g., trained spotter, emergency manager, general public, law enforcement)
 
-Creating a dataframe of all events within a certain time and distance from a hurricane track:
+In some cases, a user may wish to identify all storm events listings that were close in time and place to a tropical storm. The `noaastormevents` package therefore alls users to search for events close in time and location to a tropical storm. To do this, the package draws on data and functions in the `hurricaneexposure` and `hurricaneexposuredata` packages (in development on GitHub) to match storm event listings against tropical storm "best tracks" data, which provides 6-hour observations of storm strength and location. 
 
-```{r}
-floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 200)
+Event listings are pulled for all events that occured within a five-day window of the day the storm was closest to each county and that were within a user-specified distance of the storm track. For example, to create a dataset with all event listings for counties within 300 kilometers (`dist_limit` option) of the path of Hurricane Floyd (`storm = "Floyd-1999"`) and for which the event began within a five-day window of the storm's closest approach, the user can run:
+
+```{r eval = FALSE, echo = 1}
+floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 300)
+save(floyd_events, file = "data/floyd_events.RData")
+```
+```{r echo = 2}
+load("data/floyd_events.RData")
 head(floyd_events)
 ```
 
-Here is an example summary of this data:
+Note that the storm ID includes a storm name ("Floyd") and year ("1999"). Both must be specified, as storm names are not retired until they are used for a very severe storm. This functionality will only work for storms included in the `hurricaneexposuredata` package. These currently include: 
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+library(dplyr)
+library(hurricaneexposuredata)
+data("hurr_tracks")
+hurr_tracks %>% 
+  tidyr::separate(storm_id, c("storm", "year")) %>%
+  dplyr::select(storm, year) %>%
+  dplyr::distinct() %>%
+  dplyr::group_by(year) %>% 
+  dplyr::summarize(storms = paste(storm, collapse = ", ")) %>% 
+  knitr::kable()
+```
+
+Once `find_events` has been used to create a dataset of storm event listings, the dataset can be explored. The user can do things like determine the number of events of each type that occurred near in time and location to a storm's track. For example, here is a summary of numbers of different types of events for Hurricane Floyd, created using `dplyr` tools:
 
 ```{r message = FALSE, warning = FALSE}
 library(dplyr)
@@ -74,21 +99,27 @@ floyd_events %>%
   summarize(n = n()) %>%
   arrange(desc(n)) %>%
   knitr::kable(col.names = c("Event type", "Number of events"),
-               caption = "NOAA Storm Events within 200 km and [x] days of Hurricane Floyd.")
+               caption = "NOAA Storm Events within 200 km and within a 5-day window of Hurricane Floyd.")
   
 ```
 
-Here is another example summary:
+Similarly, you could create a summary with the states in which the most events were listed and give the number and type of events in each of those counties:
 
 ```{r}
 floyd_events %>%
-  group_by(fips) %>%
-  summarize(n = n(),
-            events = paste(type, collapse = ", ")) %>%
-  arrange(desc(n)) %>%
-  slice(1:10) %>%
+  group_by(state, type) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  arrange(state, desc(n)) %>%
+  mutate(type = paste0(type, " (", n, ")")) %>%
+  group_by(state) %>%
+  summarize(Total = sum(n),
+            Events = paste(type, collapse = ", ")) %>%
+  ungroup() %>%
+  arrange(desc(Total)) %>%
   knitr::kable()
 ```
+
 
 ### Mapping storm events
 
@@ -104,34 +135,46 @@ map_events(date_range = c("1999-09-14", "1999-09-18"))
 Mapping any county with at least one event, not restricting to only the eastern half of the country:
 
 ```{r}
-map_events(storm = "Floyd-1999", dist_limit = 200,
+map_events(storm = "Floyd-1999", dist_limit = 300,
            east_only = FALSE)
 ```
 
 Mapping the number of events in each county within a certain date range:
 
 ```{r}
-map_events(storm = "Floyd-1999", dist_limit = 200,
+map_events(storm = "Floyd-1999", dist_limit = 300,
            plot_type = "number of events")
 ```
 
-Mapping the number of events, but only counting counties that were within 100 kilometers of the track of Hurricane Floyd in 1999, with the hurricane's track added to the plot:
+Mapping the number of events, but only counting counties that were within 200 kilometers of the track of Hurricane Floyd in 1999, with the hurricane's track added to the plot:
 
 ```{r}
-map_events(storm = "Floyd-1999", dist_limit = 100, 
+map_events(storm = "Floyd-1999", dist_limit = 200, 
            add_tracks = TRUE, plot_type = "number of events")
 ```
 
 Mapping the number of all events that happened under the influence of Hurricane Floyd in 1999, with the hurricane's track added to the plot::
 
 ```{r}
-map_events(storm = "Floyd-1999", dist_limit = 100, add_tracks = TRUE,
+map_events(storm = "Floyd-1999", dist_limit = 300, add_tracks = TRUE,
            plot_type = "number of events")
 ```
 
 ## Details of how the package works
 
-This package pulls data posted online by the National Centers for Environmental Information (NCEI; formally, the National Climatic Data Center [NCDC]). The NCEI currently includes comma-separated files covering different elements of the Storm Events database, with separate files for each year, which are available [here](http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/). 
+### Linking forecast zones to counties
+
+Some events are reported by forecast zone rather than county; these events are reported using "Z" for the "CZ_ZONE" variable in the original Storm Events Database data. Rather than dropping all of these events, the `noaastormevents` functions attempt to match each of these events to an appropriate U.S. county.
+
+To match these events to counties, functions in `noaastormevents` attempt to match the "cz_name" and "state_name" for the event to a real county and state name for a U.S county. For forecast zone events, the "cz_name" will often include qualifiers describing the part of a county in which an event occurred (e.g., "eastern", "southwest", "lower", "central", "interior"). A number of these qualifiers are removed from "cz_name" before trying to match this name with a real county name. In rare cases, this cleaning might be removing part of a true county name, but in practice it seems that more county matches can be correctly identified by removing these potential qualifiers. The functions also remove forward slashes and anything that comes after them (e.g., "Albemarle / Charlottesville" is changed to "Albemarle"). 
+
+For all events that are identified by county (`cz_type` is "C"), the "cz_fips" column gives the county's FIPS directly. Therefore, matching by county name is not required for these events, and they are therefore likely more reliably linked to a county that the events reported by forecast zone.
+
+We include a column called `cz_type` in the final data returned by the `find_*` family of functions. This column takes the value "C" is the event was reported by county and "Z" if it was reported by forecast zone. Therefore, if a user decides to exclude all events listed by forecast zone, he or she can use this column to filter. In other cases, a user may wish to include these events, but perform additional quality control checks to correct any incorrect county matching in the storm events pulled for his or her specific application.
+
+### Package interaction with the NOAA Storm Events website
+
+The `noaastormevents` package pulls data posted online by the National Centers for Environmental Information (NCEI; formally, the National Climatic Data Center [NCDC]). The NCEI currently includes comma-separated files covering different elements of the Storm Events database, with separate files for each year, which are available [here](http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/). 
 
 For each year, there are three file types: 
 
