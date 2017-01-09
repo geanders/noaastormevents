@@ -13,13 +13,8 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.path = "README-"
 )
-library(noaastormevents)
-library(hurricaneexposuredata)
-library(lubridate)
-library(tidyverse)
-library(ggplot2)
-library(scales)
 ```
+
 
 ## Loading the package
 
@@ -29,6 +24,17 @@ The package currently exists in [a development version](https://github.com/zailc
 library(devtools)
 install_github("zailchen/noaastormevents")
 library(noaastormevents)
+```
+
+```{r echo = FALSE, message = FALSE}
+library(noaastormevents)
+```
+```{r message = FALSE}
+library(hurricaneexposuredata)
+library(lubridate)
+library(tidyverse)
+library(ggplot2)
+library(scales)
 ```
 
 As a caveat, however, this package is in early development and relies on other packages that are in development on GitHub, so it may take some doing to get the package set up at the moment. 
