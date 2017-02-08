@@ -13,6 +13,14 @@ install_github("zailchen/noaastormevents")
 library(noaastormevents)
 ```
 
+``` r
+library(hurricaneexposuredata)
+library(lubridate)
+library(tidyverse)
+library(ggplot2)
+library(scales)
+```
+
 As a caveat, however, this package is in early development and relies on other packages that are in development on GitHub, so it may take some doing to get the package set up at the moment.
 
 Overview of package
@@ -46,7 +54,21 @@ All of these functions require you to specify a subset of the Storm Database to 
 
 At least one of these two methods must be used to specify events to pull. In addition, the user can further filter events to one or a few event types. Here is a list of all events listed in 1999, in order of frequency:
 
-    #> Error in loadNamespace(name): there is no package called 'pander'
+<table>
+<colgroup>
+<col width="100%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Event type</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">Thunderstorm Wind, Hail, Drought, Winter Storm, Flash Flood, Heat, High Wind, Heavy Snow, Tornado, Flood, Winter Weather, Lightning, Strong Wind, Heavy Rain, Dense Fog, Ice Storm, Cold/Wind Chill, Funnel Cloud, Wildfire, Waterspout, Hurricane (Typhoon), Blizzard, High Surf, Coastal Flood, Tropical Storm, Sleet, Rip Current, Lake-Effect Snow, Storm Surge/Tide, Frost/Freeze, Dust Devil, Freezing Fog, Volcanic Ash, Dust Storm, Marine High Wind, Seiche</td>
+</tr>
+</tbody>
+</table>
 
 For more on event type definitions, see NOAA's documentation on this database \[link to NOAA documentation\].
 
@@ -65,23 +87,23 @@ map_events(date_range = c("1999-09-14", "1999-09-18"))
 #> instead
 ```
 
-![](README-unnamed-chunk-4-1.png)
+![](README-unnamed-chunk-6-1.png)
 
 Creating a dataframe of all events within a date range:
 
 ``` r
 oct_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
 head(oct_1999_events)
-#> # A tibble: 6 × 7
-#>   begin_date   end_date         STATE CZ_TYPE        state_county_name
-#>       <date>     <date>         <chr>   <chr>                    <chr>
-#> 1 1999-09-16 1999-09-17 MASSACHUSETTS       C   massachusetts franklin
-#> 2 1999-09-16 1999-09-17 MASSACHUSETTS       C massachusetts barnstable
-#> 3 1999-09-16 1999-09-17 MASSACHUSETTS       C  massachusetts hampshire
-#> 4 1999-09-17 1999-09-17   PUERTO RICO       C        puerto rico ponce
-#> 5 1999-09-18 1999-09-18       FLORIDA       C          florida manatee
-#> 6 1999-09-16 1999-09-16      MARYLAND       C         maryland harford
-#> # ... with 2 more variables: type <chr>, fips <chr>
+#> # A tibble: 6 × 8
+#>   begin_date   end_date state_county_name   state cz_type
+#>       <date>     <date>             <chr>   <chr>   <chr>
+#> 1 1999-09-14 1999-09-14     florida duval Florida       C
+#> 2 1999-09-14 1999-09-14 florida st. johns Florida       C
+#> 3 1999-09-14 1999-09-14  arizona maricopa Arizona       C
+#> 4 1999-09-14 1999-09-14  arizona maricopa Arizona       C
+#> 5 1999-09-14 1999-09-14     arizona pinal Arizona       C
+#> 6 1999-09-14 1999-09-14  arizona maricopa Arizona       C
+#> # ... with 3 more variables: type <chr>, fips <chr>, source <chr>
 ```
 
 Creating a dataframe of all events within a certain time and distance from a hurricane track:
@@ -89,16 +111,17 @@ Creating a dataframe of all events within a certain time and distance from a hur
 ``` r
 floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 200)
 head(floyd_events)
-#> # A tibble: 6 × 7
-#>   begin_date   end_date         STATE CZ_TYPE           state_county_name
-#>       <date>     <date>         <chr>   <chr>                       <chr>
-#> 1 1999-09-16 1999-09-17 MASSACHUSETTS       C      massachusetts franklin
-#> 2 1999-09-16 1999-09-17 MASSACHUSETTS       C    massachusetts barnstable
-#> 3 1999-09-16 1999-09-17 MASSACHUSETTS       C     massachusetts hampshire
-#> 4 1999-09-16 1999-09-16      MARYLAND       C            maryland harford
-#> 5 1999-09-16 1999-09-16      MARYLAND       C          maryland baltimore
-#> 6 1999-09-16 1999-09-16      MARYLAND       C maryland baltimore city (c)
-#> # ... with 2 more variables: type <chr>, fips <chr>
+#> # A tibble: 6 × 9
+#>   begin_date   end_date      state_county_name          state cz_type
+#>       <date>     <date>                  <chr>          <chr>   <chr>
+#> 1 1999-09-14 1999-09-14  north carolina martin North Carolina       C
+#> 2 1999-09-14 1999-09-16  north carolina greene North Carolina       Z
+#> 3 1999-09-14 1999-09-16  north carolina onslow North Carolina       Z
+#> 4 1999-09-14 1999-09-16 north carolina pamlico North Carolina       Z
+#> 5 1999-09-14 1999-09-16    north carolina pitt North Carolina       Z
+#> 6 1999-09-14 1999-09-16 north carolina tyrrell North Carolina       Z
+#> # ... with 4 more variables: type <chr>, fips <chr>, source <chr>,
+#> #   storm_id <chr>
 ```
 
 Here is an example summary of this data:
@@ -142,10 +165,10 @@ floyd_events %>%
 
 | fips  |    n| events                                                                                          |
 |:------|----:|:------------------------------------------------------------------------------------------------|
-| 37137 |    8| Flash Flood, Tornado, Tornado, Funnel Cloud, Tornado, Tornado, Flash Flood, Hurricane (Typhoon) |
+| 37137 |    8| Hurricane (Typhoon), Flash Flood, Tornado, Tornado, Funnel Cloud, Tornado, Tornado, Flash Flood |
 | 09003 |    7| Flash Flood, Flash Flood, Heavy Rain, Flash Flood, Strong Wind, Flood, Flood                    |
-| 37031 |    7| Flash Flood, Tornado, Tornado, Flash Flood, Tornado, Thunderstorm Wind, Hurricane (Typhoon)     |
-| 37133 |    5| Flash Flood, Flash Flood, Funnel Cloud, Tornado, Hurricane (Typhoon)                            |
+| 37031 |    7| Hurricane (Typhoon), Flash Flood, Tornado, Tornado, Tornado, Thunderstorm Wind, Flash Flood     |
+| 37133 |    5| Hurricane (Typhoon), Flash Flood, Funnel Cloud, Tornado, Flash Flood                            |
 | 25013 |    4| Heavy Rain, High Wind, Flood, High Wind                                                         |
 | 25017 |    4| Heavy Rain, Flash Flood, High Wind, Strong Wind                                                 |
 | 25023 |    4| Heavy Rain, High Wind, Strong Wind, Strong Wind                                                 |
@@ -170,7 +193,7 @@ map_events(storm = "Floyd-1999", dist_limit = 200,
 #> instead
 ```
 
-![](README-unnamed-chunk-10-1.png)
+![](README-unnamed-chunk-12-1.png)
 
 Mapping the number of events, but only counting counties that were within 100 kilometers of the track of Hurricane Floyd in 1999, with the hurricane's track added to the plot:
 
@@ -181,7 +204,7 @@ map_events(storm = "Floyd-1999", dist_limit = 100,
 #> instead
 ```
 
-![](README-unnamed-chunk-11-1.png)
+![](README-unnamed-chunk-13-1.png)
 
 Mapping the number of all events that happened under the influence of Hurricane Floyd in 1999, with the hurricane's track added to the plot::
 
@@ -192,7 +215,7 @@ map_events(storm = "Floyd-1999", dist_limit = 100, add_tracks = TRUE,
 #> instead
 ```
 
-![](README-unnamed-chunk-12-1.png)
+![](README-unnamed-chunk-14-1.png)
 
 Pulling and mapping other values
 --------------------------------
@@ -205,23 +228,11 @@ Pulling and mapping other values
 ``` r
 floyd_prop_damage <- find_damage_property(storm = "Floyd-1999",
                                          dist_limit = 500)
+#> Error in eval(expr, envir, enclos): object 'episode_id' not found
 floyd_prop_damage %>%
   select(type, fips, damage_property) %>%
   filter(!is.na(damage_property))
-#> # A tibble: 125 × 3
-#>                 type  fips damage_property
-#>                <chr> <chr>           <dbl>
-#> 1         Waterspout 12081           0e+00
-#> 2        Flash Flood 24025           2e+06
-#> 3        Flash Flood 24005           1e+03
-#> 4        Flash Flood 24510           5e+03
-#> 5        Flash Flood 24009           5e+04
-#> 6        Flash Flood 24003           2e+06
-#> 7        Flash Flood 24037           5e+04
-#> 8        Flash Flood 50025           3e+04
-#> 9  Thunderstorm Wind 12031           2e+02
-#> 10 Thunderstorm Wind 12109           2e+02
-#> # ... with 115 more rows
+#> Error in eval(expr, envir, enclos): object 'floyd_prop_damage' not found
 
 floyd_prop_damage %>%
   select(type, fips, damage_property) %>%
@@ -230,14 +241,7 @@ floyd_prop_damage %>%
   summarize(n = n(),
             mean_prop_damage = mean(damage_property)) %>%
   arrange(desc(mean_prop_damage))
-#> # A tibble: 5 × 3
-#>                type     n mean_prop_damage
-#>               <chr> <int>            <dbl>
-#> 1        Heavy Rain     3      7000000.000
-#> 2       Flash Flood   107      2826359.813
-#> 3           Tornado     4      2503175.000
-#> 4 Thunderstorm Wind     9         4533.333
-#> 5        Waterspout     2            0.000
+#> Error in eval(expr, envir, enclos): object 'floyd_prop_damage' not found
 ```
 
 Here is a histogram of reported county-level property damage associated with Hurricane Floyd:
@@ -249,34 +253,24 @@ ggplot(floyd_prop_damage, aes(x = damage_property)) +
   xlab("Property damage") + 
   ylab("# of counties") + 
   theme_bw()
+#> Error in ggplot(floyd_prop_damage, aes(x = damage_property)): object 'floyd_prop_damage' not found
 ```
-
-<img src="README-unnamed-chunk-14-1.png" style="display: block; margin: auto;" />
 
 Here is a map of property damage associated with Floyd:
 
 ``` r
 map_damage_property(storm = "Floyd-1999", dist = 500)
-#> Warning: `panel.margin` is deprecated. Please use `panel.spacing` property
-#> instead
+#> Error in eval(expr, envir, enclos): object 'episode_id' not found
 ```
-
-![](README-unnamed-chunk-15-1.png)
 
 Here are the counties with the most property damage in terms of cost:
 
 ``` r
 floyd_prop_damage %>%
   filter(damage_property == max(damage_property, na.rm = TRUE))
-#> # A tibble: 1 × 8
-#>   begin_date   end_date      STATE CZ_TYPE state_county_name        type
-#>       <date>     <date>      <chr>   <chr>             <chr>       <chr>
-#> 1 1999-09-16 1999-09-18 NEW JERSEY       C new jersey mercer Flash Flood
-#> # ... with 2 more variables: fips <chr>, damage_property <dbl>
+#> Error in eval(expr, envir, enclos): object 'floyd_prop_damage' not found
 colnames(floyd_prop_damage)
-#> [1] "begin_date"        "end_date"          "STATE"            
-#> [4] "CZ_TYPE"           "state_county_name" "type"             
-#> [7] "fips"              "damage_property"
+#> Error in is.data.frame(x): object 'floyd_prop_damage' not found
 floyd_prop_damage %>%
   group_by(state_county_name) %>%
   summarize(damage_property = sum(damage_property),
@@ -285,19 +279,7 @@ floyd_prop_damage %>%
   arrange(desc(damage_property)) %>%
   select(state_county_name, CZ_TYPE, type, damage_property, fips) %>%
   slice(1:10)
-#> # A tibble: 10 × 5
-#>                state_county_name CZ_TYPE        type damage_property  fips
-#>                            <chr>   <chr>       <chr>           <dbl> <chr>
-#> 1              new jersey bergen       C Flash Flood         1.7e+07 34003
-#> 2               new jersey essex       C Flash Flood         7.0e+06 34013
-#> 3           new york westchester       C Flash Flood         6.0e+06 36119
-#> 4          maryland queen anne's       C Flash Flood         4.0e+06 24035
-#> 5               new jersey union       C Flash Flood         4.0e+06 34039
-#> 6              new york rockland       C Flash Flood         4.0e+06 36087
-#> 7          virginia chesterfield       C Flash Flood         3.0e+06 51041
-#> 8          connecticut fairfield       C Flash Flood         1.0e+06 09001
-#> 9  virginia colonial heights (c)       C Flash Flood         1.0e+06 51570
-#> 10          virginia greensville       C Flash Flood         1.0e+06 51081
+#> Error in eval(expr, envir, enclos): object 'floyd_prop_damage' not found
 ```
 
 Some of the multiple counts for a county have the same property damage value:
@@ -310,23 +292,7 @@ floyd_prop_damage %>%
   filter(n > 1) %>%
   select(type, damage_property) %>%
   slice(1:5)
-#> Adding missing grouping variables: `state_county_name`
-#> Source: local data frame [11 x 3]
-#> Groups: state_county_name [5]
-#> 
-#>     state_county_name              type damage_property
-#>                 <chr>             <chr>           <dbl>
-#> 1       florida duval Thunderstorm Wind             200
-#> 2       florida duval Thunderstorm Wind             200
-#> 3   florida st. johns Thunderstorm Wind             200
-#> 4   florida st. johns Thunderstorm Wind             300
-#> 5   florida st. johns Thunderstorm Wind             300
-#> 6   new york dutchess       Flash Flood           90000
-#> 7   new york dutchess       Flash Flood           10000
-#> 8  new york schoharie       Flash Flood           85000
-#> 9  new york schoharie       Flash Flood            5000
-#> 10    new york ulster       Flash Flood           97500
-#> 11    new york ulster       Flash Flood           10000
+#> Error in eval(expr, envir, enclos): object 'floyd_prop_damage' not found
 ```
 
 It looks like some events are given by day. For example, for Duval County, FL, it looks like there are separate events for Sept. 14 and Sept. 15 for "Thunderstorm Wind". We may want to make sure that it makes sense to add these county-level values together to get a county total for damage.
@@ -335,14 +301,7 @@ It looks like some events are given by day. For example, for Duval County, FL, i
 floyd_prop_damage %>%
   filter(state_county_name == "florida duval") %>%
   as.data.frame()
-#>   begin_date   end_date   STATE CZ_TYPE state_county_name
-#> 1 1999-09-15 1999-09-15 FLORIDA       Z     florida duval
-#> 2 1999-09-14 1999-09-14 FLORIDA       C     florida duval
-#> 3 1999-09-15 1999-09-15 FLORIDA       C     florida duval
-#>                  type  fips damage_property
-#> 1 Hurricane (Typhoon) 12031              NA
-#> 2   Thunderstorm Wind 12031             200
-#> 3   Thunderstorm Wind 12031             200
+#> Error in eval(expr, envir, enclos): object 'floyd_prop_damage' not found
 ```
 
 In other counties (e.g., Litchfield County, CT), it looks like there is a repeat listing (both listings for "High Wind" cover the same two days and have the same property damage values). In this case, should we only include one of these two listings in determining total property damage?
@@ -351,14 +310,7 @@ In other counties (e.g., Litchfield County, CT), it looks like there is a repeat
 floyd_prop_damage %>%
   filter(state_county_name == "connecticut litchfield") %>%
   as.data.frame()
-#>   begin_date   end_date       STATE CZ_TYPE      state_county_name
-#> 1 1999-09-16 1999-09-17 CONNECTICUT       Z connecticut litchfield
-#> 2 1999-09-16 1999-09-17 CONNECTICUT       Z connecticut litchfield
-#> 3 1999-09-16 1999-09-17 CONNECTICUT       C connecticut litchfield
-#>          type  fips damage_property
-#> 1   High Wind 09005              NA
-#> 2   High Wind 09005              NA
-#> 3 Flash Flood 09005           1e+06
+#> Error in eval(expr, envir, enclos): object 'floyd_prop_damage' not found
 ```
 
 ### Injuries
@@ -414,11 +366,7 @@ First, while many storm events are listed by county, with identification by a 5-
 
 ``` r
 all_1999_events %>% group_by(CZ_TYPE) %>% summarize(frequency = n())
-#> # A tibble: 2 × 2
-#>   CZ_TYPE frequency
-#>     <chr>     <int>
-#> 1       C     27362
-#> 2       Z     15357
+#> Error in eval(expr, envir, enclos): unknown variable to group by : CZ_TYPE
 ```
 
 \[double check-- is this after filtering out some of the forecast zone observations?\]
