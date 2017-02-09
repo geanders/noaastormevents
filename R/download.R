@@ -48,7 +48,7 @@ download_storm_data <- function(year, file_type = "details"){
 #'    events data for. This string must follow the format
 #'    "[storm-name]-[4-digit storm year]" (e.g., \code{"Floyd-1999"}).
 #'    Currently, this functionality only works for storms included in the
-#'    extended hurricane best tracks, which covers 1988 to 2014.
+#'    extended hurricane best tracks, which covers 1988 to 2015.
 #' @inheritParams find_file_name
 #'
 #' @examples \dontrun{
@@ -60,7 +60,6 @@ download_storm_data <- function(year, file_type = "details"){
 create_storm_data <- function(date_range = NULL, storm = NULL,
                               file_type = "details") {
 
-  # utils::globalVariables("noaastormevents_package_env")
   # If the user has included a date range, pull all data within that date range
   if(!is.null(date_range)){
     date_range_years <- lubridate::year(date_range)
