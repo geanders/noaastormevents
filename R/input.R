@@ -13,7 +13,7 @@
 #'
 #' @export
 #'
-find_file_name <- function(year = NULL, file_type = "detail") {
+find_file_name <- function(year = NULL, file_type = "details") {
   url <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
                 "stormevents/csvfiles/")
   page <- htmltab::htmltab(doc = url, which = 1, rm_nodata_cols = FALSE)
