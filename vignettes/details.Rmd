@@ -1,0 +1,123 @@
+---
+title: "Details of `noaastormevents`"
+author: "Brooke Anderson and Ziyu Chen"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Details of noaastormevents}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+
+library(noaastormevents)
+```
+
+
+This vignette provides more details on how the `noaastormevents` package interacts with the online NOAA Storm Events database to pull storm event listings based on user queries. 
+
+## Structure of NOAA Storm Events data
+
+The NOAA Storm Events data is available online at https://www.ncdc.noaa.gov/stormevents/. This website includes documentation on the data, as well as a page that allows bulk data download of yearly csv files either through ftp or http (https://www.ncdc.noaa.gov/stormevents/ftp.jsp). Data is available from January 1950 and tends to be updated to within a few months of present. 
+
+Data is stored in bulk by year in compressed comma-separated files (`.csv.gz` files). Each year has three compressed files available: 
+
+- `StormEvents_details` file 
+- `StormEvents_fatalities` file 
+- `StormEvents_loations` file 
+
+File names for each file include both the year of the data (e.g., "1950") and the date the file was last modified (e.g., "20170120"). Files are given regular names other than these two specifications. This regular naming scheme allows us to use regular expressions on all listed file names to identify the exact name of a file for a specific year, as explained in the next section. 
+
+The size of all three file types has increased with time (see figure below; note that the y-axis is log 10). The largest file for any given year is the "Details" file. Most file sizes increased substantially in 1996 (dotted vertical line), when the database dramatically expanded the types of events it included. Before 1996, the database covered tornadoes and, for some years, a few other types of events. From 1996, the database expanded to include events like floods, tropical storms, snow storms, etc. While "Locations" files exist in the database for early years, they contain no information until 1996. See the documentation at the NOAA Storm Events database website for more information on the coverage of the database at different times across its history.
+
+```{r echo = FALSE, fig.width = 6, fig.height = 4, fig.align = "center"}
+url <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
+                "stormevents/csvfiles/")
+times_translation <- data_frame(times = c("K", "M", "G"),
+                                times_num = c(10^3, 10^6, 10^9))
+htmltab::htmltab(doc = url, which = 1, rm_nodata_cols = FALSE) %>%
+  select(Name, Size) %>%
+  filter(!(Size %in% "-")) %>%
+  mutate(file_type = str_extract(Name, ".*?-ftp"),
+         file_type = str_replace(file_type, "StormEvents_", ""),
+         file_type = str_replace(file_type, "-ftp", ""),
+         base = str_extract(Size, "[0-9.]+"),
+         times = str_extract(Size, "[A-Z]")) %>%
+  filter(file_type %in% c("details", "fatalities", "locations")) %>%
+  mutate(year = str_extract(Name, "_d[0-9]{1,4}_"),
+         year = str_extract(year, "[0-9]+"),
+         year = as.numeric(year)) %>%
+  select(file_type, base, times, year) %>%
+  left_join(times_translation, by = "times") %>%
+  mutate(base = as.numeric(base),
+         times_num = ifelse(is.na(times_num), 1, times_num),
+         file_size = base * times_num,
+         file_type = str_to_title(file_type)) %>%
+  select(-base, -times, -times_num) %>%
+  ggplot(aes(x = year, y = file_size, color = file_type)) + 
+  geom_hline(aes(yintercept = 10^3), lty = 2, col = "lightgray") + 
+  annotate("text", x = 1952, y = 10^3 + 500, label = "1 KB") + 
+  geom_hline(aes(yintercept = 10^6), lty = 2, col = "lightgray") + 
+  annotate("text", x = 1952, y = 10^6 + 500000, label = "1 GB") + 
+  geom_vline(aes(xintercept = 1996), lty = 3) + 
+  geom_line() + 
+  theme_classic() + 
+  labs(x = "Year", y = "File size", color = "File type") +
+  scale_y_log10()
+```
+
+
+## Downloading NOAA Storm Events data for a year
+
+The database data is stored in files separated by year, so the file for an entire year is identified and downloaded when a user asks for event listings from any time or any type of event that year. For example, if a user wants to list flood events from the week of Hurricane Floyd in 1999, functions in the `noaastormevents` package would first identify and download the full "Details" data file for 1999 and then filter down to flood events starting in the correct week. 
+
+To identify the online file path for a specific year, the `find_file_name` function uses the `htmltab` function (from the package of the same name) to create a dataframe listing all files available for download from the NOAA Storm Events database. The function then uses regular expressions to identify the file name in that listing for the requested year. For example, the name of the file with "Details" information for 1999 can be determined with:
+
+```{r}
+find_file_name(year = "1999", file_type = "detail")
+```
+
+Here is the full definition of the `find_file_name` function:
+
+```{r}
+find_file_name
+```
+
+Once the file name has been determined, a function in the package then downloads that file to the user's computer. For some years, files are very large, so this download can take a little while. To avoid downloading data from the same year more than once within an R session, the downloading function stores the downloaded data for that year in a temporary environment in the R user's session. In later requests for the same year, the function will first check for data from this year in the temporary environment and only download the data from the online database if it is not already saved to the user's computer. 
+
+This environment is created to be temporary, which means that it is deleted at the end of the current R session. While some packages that access online databases cache any downloaded data in a way that persists between R sessions, we chose not to do that and instead only cache within an R session, but delete all data at the close of the R session. This is because some of the Storm Event files are very large, and most users will likely only want to keep a small subset of the data for a given year (e.g., only flood events during the week of Hurricane Floyd). It would be wasteful of memory to cache all the 1999 data indefinitely on the user's computer in this case; instead, the user should use our package to create the desired subset of the data and then explicitly store that subset locally to use in future analysis. 
+
+The function for downloading the file for a year is called `download_storm_data`. Here is it's full definition: 
+
+```{r}
+noaastormevents:::download_storm_data
+```
+
+Finally, the `noaastormevents` package allows a user to query storm events either by a date range or by a named historical tropical storm, rather than a year. The `create_storm_data` function inputs either a date range or a storm name, as well as the requested file type, and downloads data for the appropriate year or years. If the user requests a date range, the function will download yearly data files for all years included in that range. If the user requests a tropical storm, the function will pull the data for that particular year. Here is the full definition of `create_storm_data`:
+
+```{r}
+create_storm_data
+```
+
+
+As a note, many of the functions in the `noaastormevents` package that allow linking events with tropical storms rely on historical data for the storms, including storm tracks, estimated distances to eastern U.S. counties, and dates when the storm was closest to each county. The package pulls this historical data from the `hurricaneexposuredata` package, through the interfacing package `hurricaneexposure`. The hurricane data goes from 1988 to (currently) 2015 and includes all Atlantic basin tropical storms that came within 250 km of at least one U.S. county. The following storms are included in that package and so available to be used for functions in `noaastormevents`: 
+
+```{r echo = FALSE}
+library(hurricaneexposuredata)
+library(hurricaneexposure)
+
+hurr_tracks %>%
+        select(storm_id) %>%
+        distinct() %>%
+        separate(storm_id, into = c("storm_name", "Year"), sep = "-") %>%
+        group_by(Year) %>%
+        summarize(Storms = paste(storm_name, collapse = ", ")) %>%
+        pander::pander(justify = "cl", split.cells = c("20%","80%"))
+```
+
+## Structure of "Details" data files
