@@ -1,18 +1,28 @@
-#' Find the file name for a specific year
+#' Find a database file name
 #'
 #' This function will find the name of the detailed file from Storm Events
-#' Database for a specific year.
+#' Database for a specific year and specific type of file. This file name
+#' can then be used (in other functions) to download the data for a given year.
 #'
-#' @param year A character string giving the year.
-#' @param file_type The type of file you would like to pull. Choices include:
-#'    "details" (the default), "fatalities", or "locations".
+#' @param year A four-digit numeric or character string giving the year for which
+#'    the user would like to download data.
+#' @param file_type A character string specifying the type of file you would
+#'    like to pull. Choices include: "details" (the default), "fatalities", or
+#'    "locations".
+#'
+#' @details This function creates a list of all file names available on
+#'    \url{https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/}
+#'    and then uses regular expressions to search that list for the name
+#'    of the file for the year and type of file requested. While the files
+#'    are named consistently, part of the name includes the date the file
+#'    was last updated, which changes frequently. The method used here is
+#'    robust to changes in this "last updated" date within the file names.
 #'
 #' @examples
 #' find_file_name(year = 1999)
 #' find_file_name(year = 2003, file_type = "fatalities")
 #'
 #' @export
-#'
 find_file_name <- function(year = NULL, file_type = "details") {
   url <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
                 "stormevents/csvfiles/")
