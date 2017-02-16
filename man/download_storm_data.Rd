@@ -7,10 +7,12 @@
 download_storm_data(year, file_type = "details")
 }
 \arguments{
-\item{year}{A character string giving the year.}
+\item{year}{A four-digit numeric or character string giving the year for which
+the user would like to download data.}
 
-\item{file_type}{The type of file you would like to pull. Choices include:
-"details" (the default), "fatalities", or "locations".}
+\item{file_type}{A character string specifying the type of file you would
+like to pull. Choices include: "details" (the default), "fatalities", or
+"locations".}
 }
 \description{
 This function takes a year for which you want to download storm data,
@@ -24,4 +26,3 @@ session (as long as the R history is not saved at the end of the session).
 This saves time if the user uses the storm data from the same year for
 several commands.
 }
-

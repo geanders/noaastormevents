@@ -14,7 +14,7 @@ dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 events data for. This string must follow the format
 "[storm-name]-[4-digit storm year]" (e.g., \code{"Floyd-1999"}).
 Currently, this functionality only works for storms included in the
-extended hurricane best tracks, which covers 1988 to 2014.}
+extended hurricane best tracks, which covers 1988 to 2015.}
 }
 \value{
 A list with date ranges and storm identification based on
@@ -26,4 +26,3 @@ package functions, looks for any errors in input, and determines
 elements like the year or years of storm data needed based on
 user inputs.
 }
-

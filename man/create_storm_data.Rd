@@ -14,10 +14,11 @@ dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 events data for. This string must follow the format
 "[storm-name]-[4-digit storm year]" (e.g., \code{"Floyd-1999"}).
 Currently, this functionality only works for storms included in the
-extended hurricane best tracks, which covers 1988 to 2014.}
+extended hurricane best tracks, which covers 1988 to 2015.}
 
-\item{file_type}{The type of file you would like to pull. Choices include:
-"details" (the default), "fatalities", or "locations".}
+\item{file_type}{A character string specifying the type of file you would
+like to pull. Choices include: "details" (the default), "fatalities", or
+"locations".}
 }
 \description{
 This function pulls storm events data based on a specified date range and /
@@ -31,4 +32,3 @@ floyd_data2 <- create_storm_data(storm = "Floyd-1999")
 }
 
 }
-

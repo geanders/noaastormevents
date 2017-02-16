@@ -20,7 +20,7 @@ must be from the storm's path to be included.}
 events data for. This string must follow the format
 "[storm-name]-[4-digit storm year]" (e.g., \code{"Floyd-1999"}).
 Currently, this functionality only works for storms included in the
-extended hurricane best tracks, which covers 1988 to 2014.}
+extended hurricane best tracks, which covers 1988 to 2015.}
 }
 \description{
 This function will find all of the direct deaths in the US for a specified
@@ -35,4 +35,3 @@ find_direct_deaths(storm = "Floyd-1999", dist_limit = 50)
 }
 
 }
-
