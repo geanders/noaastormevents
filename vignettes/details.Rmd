@@ -10,10 +10,13 @@ vignette: >
 ---
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
-library(dplyr)
-library(tidyr)
 library(ggplot2)
 library(stringr)
+library(lubridate)
+library(forcats)
+library(dplyr)
+library(tidyr)
+library(viridis)
 
 library(noaastormevents)
 ```
@@ -63,7 +66,7 @@ htmltab::htmltab(doc = url, which = 1, rm_nodata_cols = FALSE) %>%
   geom_hline(aes(yintercept = 10^3), lty = 2, col = "lightgray") + 
   annotate("text", x = 1952, y = 10^3 + 500, label = "1 KB") + 
   geom_hline(aes(yintercept = 10^6), lty = 2, col = "lightgray") + 
-  annotate("text", x = 1952, y = 10^6 + 500000, label = "1 GB") + 
+  annotate("text", x = 1952, y = 10^6 + 500000, label = "1 MB") + 
   geom_vline(aes(xintercept = 1996), lty = 3) + 
   geom_line() + 
   theme_classic() + 
@@ -121,3 +124,729 @@ hurr_tracks %>%
 ```
 
 ## Structure of "Details" data files
+
+While the `noaastormevent` package focuses on higher-level functions, which result in a simplified and cleaned version of this storm events data, a user can use the `create_storm_data` function to pull the full dataset for a year into R and work with the raw, uncleaned version. For example, here is a call that pulls the raw data for 2015 into an R object called `events_2015`. 
+
+```{r message = FALSE}
+events_2015 <- create_storm_data(date_range = c("2015-01-01", "2015-12-31"))
+slice(events_2015, 1:3)
+```
+
+This raw data has `r ncol(events_2015)` columns. This includes:
+
+- the date and time of the beginning and end of the event (`BEGIN_YEARMONTH`, `BEGIN_DAY`, `BEGIN_TIME`, `BEGIN_DATE_TIME`, `END_YEARMONTH`, `END_DAY`, `END_TIME`, `END_DATE_TIME`)
+- unique IDs for the event and the epidsode, which can be used to link listings for events and episodes across the three types of files ("details", "locations", and "fatalities") (`EPISODE_ID`, `EVENT_ID`). Note that there are more unique event IDs (`r prettyNum(length(unique(events_2015$EVENT_ID)), big.mark = ",")` for the 2015 events data) than unique episode IDs (`r prettyNum(length(unique(events_2015$EPISODE_ID)), big.mark = ",")` for the 2015 events data)
+- the type of event (`EVENT_TYPE`)
+- the location of the event (`CZ_TYPE`, `CZ_FIPS`, `CZ_NAME`, `BEGIN_AZIMUTH`, `BEGIN_LOCATION`, `END_LOCATION`, `END_AZIMUTH`, `BEGIN_LAT`, `BEGIN_LON`, `END_LAT`, `END_LON`)
+- description and impacts of the event (`EPISODE_NARRATIVE`, `EVENT_NARRATIVE`, `INJURIES_DIRECT`, `INJURIES_INDIRECT`, `DEATHS_DIRECT`, `DEATHS_INDIRECT`, `DAMAGE_PROPERTY`, `DAMAGE_CROPS`)
+- information on how the event was reported (`SOURCE`)
+- some metrics that are specific to event types (e.g., `FLOOD_CAUSE`, `CATEGORY`, `TOR_F_SCALE`, `TOR_LENGTH`, `TOR_WIDTH`)
+
+### Event types
+
+In the 2015 event listings, here are the types of events and the number of reported events for each: 
+
+```{r echo = FALSE}
+events_2015 %>%
+  group_by(EVENT_TYPE) %>%
+  summarize(N = n()) %>%
+  arrange(desc(N)) %>%
+  mutate(N = prettyNum(N, big.mark = ",")) %>%
+  knitr::kable(col.names = c("Event type", "Number of events in 2015"))
+```
+
+Here are how the start dates for listings for each event type are distributed over the year (event types are ordered by decreasing total count during the year; note that the y-axes vary depending on the range of events by date for each event type): 
+
+```{r fig.width = 8, fig.height = 8, echo = FALSE, fig.align = "center"}
+events_2015 %>%
+  select(BEGIN_DATE_TIME, EVENT_TYPE) %>%
+  mutate(date = str_extract(BEGIN_DATE_TIME, ".+\\ "),
+         date = dmy(date)) %>%
+  group_by(date, EVENT_TYPE) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(EVENT_TYPE) %>%
+  mutate(tot_n = sum(n)) %>%
+  ungroup() %>%
+  arrange(desc(tot_n)) %>%
+  mutate(EVENT_TYPE = factor(EVENT_TYPE, levels = unique(EVENT_TYPE))) %>%
+  ggplot(aes(x = date, y = n)) + 
+  geom_point(alpha = 0.3, size = 1) + 
+  facet_wrap(~ EVENT_TYPE, scales = "free_y", ncol = 5) + 
+  scale_x_date(date_labels = "%m/%d", date_breaks = "4 months") + 
+  theme_classic()
+```
+
+Many event types are clearly seasonal (e.g., winter weather, winter storms, heavy snow, cold, extreme cold, blizzards, ice storms, lake-effect snow, and avalanches are all much more common during winter months, while tropical depressions and tropical storms are all limited to the hurricane season). However, for some events, reporting seasonal patterns might be based not just on the true pattern of events but also on the timing of important exposures and impacts of the events. For example, rip currents have many more listings during the spring and summer, which may be related to events being more likely to be listed when more people are swimming. Frost event listings are particularly high at the start and end of the frost season, rather than in the middle of winter, which may be related to the impacts of frost on crops being higher in spring and fall than during the winter. If working with this data, it important to keep in mind that the data are based on reporting, and there may be related influences on the probability of an event being reported and included in the data that differ from using data from something like a weather station. 
+
+### Episodes versus events
+
+"Episodes" seem to collect related "events", where events can vary in the type or location of the event, while an "episode" collects events that belong to the same large system. The following graph shows, for each episode listed in 2015, the number of events listed for the episode (x-axis) and the size (in days) of the range of begin dates across events in the episode.
+
+```{r fig.height = 3.5, fig.width = 5, echo = FALSE, fig.align = "center"}
+events_2015 %>%
+  mutate(date = substring(BEGIN_DATE_TIME, 1, 9),
+         date = dmy(date),
+         yday = yday(date)) %>%
+  group_by(EPISODE_ID) %>%
+  summarize(n = n(),
+            day_diff = max(yday) - min(yday)) %>%
+  ggplot(aes(x = n, y = day_diff)) +
+  geom_jitter(height = 0.1, alpha = 0.25) + 
+  theme_classic() + 
+  labs(x = "Number of events per episode", 
+       y = "Largest difference in begin dates\nacross events in the episode")
+```
+
+Here are maps with the beginning locations of events in the episodes with the most events in 2015. Note that the beginning latitude and longitude are not listed for every event, resulting in one of the episodes not having any points on the map. From the other maps, it is clear that events within the episode were fairly close together. 
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, fig.align = "center", fig.width = 6, fig.height = 10}
+top_episodes <- events_2015 %>%
+  group_by(EPISODE_ID) %>%
+  summarize(n = n()) %>%
+  arrange(desc(n)) %>%
+  slice(1:10)
+
+events_2015 %>%
+  filter(EPISODE_ID %in% top_episodes$EPISODE_ID) %>%
+  mutate(EPISODE_ID = factor(EPISODE_ID, levels = unique(top_episodes$EPISODE_ID))) %>%
+  ggplot(aes(x = BEGIN_LON, y = BEGIN_LAT)) +  
+  geom_polygon(data= map_data("state"),
+               aes(x = long, y = lat, group = group),
+               colour = "black", fill = NA) + 
+  geom_point(color = "red", alpha = 0.3, size = 0.5) + 
+  facet_wrap(~ EPISODE_ID, ncol = 2) +
+  coord_map() + 
+  theme_void()
+```
+
+For these episodes with the most events in 2015, the following graph shows the number of events reported for the episode. One of the episode was a winter storm, another was heavy rains and floods, while the rest of the episodes included high winds, hail, tornadoes, rain, and / or flooding. 
+
+```{r echo = FALSE, fig.align = "center", fig.width = 6, fig.height = 4}
+top_episodes <- events_2015 %>%
+  group_by(EPISODE_ID) %>%
+  summarize(n = n()) %>%
+  arrange(desc(n)) %>%
+  slice(1:10)
+
+a <- events_2015 %>%
+  filter(EPISODE_ID %in% top_episodes$EPISODE_ID) %>%
+  group_by(EPISODE_ID, EVENT_TYPE) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  spread(key = EPISODE_ID, value = n, fill = 0) %>%
+  tibble::remove_rownames() %>%
+  as.data.frame() %>%
+  tibble::column_to_rownames(var = "EVENT_TYPE") %>%
+  dist("canberra") %>%
+  hclust() 
+```
+
+```{r echo = FALSE, fig.align = "center", fig.width = 6, fig.height = 3.5}
+events_2015 %>%
+  filter(EPISODE_ID %in% top_episodes$EPISODE_ID) %>%
+  group_by(EPISODE_ID, EVENT_TYPE) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(EPISODE_ID = factor(EPISODE_ID, levels = unique(top_episodes$EPISODE_ID)),
+         EVENT_TYPE = factor(EVENT_TYPE, levels = unique(a$labels[a$order]))) %>%
+  ggplot(aes(x = EPISODE_ID, y = EVENT_TYPE)) + 
+  geom_tile(aes(fill = n)) + 
+  theme_classic() + 
+  labs(x = "", y = "", fill = "Number of events reported") + 
+  theme(axis.text.x  = element_text(angle=45, vjust = 1, hjust = 0),
+        legend.position = "top",
+        plot.margin = unit(c(0, 1, 0, 0), "cm")) +
+  scale_x_discrete(position = "top") +
+  scale_fill_viridis(option = "A", direction = -1)
+```
+
+Once we removed event types with less that 50 listings in 2015, we did a cluster analysis of event types, to group events that are more likely to occur together within an episode. The following plot shows the resulting cluster structure of these event types.
+
+```{r echo = FALSE, fig.align = "center", fig.width = 6, fig.height = 10}
+b <- events_2015 %>%
+  group_by(EVENT_TYPE) %>%
+  mutate(n_events = n()) %>%
+  ungroup() %>%
+  filter(n_events >= 50) %>%
+  group_by(EPISODE_ID, EVENT_TYPE) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  spread(key = EPISODE_ID, value = n, fill = 0) %>%
+  tibble::remove_rownames() %>%
+  as.data.frame() %>%
+  tibble::column_to_rownames(var = "EVENT_TYPE") %>%
+  dist("canberra") %>%
+  hclust() 
+plot(as.dendrogram(b, hang = 0.25), horiz = TRUE, axes = FALSE)
+```
+
+The next graph shows the number of events of each event type (excluding event types with less than 50 total listings in 2015). Each row represents an episode.
+
+```{r echo = FALSE, fig.height = 6, fig.width = 8, fig.align = "center"}
+events_2015 %>%
+  group_by(EVENT_TYPE) %>%
+  mutate(n_events = n()) %>%
+  ungroup() %>%
+  filter(n_events >= 100) %>%
+  group_by(EPISODE_ID, EVENT_TYPE) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(EPISODE_ID = factor(EPISODE_ID),
+         EVENT_TYPE = factor(EVENT_TYPE, levels = unique(b$labels[b$order]))) %>%
+  ggplot(aes(x = EVENT_TYPE, y = EPISODE_ID)) + 
+  geom_tile(aes(fill = n)) + 
+  theme_classic() + 
+  theme(axis.text.x  = element_text(angle = 45, vjust = 1, hjust = 0),
+        legend.position = "top",
+        plot.margin = unit(c(0, 1, 0, 0), "cm"),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  scale_x_discrete(position = "top") +
+  scale_fill_viridis(option = "A", direction = -1, begin = 0.1, end = 0.9) + 
+  labs(x = "", y = "", fill = "Number of reported events in the episode")
+```
+
+### How events are reported
+
+The `SOURCE` column of the raw data gives information on how each event was reported. 
+
+```{r echo = FALSE}
+events_2015 %>%
+  group_by(SOURCE) %>%
+  summarize(N = n()) %>%
+  arrange(desc(N)) %>%
+  mutate(N = prettyNum(N, big.mark = ",")) %>%
+  knitr::kable(col.names = c("Source of event report", "Number of events reported in 2015"))
+```
+
+The majority of events in this database, at least for 2015, were reported by either a trained spotter or the public.
+
+The following graph shows, for each type of event in 2015, the percent reported by each source. For some types of events, reporting is dominated by a specific source. For example, most high surf reports come from trained spotters, while most drought reports come from drought monitors and most tornado reports come from the NWS Storm Survey. For other types of events, reporting sources are more diversified. Both axes of the plot are ordered by overall frequency (i.e., overall number of each type of event and overall number of reports from each source).
+
+```{r fig.height = 7, fig.width = 10, echo = FALSE, message = FALSE, warning = FALSE, fig.align = "center"}
+tot_events <- events_2015 %>%
+  group_by(EVENT_TYPE) %>%
+  summarize(tot_events = n()) %>%
+  arrange(desc(tot_events))
+tot_source <- events_2015 %>%
+  group_by(SOURCE) %>%
+  summarize(tot_source = n()) %>%
+  arrange(tot_source)
+
+events_2015 %>%
+  group_by(EVENT_TYPE, SOURCE) %>%
+  summarize(N = n()) %>%
+  ungroup() %>%
+  right_join(tot_events, by = "EVENT_TYPE") %>%
+  mutate(perc_events = 100 * N / tot_events) %>%
+  mutate(EVENT_TYPE = factor(EVENT_TYPE, levels = unique(EVENT_TYPE)),
+         SOURCE = factor(SOURCE, levels = unique(tot_source$SOURCE))) %>%
+  ggplot(aes(y = SOURCE, x = EVENT_TYPE)) + 
+  geom_tile(aes(fill = perc_events)) + 
+  theme_classic() + 
+  labs(x = "", y = "", fill = "% events reported by a given source") + 
+  theme(axis.text.x  = element_text(angle=45, vjust = 1, hjust = 0),
+        legend.position = "top",
+        plot.margin = unit(c(0, 1, 0, 0), "cm")) +
+  scale_x_discrete(position = "top") +
+  scale_fill_viridis(option = "C", direction = -1)
+```
+
+### Event locations
+
+Each event has a state listed for the event (`STATE`). The following graph gives the number of reported events in each state for 2015:
+
+```{r echo = FALSE, fig.height = 8, fig.width = 6, fig.align = "centers"}
+events_2015 %>%
+  group_by(STATE) %>%
+  summarize(n = n()) %>%
+  mutate(STATE = str_to_title(STATE)) %>%
+  ggplot(aes(x = n, y = fct_reorder(STATE, n))) + 
+  geom_point() + 
+  labs(x = "Number of listed events in 2015", y = "") + 
+  theme_classic()
+```
+
+Note that "states" include bodies of water (e.g., specific Great Lakes, the Hawaii waters, the Gulf of Mexico) and territories (American Samoa, Guam, Puerto Rico, Virgin Islands).
+
+For some event types, the latitude and longitude of the beginning of the event is included with the event listing. 
+
+```{r echo = FALSE}
+events_2015 %>%
+  group_by(EVENT_TYPE) %>%
+  summarize(n = n(),
+            non_miss = sum(!is.na(BEGIN_LAT)),
+            perc_non_miss = non_miss / n,
+            perc_non_miss = factor(perc_non_miss, levels = c(1, 0),
+                                   labels = c("With latitude / longitude",
+                                              "Without latitude / longitude"))) %>%
+  ungroup() %>%
+  group_by(perc_non_miss) %>%
+  summarize(with_loc = paste(EVENT_TYPE, collapse = ", ")) %>%
+  rename(` ` = perc_non_miss, 
+         `Event types` = with_loc) %>%
+  pander::pander(split.cells = c(20, 60),
+                 justify = "rl")
+```
+
+Of the 2015 events with a latitude and longitude listed for the beginning of the event and that are in the continental U.S., here are those locations by month: 
+
+```{r echo = FALSE, fig.width = 9, fig.height = 6, fig.align = "center"}
+events_2015 %>%
+  filter(!is.na(BEGIN_LAT) & !(is.na(BEGIN_LON))) %>%
+  filter(!(STATE %in% c("GULF OF MEXICO", "ALASKA", "GUAM", "ATLANTIC NORTH",
+                        "LAKE HURON", "LAKE ST CLAIR", "HAWAII", "AMERICAN SAMOA",
+                        "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN", 
+                        "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
+                        "LAKE ONTARIO", "VIRGIN ISLANDS"))) %>%
+  mutate(MONTH_NAME = factor(MONTH_NAME, levels = month.name)) %>%
+  ggplot(aes(x = BEGIN_LON, y = BEGIN_LAT)) + 
+  geom_polygon(data = map_data("usa"), aes(x = long, y = lat, group = group),
+               color = "black", fill = NA) + 
+  geom_point(size = 1, alpha = 0.15, color = "darkred") + 
+  coord_map() + 
+  theme_void() + 
+  facet_wrap(~ MONTH_NAME)
+```
+
+Here are those locations by event type: 
+
+```{r echo = FALSE, fig.width = 9, fig.height = 6, fig.align = "center"}
+events_2015 %>%
+  filter(!is.na(BEGIN_LAT) & !(is.na(BEGIN_LON))) %>%
+  filter(!(STATE %in% c("GULF OF MEXICO", "ALASKA", "GUAM", "ATLANTIC NORTH",
+                        "LAKE HURON", "LAKE ST CLAIR", "HAWAII", "AMERICAN SAMOA",
+                        "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN", 
+                        "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
+                        "LAKE ONTARIO", "VIRGIN ISLANDS"))) %>%
+  group_by(EVENT_TYPE) %>%
+  mutate(n = n()) %>%
+  ungroup() %>%
+  mutate(EVENT_TYPE = fct_reorder(EVENT_TYPE, n, .desc = TRUE)) %>%
+  ggplot(aes(x = BEGIN_LON, y = BEGIN_LAT)) + 
+  geom_polygon(data = map_data("usa"), aes(x = long, y = lat, group = group),
+               color = "black", fill = NA) + 
+  geom_point(size = 0.8, alpha = 0.15, color = "darkred") + 
+  coord_map() + 
+  theme_void() + 
+  facet_wrap(~ EVENT_TYPE)
+```
+
+Some events have different latitudes and longitudes for the beginning and ending locations. For example, here are maps for one state (Arkansas) of events with different starting and ending locations:
+
+```{r echo = FALSE, fig.width = 7, fig.height = 5, fig.align = "center"}
+events_2015 %>%
+  filter(!is.na(BEGIN_LAT) & !(is.na(BEGIN_LON)) & 
+        !is.na(END_LAT) & !(is.na(END_LON))) %>%
+  mutate(diff_lon = BEGIN_LON - END_LON,
+         diff_lat = BEGIN_LAT - END_LAT) %>%
+  filter(abs(diff_lon) > 0.1 | abs(diff_lat) > 0.1) %>%
+  filter(STATE == "ARKANSAS") %>%
+  ggplot(aes(x = BEGIN_LON, y = BEGIN_LAT)) + 
+  geom_polygon(data = map_data("county", region = "arkansas"), 
+               aes(x = long, y = lat, group = group),
+               color = "lightgray", fill = NA) + 
+  geom_polygon(data = map_data("state", region = "arkansas"),
+               aes(x = long, y = lat, group = group),
+                   color = "black", fill = NA) + 
+  geom_segment(aes(xend = END_LON, yend = END_LAT), color = "red", size = 1) + 
+  theme_void() + 
+  coord_map() + 
+  facet_wrap(~ EVENT_TYPE, ncol = 3)
+```
+
+Some events are reported by forecast zone (`CZTYPE` of "Z") rather than county (`CZTYPE` of "C"). Specific types of events are typically either always reported for a county or always reported for a forecast zone (see table below). Events typically reported by county include floods ("Flash Flood", "Flood", "Debris Flow"), tornado-like events ("Tornado", "Funnel Cloud", "Dust Devil"), and a few other events often related to thunderstorms ("Thunderstorm Wind", "Hail", "Heavy Rain", "Lightning"). Events typically reported by forecast zone include severe winter weather ("Winter Weather", "Winter Storm", "Heavy Snow", "Cold/Wind Chill", "Extreme Cold/Wind Chill", "Blizzard", "Frost/Freeze", "Ice Storm", "Sleet", "Lake-Effect Snow", "Avalance", "Freezing Fog"), extreme heat ("Heat", "Excessive Heat", "Drought"), events related to the water or coast ("Marine Thunderstorm Wind", "High Surf", "Coastal Flood", "Waterspout", "Astronomical Low Tide", "Rip Current", "Tropical Storm", "Marine High Wind", "Marine Hail", "Marine Strong Wind", "Hurricane", "Seiche", "Storm Surge/Tide", "Tropical Depression", "Marine Dense Fog", "Sneakerwave", "Tsunami"), and a few others ("High Wind", "Dense Fog", "Strong Wind", "Wildfire", "Dust Storm", "Dense Smoke").
+
+```{r echo = FALSE}
+events_2015 %>%
+  group_by(CZ_TYPE, EVENT_TYPE) %>%
+  summarize(n_events = n()) %>%
+  ungroup() %>%
+  spread(key = CZ_TYPE, value = n_events, fill = 0) %>%
+  mutate(total = C + Z,
+         perc_county = 100 * C / total) %>%
+  arrange(desc(perc_county), desc(total)) %>%
+  mutate(C = prettyNum(C, big.mark = ","),
+         Z = prettyNum(Z, big.mark = ","),
+         total = prettyNum(total, big.mark = ","),
+         perc_county = paste0(round(perc_county), "%")) %>%
+  knitr::kable(col.names = c("Event type", "County", "Forecast Zone", "Total", "% county"),
+               align = "lcccc")
+```
+
+```{r message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6, fig.align = "center", echo = FALSE}
+events_2015 %>%
+  filter(CZ_TYPE == "C") %>%
+  filter(EVENT_TYPE != "Heat") %>%
+  filter(!(STATE %in% c("GULF OF MEXICO", "ALASKA", "GUAM", "ATLANTIC NORTH",
+                        "LAKE HURON", "LAKE ST CLAIR", "HAWAII", "AMERICAN SAMOA",
+                        "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN", 
+                        "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
+                        "LAKE ONTARIO", "VIRGIN ISLANDS"))) %>%
+  mutate(CZ_FIPS = str_pad(CZ_FIPS, width = 3, pad = "0"),
+         STATE_FIPS = str_pad(STATE_FIPS, width = 2, pad = "0")) %>%
+  unite(fips, STATE_FIPS, CZ_FIPS, sep = "") %>%
+  mutate(fips = as.numeric(fips)) %>%
+  group_by(fips, EVENT_TYPE) %>%
+  dplyr::summarize(value = n()) %>%
+  ungroup() %>%
+  left_join(maps::county.fips, by = "fips") %>%
+  left_join(unite(map_data("county"), polyname, region, subregion, sep = ","),
+            by = "polyname") %>%
+  ggplot(aes(x = long, y = lat, group = group, fill = value)) +
+  geom_polygon(color = NA) + 
+  geom_polygon(data = map_data("usa"), 
+               aes(x = long, y = lat, group = group),
+               color = "black", fill = NA) + 
+  theme_void() + 
+  coord_map() + 
+  scale_fill_viridis(option = "A", direction = -1) + 
+  facet_wrap(~ EVENT_TYPE) + 
+  theme(legend.position = "top") + 
+  labs(fill = "Number of events")
+```
+
+Here is a sample of events that are instead reported by forecast zone, with the state, `CZ_NAME`, and event narrative included. Note that the county name is often provided by the `CZ_NAME` column, although the `CZ_FIPS` value is the forecast zone for any event listed by forecast zone. We use code to try to match `STATE` and `CZ_NAME` listings to a table of U.S. county names and associated county FIPS for each event listed by forecast zone, to allow these events to be included in event listings and maps created by functions in `noaastormevents`.
+
+```{r echo = FALSE}
+events_2015 %>%
+  filter(CZ_TYPE == "Z" & EVENT_NARRATIVE != "") %>%
+    filter(!(STATE %in% c("GULF OF MEXICO", "ALASKA", "GUAM", "ATLANTIC NORTH",
+                        "LAKE HURON", "LAKE ST CLAIR", "HAWAII", "AMERICAN SAMOA",
+                        "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN", 
+                        "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
+                        "LAKE ONTARIO", "VIRGIN ISLANDS"))) %>%
+  select(STATE, CZ_NAME, EVENT_NARRATIVE) %>%
+  sample_n(8) %>%
+  mutate(STATE = str_to_title(STATE),
+         CZ_NAME = str_to_title(CZ_NAME)) %>%
+  pander::pander(split.cells = c(15, 15, 50), justify = "ccl")
+```
+
+Within the code in `noaastormevents`, the `match_forecast_county` is used to try to match a county FIPS to each of the events listed by forecast zone. To get the full code for that function, you can run `match_forecast_county` (i.e., the function name, without parentheses after). To match an events listed by forecast zone to a county, this function tries the following to try to match all or part of the `state_name` and `cz_name` columns in the storm events data to the state and county names in the `county.fips` dataframe that comes with the `maps` package: 
+
+1. Tries to match `cz_name` to the county name in `county.fips` after removing any periods or apostrophes in `cz_name`.
+2. Next, for county names with 'county' in them, try to match the word before 'county'
+   to county name in `county.fips`. Then check the two words before 'county', then the
+   one and two words before 'counties'.
+3. Next, pull out the last word in `cz_name` and try to match it to the county name
+  in `county.fips`. The check the last two words in `cz_name`, then check the last three words in `cz_name`.
+4. Next, pull any words right before a slash and check that against the county name.
+5. Finally, try removing anything in parentheses in `cz_name` before matching.
+
+```{r echo = FALSE}
+z_events_2015 <- events_2015 %>%
+  dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
+                   ~ EPISODE_ID, ~EVENT_ID, ~ STATE, ~ CZ_TYPE, ~ CZ_NAME,
+                    ~ DEATHS_DIRECT, ~ DEATHS_INDIRECT, ~ INJURIES_DIRECT,
+                  ~ INJURIES_INDIRECT, ~ DAMAGE_PROPERTY, ~ DAMAGE_CROPS,
+                   ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ SOURCE,
+                   ~ EPISODE_NARRATIVE, ~ EVENT_NARRATIVE) %>%
+  setNames(tolower(names(.))) %>%
+  dplyr::filter_(~ cz_type == "Z") %>%
+  match_forecast_county()
+```
+
+In the 2015 events data, there are `r prettyNum(nrow(z_events_2015), big.mark = ",")` events listed by forecast zone rather than county. Once the `match_forecast_county` function is applied to these events, `r prettyNum(sum(!is.na(z_events_2015$fips)), big.mark = ",")` events were linked to a county (`r round(100 * mean(!is.na(z_events_2015$fips)))`%) while `r prettyNum(sum(is.na(z_events_2015$fips)), big.mark = ",")` events (`r round(100 * mean(is.na(z_events_2015$fips)))`%) could not be matched to a county.
+
+```{r echo = FALSE}
+outside_events <- z_events_2015 %>%
+  filter(state %in% c("GULF OF MEXICO", "GUAM", "ATLANTIC NORTH",
+                                    "LAKE HURON", "LAKE ST CLAIR", "AMERICAN SAMOA",
+                                    "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN",
+                                    "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
+                                    "LAKE ONTARIO", "VIRGIN ISLANDS", "HAWAII", "ALASKA")) %>%
+  filter(is.na(fips)) 
+```
+
+Of the events not matched to a county, `r prettyNum(nrow(outside_events), big.mark = ",")` events were outside the continental U.S. (i.e., in Hawaii, Alaska, U.S. territories, or waters): 
+
+```{r echo = FALSE}
+outside_events %>%
+  mutate(state = stringr::str_to_title(state)) %>%
+  group_by(state) %>%
+  dplyr::summarize(n = n()) %>%
+  arrange(desc(n)) %>%
+  knitr::kable(col.names = c("State", "Number of events listed by forecast zone"))
+```
+
+```{r echo = FALSE}
+continental_events <- z_events_2015 %>%
+  filter(!(state %in% c("GULF OF MEXICO", "GUAM", "ATLANTIC NORTH",
+                                    "LAKE HURON", "LAKE ST CLAIR", "AMERICAN SAMOA",
+                                    "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN",
+                                    "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
+                                    "LAKE ONTARIO", "VIRGIN ISLANDS", "HAWAII", "ALASKA"))) %>%
+  filter(is.na(fips)) 
+```
+
+This left `r prettyNum(nrow(continental_events), big.mark = ",")` events in the continental U.S. that were listed by forecast zone but could not be linked to a county by the `match_forecast_county` function. Most of these events had a value for `cz_name` with words related to mountains, water, adjacency (e.g., "area of", "vicinity of"), or a few other word types (e.g., "desert", "hwy"). The following table gives the number of these remaining unmatched events with words from each of these categories (note: the `cz_name` for an event may have words from more than one of these categories, in which case it would be counted in this table under both categories). 
+
+```{r echo = FALSE}
+mountain_words <- c("mountains", "mountain", "valley", "valleys", "divide", "range",
+                    "ridge", "ridges", "gap", "front", "cascades", "foothills", "plateau",
+                    "highlands", "mtns", "hills", "mesa", "mesas", "vly", "peak",
+                    "gorge", "rim", "arches", "hole", "canyon")
+water_words <- c("beaches", "beach", "river", "basin", "coast", "delta", "lake",
+                 "shoreline", "bay")
+adjacent_words <- c("area", "region", "vicinity", "country")
+other_words <- c("desert", "hwy", "panhandle", "corridor", "nation", "plains", 
+                 "lowlands", "prarie")
+
+continental_events <- continental_events %>%
+  mutate(cz_name = str_to_lower(cz_name),
+         has_mountain_words = str_detect(cz_name, paste0(mountain_words, collapse = "|")),
+         has_water_words = str_detect(cz_name, paste0(water_words, collapse = "|")),
+         has_adjacent_words = str_detect(cz_name, paste0(adjacent_words, collapse = "|")),
+         has_other_words = str_detect(cz_name, paste0(other_words, collapse = "|")))
+
+continental_events %>% 
+  summarize(mountain_words = sum(has_mountain_words),
+            water_words = sum(has_water_words),
+            adjacent_words = sum(has_adjacent_words),
+            other_words = sum(has_other_words)) %>% 
+  gather(key = word_type, value = n_events) %>%
+  mutate(words = c(paste(mountain_words, collapse = ", "),
+                   paste(water_words, collapse = ", "),
+                   paste(adjacent_words, collapse = ", "),
+                   paste(other_words, collapse = ", "))) %>%
+  select(word_type, words, n_events) %>%
+  mutate(word_type = str_to_title(str_replace(word_type, "_words", ""))) %>%
+  dplyr::rename(`Word type` = word_type,
+                Words = words,
+                `# events` = n_events) %>%
+  pander::pander(split.cells = c(10, 50, 10), big.mark = ",", justify = "llc")
+```
+
+The following table summarizes the number of events that could not be linked to a county that contained at least one of each of these types of words:
+
+```{r echo = FALSE}
+continental_events %>% 
+  dplyr::group_by(event_type) %>%
+  dplyr::summarize(mountain_words = sum(has_mountain_words),
+                   water_words = sum(has_water_words),
+                   adjacent_words = sum(has_adjacent_words),
+                   other_words = sum(has_other_words)) %>% 
+  dplyr::arrange(desc(mountain_words)) %>%
+  knitr::kable(col.names = c("Event type", "Mountain words", "Water words", "Adjacent words",
+                             "Other words"))
+```
+
+For 2015, here are the `cz_name` values for the events that could not be matched to a county and did not include the words listed above:
+
+```{r echo = FALSE}
+continental_events %>% 
+  filter(!has_mountain_words & !has_water_words & !has_adjacent_words & !has_other_words) %>%
+  select(cz_name, state) %>% 
+  mutate(cz_name = str_to_title(cz_name),
+         state = str_to_title(state)) %>%
+  distinct() %>%
+  knitr::kable()
+```
+
+For the events listed by forecast zone that could be successfully matched to a county
+
+```{r message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6, fig.align = "center", echo = FALSE}
+z_events_2015 %>%
+  filter(!is.na(fips)) %>%
+  filter(!(state %in% c("GULF OF MEXICO", "ALASKA", "GUAM", "ATLANTIC NORTH",
+                        "LAKE HURON", "LAKE ST CLAIR", "HAWAII", "AMERICAN SAMOA",
+                        "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN", 
+                        "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
+                        "LAKE ONTARIO", "VIRGIN ISLANDS"))) %>%
+  group_by(event_type) %>%
+  dplyr::mutate(n_events = n()) %>%
+  ungroup() %>%
+  filter(n_events >= 100) %>%
+  select(-n_events) %>%
+  group_by(fips, event_type) %>%
+  dplyr::summarize(value = n()) %>%
+  ungroup() %>%
+  left_join(maps::county.fips, by = "fips") %>%
+  left_join(unite(map_data("county"), polyname, region, subregion, sep = ","),
+            by = "polyname") %>%
+  ggplot(aes(x = long, y = lat, group = group, fill = value)) +
+  geom_polygon(color = NA) + 
+  geom_polygon(data = map_data("usa"), 
+               aes(x = long, y = lat, group = group),
+               color = "black", fill = NA) + 
+  theme_void() + 
+  coord_map() + 
+  scale_fill_viridis(option = "A", direction = -1) + 
+  facet_wrap(~ event_type) + 
+  theme(legend.position = "top") + 
+  labs(fill = "Number of events")
+```
+
+### Impact measurements
+
+The "Details" datasets for each year include six measurements of the impacts of each event: 
+
+- `DEATHS_DIRECT`
+- `DEATHS_INDIRECT`
+- `INJURIES_DIRECT`
+- `INJURIES_INDIRECT`
+- `DAMAGE_PROPERTY`
+- `DAMAGE_CROPS`
+
+```{r echo = FALSE}
+c_events_2015 <- events_2015 %>%
+  dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
+                   ~ EPISODE_ID, ~EVENT_ID, ~ STATE, ~ CZ_TYPE, ~ CZ_NAME,
+                  ~ DEATHS_DIRECT, ~ DEATHS_INDIRECT, ~ INJURIES_DIRECT,
+                  ~ INJURIES_INDIRECT, ~ DAMAGE_PROPERTY, ~ DAMAGE_CROPS,
+                   ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ SOURCE,
+                   ~ EPISODE_NARRATIVE, ~ EVENT_NARRATIVE) %>%
+  setNames(tolower(names(.))) %>%
+  dplyr::filter_(~ cz_type == "C") %>%
+  dplyr::mutate_(fips = ~ as.numeric(paste0(state_fips, str_pad(cz_fips, 3, pad = "0"))))
+
+county_events_2015 <- bind_rows(c_events_2015, filter(z_events_2015, !is.na(fips)))
+```
+
+Many of the impact values are given using abbreviations for amounts. For example, this listing for a tornado gives the property damage as "5.00K":
+
+```{r}
+county_events_2015 %>% filter(event_id == "582970")
+```
+
+Therefore, the `noaastormevents` package uses a function to pull out these abbreviations and convert associated impact values to numeric values (e.g., 5000 for "5.00K"). The conversions conducted are: 
+
+- "K" = 1,000
+- "M" = 1,000,000
+- "B" = 1,000,000,000
+- "T" = 1,000,000,000,000
+
+```{r echo = FALSE}
+county_damage_2015 <- county_events_2015 %>%
+  dplyr::select(episode_id , event_id, fips, event_type, contains("damage")) %>% 
+  tidyr::gather(key = impact, value = amount, -event_type, -event_id, -episode_id, -fips) %>%
+  dplyr::mutate(amount_times = stringr::str_extract(amount, "[A-Z]"),
+                amount_times = stringr::str_to_upper(amount_times),
+                amount_times = ifelse(amount_times == "K", "1000", amount_times),
+                amount_times = ifelse(amount_times == "M", "1000000", amount_times),
+                amount_times = ifelse(amount_times == "B", "1000000000", amount_times),  
+                amount_times = ifelse(amount_times == "T", "1000000000000", amount_times),
+                amount_times = as.numeric(amount_times),
+                amount = stringr::str_extract(amount, "[0-9.]*+"),
+                amount = as.numeric(amount),
+                amount = ifelse(!is.na(amount_times), amount * amount_times, amount),
+                amount = ifelse(is.na(amount), NA, amount)) %>%
+  dplyr::select(- amount_times)
+```
+
+```{r echo = FALSE}
+county_damage_2015 %>%
+  group_by(event_id) %>%
+  summarize(episode_id = first(episode_id),
+            fips = first(fips),
+            total_amount = sum(amount)) %>%
+  ungroup() %>% 
+  group_by(episode_id, fips) %>% 
+  summarize(n_events = n(),
+            average_amount = mean(total_amount),
+            max_amount = max(total_amount),
+            range_amount = diff(range(total_amount))) %>%
+  filter(!is.na(max_amount) & max_amount > 0 & n_events > 1) %>% 
+  ungroup() %>% 
+  arrange(desc(max_amount)) %>%
+  filter(range_amount == 0) %>%
+  slice(1:6)
+```
+
+Usually, it seems that the cost per events within an episode do not overlap, so that the costs from all events in an episode can be summed to generate a total damage cost. While in some cases, different event listings within the same county in the same episode have the same damage cost, it often seems that the total cost was divided in these cases across events, as in this case, where the total estimated cost of $6,186,909 in the county (see the narratives) was spread evenly over the two event listings:
+
+```{r echo = FALSE}
+county_events_2015 %>%
+  filter(episode_id == "100823" & fips == 45035) %>%
+  select(event_type, contains("damage"), cz_name, state, event_narrative, episode_narrative) %>% 
+  pander::pander()
+```
+
+However, there are a few cases where it appears that costs might be duplicated over different events within the same episode in a county. For example, in the following listing, it looks like the total estimated damage cost of $1.7 million (see that narrative) is repeated over the two listed events, which would mean that adding damages across events in the episode would lead to a county damage cost of twice the true amount. 
+
+```{r echo = FALSE}
+county_events_2015 %>%
+  filter(episode_id == "99142" & fips == 2023) %>%
+  select(event_type, contains("damage"), cz_name, state, event_narrative, episode_narrative) %>% 
+  pander::pander()
+```
+
+```{r echo = FALSE}
+a <- county_damage_2015 %>%
+  group_by(event_id) %>%
+  summarize(episode_id = first(episode_id),
+            fips = first(fips),
+            total_amount = sum(amount)) %>%
+  ungroup() %>% 
+  group_by(episode_id, fips) %>% 
+  summarize(n_events = n(),
+            average_amount = mean(total_amount),
+            max_amount = max(total_amount),
+            range_amount = diff(range(total_amount))) %>%
+  filter(!is.na(max_amount) & max_amount > 0 & n_events > 1) %>% 
+  ungroup() %>%
+  mutate(zero_range = range_amount == 0) %>%
+  group_by(zero_range) %>%
+  count()
+```
+
+Of the times when a county had two or more events as part of the same episode in 2015, in `r formatC(a[a$zero_range == FALSE, ]$n, big.mark = ",")` (`r round(100 * a[a$zero_range == FALSE, ]$n / (sum(a[ , "n"])))`%) cases the damage costs were not identical across the event listings for the county and episode, while in `r formatC(a[a$zero_range == TRUE, ]$n, big.mark = ",")` cases (`r round(100 * a[a$zero_range == TRUE, ]$n / (sum(a[ , "n"])))`%) the cost listings were identical across event listings (as shown in the cases just given). If using damage cost estimates for research, it may be wise to hand-check for cases where damage cost estimates are duplicated across different events in a way that prevents summing across events to get the cumulative episode total cost. 
+
+When costs were summed over all event and county listings in an episode, here are the ten episodes in the 2015 dataset with the highest total damage costs (combining property and crop damage):
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+county_damage_2015 %>%
+  left_join(county_events_2015 %>% select(fips, cz_name, state, episode_narrative, event_id)) %>%
+  unite(location, cz_name, state, sep = ", ") %>% 
+  group_by(episode_id) %>%
+  summarize(location = paste(unique(stringr::str_to_title(location)), collapse = "; "),
+            episode_damage = sum(amount, na.rm = TRUE),
+            event_types = paste(unique(event_type), collapse = ", "),
+            episode_narrative = first(episode_narrative)) %>%
+  ungroup() %>%
+  arrange(desc(episode_damage)) %>%
+  mutate(episode_damage = formatC(episode_damage, format = "d", big.mark = ","),
+         episode_damage = paste0("$", episode_damage)) %>%
+  slice(1:10) %>%
+  select(event_types, episode_damage, location, episode_narrative) %>%
+  rename(`Event types` = event_types,
+         `Total damage` = episode_damage,
+         Counties = location,
+         Narrative = episode_narrative) %>% 
+  pander::pander(split.cells = c(5, 5, 15, 35), justify = "lcll") 
+```
+
+
+Here is a table of the total number of events with non-zero damage (either for property damage or crop damage), the total damage costs across all events of that type in 2015, and the median and maximum damage per event for events of that type with non-zero damage costs. Event types are ordered by total damage costs summed across all events. 
+
+```{r echo = FALSE}
+county_damage_2015 %>% 
+  group_by(event_type) %>%
+  dplyr::mutate(tot_amount = sum(amount)) %>%
+  ungroup() %>%
+  filter(amount > 0) %>%
+  dplyr::mutate(event_type = forcats::fct_reorder(event_type, tot_amount, .desc = TRUE)) %>%
+  group_by(event_type) %>%
+  dplyr::summarize(n_non_zero = n(),
+                   total = sum(amount),
+                   median = median(amount),
+                   max = max(amount)) %>%
+  arrange(desc(total)) %>% 
+  mutate(n_non_zero = prettyNum(n_non_zero, big.mark = ","),
+         total = paste0("$", formatC(total, format = "d", big.mark = ",")),
+         median = paste0("$", formatC(median, format = "d", big.mark = ",")),
+         max = paste0("$", formatC(max, format = "d", big.mark = ","))) %>%
+  knitr::kable(col.names = c("Event type", "# Events", "Total damage", "Median damage", 
+                             "Maximum damage"))
+```
+
+
+```{r echo = FALSE}
+county_damage_2015 %>% 
+  filter(!is.na(amount)) %>% 
+  mutate() %>% 
+  group_by(event_type, )
+```
+
