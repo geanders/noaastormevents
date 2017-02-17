@@ -846,7 +846,11 @@ county_damage_2015 %>%
 ```{r echo = FALSE}
 county_damage_2015 %>% 
   filter(!is.na(amount)) %>% 
-  mutate() %>% 
-  group_by(event_type, )
+  group_by(event_id) %>% 
+  mutate(amount = sum(amount)) %>% 
+  ungroup() %>% 
+  mutate(no_damage = amount == 0) %>% 
+  group_by(event_type, no_damage) %>% 
+  count()
 ```
 
