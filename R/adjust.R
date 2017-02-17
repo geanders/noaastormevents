@@ -47,7 +47,8 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
       dplyr::select_(~ -closest_time_utc, ~ -local_time) %>%
       dplyr::mutate_(closest_date = ~ lubridate::ymd(closest_date),
                      earliest_date = ~ closest_date - lubridate::ddays(2),
-                     latest_date = ~ closest_date + lubridate::ddays(2))
+                     latest_date = ~ closest_date + lubridate::ddays(2),
+                     fips = ~ as.numeric(fips))
     storm_data <- storm_data %>%
       dplyr::left_join(distance_df, by = "fips")
   }
