@@ -732,27 +732,8 @@ county_damage_2015 <- county_events_2015 %>%
                 amount = stringr::str_extract(amount, "[0-9.]*+"),
                 amount = as.numeric(amount),
                 amount = ifelse(!is.na(amount_times), amount * amount_times, amount),
-                amount = ifelse(is.na(amount), NA, amount)) %>%
+                amount = ifelse(is.na(amount), 0, amount)) %>%
   dplyr::select(- amount_times)
-```
-
-```{r echo = FALSE}
-county_damage_2015 %>%
-  group_by(event_id) %>%
-  summarize(episode_id = first(episode_id),
-            fips = first(fips),
-            total_amount = sum(amount)) %>%
-  ungroup() %>% 
-  group_by(episode_id, fips) %>% 
-  summarize(n_events = n(),
-            average_amount = mean(total_amount),
-            max_amount = max(total_amount),
-            range_amount = diff(range(total_amount))) %>%
-  filter(!is.na(max_amount) & max_amount > 0 & n_events > 1) %>% 
-  ungroup() %>% 
-  arrange(desc(max_amount)) %>%
-  filter(range_amount == 0) %>%
-  slice(1:6)
 ```
 
 Usually, it seems that the cost per events within an episode do not overlap, so that the costs from all events in an episode can be summed to generate a total damage cost. While in some cases, different event listings within the same county in the same episode have the same damage cost, it often seems that the total cost was divided in these cases across events, as in this case, where the total estimated cost of $6,186,909 in the county (see the narratives) was spread evenly over the two event listings:
@@ -842,15 +823,27 @@ county_damage_2015 %>%
                              "Maximum damage"))
 ```
 
+The following graph shows the distribution of events between those with listed damage costs greater than $0 and those without.
 
-```{r echo = FALSE}
+```{r echo = FALSE, fig.width = 6, fig.height = 7}
 county_damage_2015 %>% 
   filter(!is.na(amount)) %>% 
   group_by(event_id) %>% 
   mutate(amount = sum(amount)) %>% 
   ungroup() %>% 
-  mutate(no_damage = amount == 0) %>% 
+  mutate(no_damage = amount == 0,
+         no_damage = factor(no_damage, 
+                            levels = c(FALSE, TRUE),
+                            labels = c("Damage", "No damage"))) %>% 
   group_by(event_type, no_damage) %>% 
-  count()
+  count() %>% 
+  ggplot(aes(x = fct_reorder(event_type, n, fun = sum), y = n, fill = no_damage)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() + 
+  theme_classic() + 
+  theme(legend.position = "top") + 
+  scale_fill_viridis(name = " ", discrete = TRUE, option = "D", begin = 0.3, end = 0.8,
+                     direction = -1) + 
+  labs(x = "", y = "Number of events")
 ```
 
