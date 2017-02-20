@@ -198,6 +198,17 @@ events_2015 %>%
        y = "Largest difference in begin dates\nacross events in the episode")
 ```
 
+An episode will never include events in more than one state, so a large weather system could potentially be described by multiple episodes in different states: 
+
+```{r}
+events_2015 %>% 
+  select(EPISODE_ID, STATE) %>% 
+  group_by(EPISODE_ID) %>% 
+  summarize(n_states = length(unique(STATE))) %>% 
+  ungroup() %>% 
+  summarize(max_n_states = max(n_states))
+```
+
 Here are maps with the beginning locations of events in the episodes with the most events in 2015. Note that the beginning latitude and longitude are not listed for every event, resulting in one of the episodes not having any points on the map. From the other maps, it is clear that events within the episode were fairly close together. 
 
 ```{r message = FALSE, warning = FALSE, echo = FALSE, fig.align = "center", fig.width = 6, fig.height = 10}
@@ -731,22 +742,18 @@ Therefore, the `noaastormevents` package uses a function to pull out these abbre
 - "B" = 1,000,000,000
 - "T" = 1,000,000,000,000
 
+This is done by the function `parse_damage`:
+
+```{r}
+parse_damage
+```
+
+
 ```{r echo = FALSE}
 county_damage_2015 <- county_events_2015 %>%
   dplyr::select(episode_id , event_id, fips, event_type, contains("damage")) %>% 
   tidyr::gather(key = impact, value = amount, -event_type, -event_id, -episode_id, -fips) %>%
-  dplyr::mutate(amount_times = stringr::str_extract(amount, "[A-Z]"),
-                amount_times = stringr::str_to_upper(amount_times),
-                amount_times = ifelse(amount_times == "K", "1000", amount_times),
-                amount_times = ifelse(amount_times == "M", "1000000", amount_times),
-                amount_times = ifelse(amount_times == "B", "1000000000", amount_times),  
-                amount_times = ifelse(amount_times == "T", "1000000000000", amount_times),
-                amount_times = as.numeric(amount_times),
-                amount = stringr::str_extract(amount, "[0-9.]*+"),
-                amount = as.numeric(amount),
-                amount = ifelse(!is.na(amount_times), amount * amount_times, amount),
-                amount = ifelse(is.na(amount), 0, amount)) %>%
-  dplyr::select(- amount_times)
+  dplyr::mutate(amount = parse_damage(amount)) 
 ```
 
 Usually, it seems that the cost per events within an episode do not overlap, so that the costs from all events in an episode can be summed to generate a total damage cost. While in some cases, different event listings within the same county in the same episode have the same damage cost, it often seems that the total cost was divided in these cases across events, as in this case, where the total estimated cost of $6,186,909 in the county (see the narratives) was spread evenly over the two event listings:
@@ -858,5 +865,54 @@ county_damage_2015 %>%
   scale_fill_viridis(name = " ", discrete = TRUE, option = "D", begin = 0.3, end = 0.8,
                      direction = -1) + 
   labs(x = "", y = "Number of events")
+```
+
+The following figure shows the top 50 episodes in terms of damages (property and crop damage combined) in 2015:
+
+```{r fig.height = 7, fig.width = 5, fig.align = "center"}
+ex <- county_events_2015 %>% 
+  unite(begin_date, begin_yearmonth, begin_day, sep = "-") %>% 
+  mutate(begin_date = ymd(begin_date)) %>% 
+  unite(end_date, end_yearmonth, end_day, sep = "-") %>% 
+  mutate(end_date = ymd(end_date)) %>% 
+  mutate(damage_property = parse_damage(damage_property),
+         damage_crops = parse_damage(damage_crops),
+         state = str_to_title(state)) %>% 
+  select(begin_date, end_date, episode_id, state, damage_property, damage_crops, event_type) %>% 
+  gather(key = damage_type, value = damage, contains("damage")) %>% 
+  group_by(episode_id) %>% 
+  summarize(begin_date = min(begin_date),
+            end_date = max(end_date),
+            state = first(state),
+            event_type = paste(unique(event_type), collapse = ", "),
+            damage = sum(damage)) %>% 
+  arrange(desc(damage)) %>% 
+  slice(1:50) %>% 
+  arrange(state, begin_date) %>% 
+  mutate(n = 1:n(),
+         damage_text = ifelse(damage == 0, "", 
+                              paste0("$", formatC(damage, format = "d", big.mark = ","))))
+
+ggplot(ex, aes(x = begin_date, y = n, color = state)) + 
+  geom_segment(aes(xend = end_date, yend = n)) + 
+  geom_point(size = 0.2) + 
+  geom_point(aes(x = end_date), size = 0.2) +
+  theme_classic() + 
+  theme(legend.position = "bottom",
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.line.y = element_blank()) + 
+  geom_text(aes(label = event_type, x = begin_date - 2), 
+            hjust = "right", size = 2) + 
+  geom_text(aes(label = damage_text, x = end_date + 2), 
+            hjust = "left", size = 2) +  
+  labs(color = "") + 
+  scale_x_date(name = "Episode date", 
+               breaks = ymd(c(20150101, 20150301, 20150501, 
+                                   20150701, 20150901, 20151101,
+                              20160101)), 
+               date_labels = "%b",
+               limits = c(ymd(20141001), ymd(20160201)))
 ```
 
