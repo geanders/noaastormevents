@@ -535,6 +535,8 @@ Within the code in `noaastormevents`, the `match_forecast_county` is used to try
 4. Next, pull any words right before a slash and check that against the county name.
 5. Finally, try removing anything in parentheses in `cz_name` before matching.
 
+In addition, there are a few final steps in cleaning the data. First, all listings with "Utah" in the `cz_name` are set to missing-- while there is a Utah County, Utah, from inspection of event listings in 2015, events in Utah with "Utah" in `cz_name` often referred to parts of the state, rather than to the county. Further, any event with "National Park" listed in `cz_name` is set to not match with a county FIPS. In Wyoming, Park County was being match to a `cz_name` for Yellowstone National Park, and this could be a problem in other states, so this extra check was included. 
+
 ```{r echo = FALSE}
 z_events_2015 <- events_2015 %>%
   dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
@@ -677,6 +679,17 @@ z_events_2015 %>%
   facet_wrap(~ event_type) + 
   theme(legend.position = "top") + 
   labs(fill = "Number of events")
+```
+
+When using this function, and for event listings generated using this function, the user may want to hand-check that event lisings with names like "Lake" and "Mountain" in the `cz_name` column are not erroneously matched to counties with names like "Lake County" and "Mountain County". Code like the following can be used for these checks (in this case, checking a dataframe of event listings named `z_events_2015` that is output from `match_forecast_county` and so has `fips` added for each event listing, if a match could be found): 
+
+```{r eval = FALSE}
+z_events_2015 %>% 
+  filter(cz_type == "Z") %>% 
+  select(cz_name, state, fips) %>% 
+  mutate(cz_name = str_to_title(cz_name)) %>% 
+  filter(str_detect(cz_name, "Lake") & !is.na(fips))  %>% 
+  distinct()
 ```
 
 ### Impact measurements
