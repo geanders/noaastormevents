@@ -37,18 +37,8 @@ find_damage_property <- function(date_range = NULL, event_type = NULL,
 
 
   # Convert property values (e.g., from "5K" to 5000)
-  value_table <- data.frame(letter_prop = c(NA, "K", "M", "B"),
-                            value_prop = 10 ^ c(0, 2, 6, 9),
-                            stringsAsFactors = FALSE)
-
   storm_data <- storm_data %>%
-    dplyr::mutate_(num_prop = ~ stringr::str_extract(damage_property, "[0-9]+"),
-                  num_prop = ~ as.numeric(num_prop),
-                  letter_prop = ~ stringr::str_extract(damage_property,
-                                                       "[A-Z]+")) %>%
-    dplyr::left_join(value_table, by = "letter_prop") %>%
-    dplyr::mutate_(damage_property = ~ num_prop * value_prop) %>%
-    dplyr::select_(~ -num_prop, ~ -letter_prop, ~ -value_prop)
+    dplyr::mutate_(damage_property = ~ parse_damage(damage_property))
 
   storm_data_NONA <- storm_data %>%
     dplyr::group_by_(~ STATE) %>%
