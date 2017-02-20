@@ -104,11 +104,11 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 #' @param storm_data_z A dataframe of storm events reported by forecast zone
 #'    (i.e., \code{cz_type == "Z"}) rather than county. This dataframe should
 #'    include the columns:
-#'    \begin{itemize}
-#'      \item{\code{state}:}{State name, in lowercase}
-#'      \item{\code{cz_name}:}{Location name, in lowercase}
-#'      \item{\code{cz_fips}:}{Forecast zone FIPS}
-#'    \end{itemize}
+#'    \itemize{
+#'      \item{\code{state}: }{State name, in lowercase}
+#'      \item{\code{cz_name}: }{Location name, in lowercase}
+#'      \item{\code{cz_fips}: }{Forecast zone FIPS}
+#'    }
 #'
 #' @return The dataframe of events input to the function, with county FIPS
 #'    added for events matched to a county in the \code{fips} column. Events
@@ -120,7 +120,70 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 #'
 #' @details This function tries to match the \code{cz_name} of each event to
 #'    a state and county name from the \code{county.fips} dataframe that comes
-#'    with the \code{maps} package.
+#'    with the \code{maps} package. The following steps are taken to try to
+#'    match each \code{cz_name} to a state and county name from \code{county.fips}:
+#'    \enumerate{
+#'      \item Tries to match \code{cz_name} to the county name in \code{county.fips}
+#'        after removing any periods or apostrophes in \code{cz_name}.
+#'      \item Next, for county names with "county" in them, try to match the word before
+#'         "county" to county name in \code{county.fips}. Then check the two words before
+#'         "county", then the one and two words before "counties".
+#'      \item Next, pull out the last word in \code{cz_name} and try to match it to the county
+#'         name in \code{county.fips}. The check the last two words in \code{cz_name}, then check
+#'         the last three words in \code{cz_name}.
+#'      \item Next, pull any words right before a slash and check that against the county name.
+#'      \item Finally, try removing anything in parentheses in \code{cz_name} before matching.
+#'    }
+#'
+#' @note You may want to hand-check that event listings with names like "Lake", "Mountain", and
+#'    "Park" have not been unintentionally linked to a county like "Lake County". While such
+#'    examples seem rare in the example data used to develop this function (NOAA Storm Events
+#'    for 2015), it can sometimes happen. To do so, you can use the \code{str_detect} function
+#'    from the \code{stringr} package.
+#'
+#' @examples
+#' counties_to_parse <- dplyr::data_frame(
+#'                                    event_id = c(1:19),
+#'                                    cz_name = c("Suffolk",
+#'                                                "Eastern Greenbrier",
+#'                                                "Ventura County Mountains",
+#'                                                "Central And Southeast Montgomery",
+#'                                                "Western Cape May",
+#'                                                "San Diego County Coastal Areas",
+#'                                                "Blount/Smoky Mountains",
+#'                                                "St. Mary's",
+#'                                                "Central & Eastern Lake County",
+#'                                                "Mountains Southwest Shasta County To Northern Lake County",
+#'                                                "Kings (Brooklyn)",
+#'                                                "Lower Bucks",
+#'                                                "Central St. Louis",
+#'                                                "Curry County Coast",
+#'                                                "Lincoln County Except The Sheep Range",
+#'                                                "Shasta Lake/North Shasta County",
+#'                                                "Coastal Palm Beach County",
+#'                                                "Larimer & Boulder Counties Between 6000 & 9000 Feet",
+#'                                                "Yellowstone National Park"),
+#'                                    state = c("Virginia",
+#'                                              "West Virginia",
+#'                                              "California",
+#'                                              "Maryland",
+#'                                              "New Jersey",
+#'                                              "California",
+#'                                              "Tennessee",
+#'                                              "Maryland",
+#'                                              "Oregon",
+#'                                              "California",
+#'                                              "New York",
+#'                                              "Pennsylvania",
+#'                                              "Minnesota",
+#'                                              "Oregon",
+#'                                              "Nevada",
+#'                                              "California",
+#'                                              "Florida",
+#'                                              "Colorado",
+#'                                              "Wyoming"))
+#' match_forecast_county(counties_to_parse)
+#' @importFrom dplyr %>%
 #'
 #' @export
 match_forecast_county <- function(storm_data_z){
@@ -228,9 +291,57 @@ match_forecast_county <- function(storm_data_z){
   small_data <- dplyr::filter_(small_data, ~ !(event_id %in% j$event_id))
 
   matched_data <- dplyr::bind_rows(a, b, c, d, e, f, g, h, i, j) %>%
-    mutate(fips = ifelse(fips == 49049, NA, fips)) # Utah County, Utah is getting wrong matches
+    dplyr::mutate_(fips = ~ ifelse(fips == 49049, NA, fips)) # Utah County, Utah is getting wrong matches
+
   storm_data_z <- storm_data_z %>%
-    dplyr::left_join(matched_data, by = "event_id")
+    dplyr::left_join(matched_data, by = "event_id") %>%
+    dplyr::mutate_(fips = ~ ifelse(stringr::str_detect(stringr::str_to_lower(cz_name),
+                                                       "national park"),
+                                   NA, fips)) # Park County, Wyoming is getting wrong matches. Likely, this may happen in other states, as well.
 
   return(storm_data_z)
+}
+
+#' Parse damage values
+#'
+#' Take damage values that include letters for order of magnitude (e.g., "2K" for
+#' $2,000) and return a numeric value of damage.
+#'
+#' @param damage_vector A character vector with damage values (e.g., the \code{damage_crops}
+#'    or \code{damage_property} columns in the NOAA Storm Events data). This vector should
+#'    give numbers except for specific abbreviations specifying order of magnitude (see Details).
+#'
+#' @return The input vector, parsed to a numeric, with abbreviations for orders of magnitude
+#'    appropriately interpreted (e.g., "2K" in the input vector becomes the numeric 2000 in the
+#'    output vector).
+#'
+#' @details This function parses the following abbreviations for order of magnitude:
+#'   \itemize{
+#'     \item{"K":}{  1,000 (thousand)}
+#'     \item{"M":}{  1,000,000 (million)}
+#'     \item{"B":}{  1,000,000,000 (billion)}
+#'     \item{"T":}{  1,000,000,000,000 (trillion)}
+#'   }
+#'
+#' @examples
+#' damage_crops <- c("150", "2K", "3.5B", NA)
+#' parse_damage(damage_crops)
+#'
+#' @importFrom dplyr %>%
+#'
+#' @export
+parse_damage <- function(damage_vector){
+  value_table <- dplyr::data_frame(letter_damage = c(NA, "K", "M", "B", "T"),
+                                   value_damage = 10 ^ c(0, 3, 6, 9, 12))
+
+  out <- data_frame(damage_vector) %>%
+    dplyr::mutate_(num_damage = ~ stringr::str_extract(damage_vector, "[0-9.]+"),
+                   num_damage = ~ as.numeric(num_damage),
+                   letter_damage = ~ stringr::str_extract(damage_vector, "[A-Z]+"),
+                   letter_damage = ~ stringr::str_to_upper(letter_damage)) %>%
+    dplyr::left_join(value_table, by = "letter_damage") %>%
+    dplyr::mutate_(damage_vector = ~ num_damage * value_damage,
+                   damage_vector = ~ ifelse(is.na(damage_vector), 0, damage_vector))
+
+  return(out$damage_vector)
 }
