@@ -32,18 +32,8 @@ find_damage_crops <- function(date_range = NULL, event_type = NULL,
                       dist_limit = dist_limit, storm = storm)
 
   # Convert crop values (e.g., from "5K" to 5000)
-  value_table <- data.frame(letter_crops = c(NA, "K", "M", "B"),
-                            value_crops = 10 ^ c(0, 2, 6, 9),
-                            stringsAsFactors = FALSE)
-
   storm_data <- storm_data %>%
-    dplyr::mutate_(num_crops = ~ stringr::str_extract(damage_crops, "[0-9]+"),
-                  num_crops = ~ as.numeric(num_crops),
-                  letter_crops = ~ stringr::str_extract(damage_crops,
-                                                        "[A-Z]+")) %>%
-    dplyr::left_join(value_table, by = "letter_crops") %>%
-    dplyr::mutate_(damage_crops = ~ num_crops * value_crops) %>%
-    dplyr::select_(~ -num_crops, ~ -letter_crops, ~ -value_crops)
+    dplyr::mutate_(damage_crops = ~ parse_damage(damage_crops))
 
   storm_data_NONA <- storm_data %>%
     dplyr::group_by_(~ STATE) %>%
