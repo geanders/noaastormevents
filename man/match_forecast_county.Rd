@@ -10,11 +10,11 @@ match_forecast_county(storm_data_z)
 \item{storm_data_z}{A dataframe of storm events reported by forecast zone
 (i.e., \code{cz_type == "Z"}) rather than county. This dataframe should
 include the columns:
-\begin{itemize}
-  \item{\code{state}:}{State name, in lowercase}
-  \item{\code{cz_name}:}{Location name, in lowercase}
-  \item{\code{cz_fips}:}{Forecast zone FIPS}
-\end{itemize}}
+\itemize{
+  \item{\code{state}: }{State name, in lowercase}
+  \item{\code{cz_name}: }{Location name, in lowercase}
+  \item{\code{cz_fips}: }{Forecast zone FIPS}
+}}
 }
 \value{
 The dataframe of events input to the function, with county FIPS
@@ -29,7 +29,20 @@ as many as possible to counties.
 \details{
 This function tries to match the \code{cz_name} of each event to
    a state and county name from the \code{county.fips} dataframe that comes
-   with the \code{maps} package.
+   with the \code{maps} package. The following steps are taken to try to
+   match each \code{cz_name} to a state and county name from \code{county.fips}:
+   \enumerate{
+     \item Tries to match \code{cz_name} to the county name in \code{county.fips}
+       after removing any periods or apostrophes in \code{cz_name}.
+     \item Next, for county names with "county" in them, try to match the word before
+        "county" to county name in \code{county.fips}. Then check the two words before
+        "county", then the one and two words before "counties".
+     \item Next, pull out the last word in \code{cz_name} and try to match it to the county
+        name in \code{county.fips}. The check the last two words in \code{cz_name}, then check
+        the last three words in \code{cz_name}.
+     \item Next, pull any words right before a slash and check that against the county name.
+     \item Finally, try removing anything in parentheses in \code{cz_name} before matching.
+   }
 }
 \note{
 This function does not provide any matches for events outside
