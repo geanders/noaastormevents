@@ -11,6 +11,16 @@
 #'    (FALSE, the default). If included, these IDs could be used in some
 #'    cases to link events to data in the "fatalities" or "locations"
 #'    files available through the NOAA Storm Events database.
+#' @param clean_damage TRUE / FALSE of whether additional cleaning should be
+#'    done to try to exclude incorrect damage listings. If TRUE, any property
+#'    or crop damages for which the listing for that single event exceeds all
+#'    other damages in the state combined for the event dataset, the damages for
+#'    that event listing will be set to missing. Default is FALSE (i.e., this
+#'    additional check is not performed). In some cases, it seems that a single
+#'    listing by forecast zone gives the state total for damages, and this option
+#'    may help in identifying and excluding such listings (for example, one listing in
+#'    North Carolina for Hurricane Floyd seems to be the state total for damages, rather
+#'    than a county-specific damage estimate).
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
 #'
@@ -32,7 +42,7 @@
 find_events <- function(date_range = NULL, event_types = NULL,
                         dist_limit = NULL, storm = NULL,
                         include_narratives = FALSE,
-                        include_ids = FALSE){
+                        include_ids = FALSE, clean_damage = FALSE){
 
   processed_inputs <- process_input_args(date_range = date_range,
                                          storm = storm)
@@ -44,6 +54,22 @@ find_events <- function(date_range = NULL, event_types = NULL,
                       event_type = event_type,
                       dist_limit = dist_limit,
                       storm = processed_inputs$storm)
+
+  # If the users chooses, identify any cases where the crop or property damage for a
+  # single event is larger than for all others in the state in that year combined and reset
+  # those damages to missing
+  if(clean_damage){
+    storm_data_NONA <- storm_data %>%
+      dplyr::group_by_(~ state) %>%
+      dplyr::mutate_(state_crop_damage = sum(damage_crops),
+                     damage_crops = ~ ifelse((state_crop_damage - damage_crops) < damage_crops,
+                                             NA, damage_crops),
+                     state_property_damage = sum(damage_property),
+                     damage_property = ~ ifelse((state_property_damage - damage_property) < damage_property,
+                                                NA, damage_crops)) %>%
+      dplyr::ungroup() %>%
+      dplyr::select_(~ -state_crop_damage, - state_property_damage)
+  }
 
   if(!include_ids){
     storm_data <- storm_data %>%
