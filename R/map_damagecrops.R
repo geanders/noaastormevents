@@ -1,55 +1,3 @@
-#' Find all damaged crop listings for date range
-#'
-#' This function will find all of the crops damaged in the US for a specified
-#' date range.
-#'
-#' @inheritParams create_storm_data
-#' @inheritParams adjust_storm_data
-#'
-#' @examples \dontrun{
-#' find_damage_crops(date_range = c("1999-09-10", "1999-09-30"))
-#'
-#' find_damage_crops(date_range = c("1999-09-01", "1999-09-30"),
-#'    storm = "Floyd-1999", dist_limit = 200)
-#' }
-#'
-#' @importFrom dplyr %>%
-#'
-#' @export
-find_damage_crops <- function(date_range = NULL, event_type = NULL,
-                              dist_limit = NULL, storm = NULL){
-
-  processed_inputs <- process_input_args(date_range = date_range, storm = storm)
-  date_range <- processed_inputs$date_range
-  storm <- processed_inputs$storm
-
-  storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
-                   ~ STATE, ~ CZ_TYPE, ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
-                   ~ CZ_FIPS, ~ DAMAGE_CROPS) %>%
-    setNames(tolower(names(.))) %>%
-    adjust_storm_data(date_range = date_range, event_type = event_type,
-                      dist_limit = dist_limit, storm = storm)
-
-  # Convert crop values (e.g., from "5K" to 5000)
-  storm_data <- storm_data %>%
-    dplyr::mutate_(damage_crops = ~ parse_damage(damage_crops))
-
-  storm_data_NONA <- storm_data %>%
-    dplyr::group_by_(~ STATE) %>%
-    dplyr::filter_(~ !is.na(damage_crops)) %>%
-    dplyr::mutate_(damage_crops = ~ ifelse(sum(damage_crops) - damage_crops <
-                                           damage_crops, NA, damage_crops)) %>%
-    dplyr::ungroup()
-
-  storm_data <- storm_data %>%
-    dplyr::filter_(~ is.na(damage_crops)) %>%
-    dplyr::full_join(storm_data_NONA, by = c("STATE","begin_date", "end_date", "state_county_name",
-                                             "CZ_TYPE", "type", "fips", "damage_crops"))
-
-  return(storm_data)
-}
-
 #' Map crops damaged for a date range
 #'
 #' This function maps all crops damaged listed with a starting date within a
@@ -87,9 +35,8 @@ map_damage_crops <- function(date_range = NULL, event_type = NULL,
                       "tennessee", "texas", "vermont", "virginia",
                       "west virginia", "wisconsin")
 
-  map_data <- find_damage_crops(date_range = date_range,
-                                   storm = storm, dist_limit = dist_limit,
-                                event_type = event_type) %>%
+  map_data <- find_events(date_range = date_range, storm = storm, dist_limit = dist_limit,
+                          event_type = event_type) %>%
     dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
     dplyr::rename_(region = ~ fips, value = ~ damage_crops) %>%
     dplyr::full_join(county.regions, by = "region") %>%
@@ -138,10 +85,7 @@ map_damage_crops <- function(date_range = NULL, event_type = NULL,
     out$set_zoom(continental_states)
   }
 
-
-
-
-  if(add_tracks){
+ if(add_tracks){
     tracks_map <- hurricaneexposure::map_tracks(storms = storm,
                                                 plot_object = out$render(),
                                                 plot_points = FALSE,
