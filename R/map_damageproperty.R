@@ -6,6 +6,7 @@
 #' @inheritParams map_events
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
+#' @inheritParams find_events
 #'
 #' @examples \dontrun{
 #' map_damage_property(date_range = c("1999-09-10", "1999-09-30"))
@@ -20,9 +21,10 @@
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_damage_property <- function(date_range = NULL, event_type = NULL,
+map_damage_property <- function(date_range = NULL, event_types = NULL,
                                 east_only = TRUE, dist_limit = NULL,
-                                storm = NULL, add_tracks = FALSE) {
+                                storm = NULL, add_tracks = FALSE,
+                                clean_damage = FALSE) {
   utils::data(county.regions, package = "choroplethrMaps")
   eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
                       "district of columbia", "florida", "georgia", "illinois",
@@ -35,7 +37,7 @@ map_damage_property <- function(date_range = NULL, event_type = NULL,
                       "west virginia", "wisconsin")
 
   map_data <- find_events(date_range = date_range, storm = storm, dist_limit = dist_limit,
-                          event_type = event_type) %>%
+                          event_types = event_types, clean_damage = clean_damage) %>%
     dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
     dplyr::rename_(region = ~ fips, value = ~ damage_property) %>%
     dplyr::full_join(county.regions, by = "region") %>%

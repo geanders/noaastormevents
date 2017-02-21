@@ -118,6 +118,9 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
       dplyr::filter_(~ tolower(event_type) %in% stringr::str_to_lower(event_types))
   }
 
+  storm_data <- storm_data %>%
+    dplyr::select_(~ - state_fips, ~ -cz_fips)
+
   return(storm_data)
 }
 
@@ -168,45 +171,45 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 #'
 #' @examples
 #' counties_to_parse <- dplyr::data_frame(
-#'                                    event_id = c(1:19),
-#'                                    cz_name = c("Suffolk",
-#'                                                "Eastern Greenbrier",
-#'                                                "Ventura County Mountains",
-#'                                                "Central And Southeast Montgomery",
-#'                                                "Western Cape May",
-#'                                                "San Diego County Coastal Areas",
-#'                                                "Blount/Smoky Mountains",
-#'                                                "St. Mary's",
-#'                                                "Central & Eastern Lake County",
-#'                                                "Mountains Southwest Shasta County To Northern Lake County",
-#'                                                "Kings (Brooklyn)",
-#'                                                "Lower Bucks",
-#'                                                "Central St. Louis",
-#'                                                "Curry County Coast",
-#'                                                "Lincoln County Except The Sheep Range",
-#'                                                "Shasta Lake/North Shasta County",
-#'                                                "Coastal Palm Beach County",
-#'                                                "Larimer & Boulder Counties Between 6000 & 9000 Feet",
-#'                                                "Yellowstone National Park"),
-#'                                    state = c("Virginia",
-#'                                              "West Virginia",
-#'                                              "California",
-#'                                              "Maryland",
-#'                                              "New Jersey",
-#'                                              "California",
-#'                                              "Tennessee",
-#'                                              "Maryland",
-#'                                              "Oregon",
-#'                                              "California",
-#'                                              "New York",
-#'                                              "Pennsylvania",
-#'                                              "Minnesota",
-#'                                              "Oregon",
-#'                                              "Nevada",
-#'                                              "California",
-#'                                              "Florida",
-#'                                              "Colorado",
-#'                                              "Wyoming"))
+#'            event_id = c(1:19),
+#'            cz_name = c("Suffolk",
+#'                        "Eastern Greenbrier",
+#'                        "Ventura County Mountains",
+#'                        "Central And Southeast Montgomery",
+#'                        "Western Cape May",
+#'                        "San Diego County Coastal Areas",
+#'                        "Blount/Smoky Mountains",
+#'                        "St. Mary's",
+#'                        "Central & Eastern Lake County",
+#'                        "Mountains Southwest Shasta County To Northern Lake County",
+#'                        "Kings (Brooklyn)",
+#'                        "Lower Bucks",
+#'                        "Central St. Louis",
+#'                        "Curry County Coast",
+#'                        "Lincoln County Except The Sheep Range",
+#'                        "Shasta Lake/North Shasta County",
+#'                        "Coastal Palm Beach County",
+#'                        "Larimer & Boulder Counties Between 6000 & 9000 Feet",
+#'                        "Yellowstone National Park"),
+#'           state = c("Virginia",
+#'                     "West Virginia",
+#'                     "California",
+#'                     "Maryland",
+#'                     "New Jersey",
+#'                     "California",
+#'                     "Tennessee",
+#'                     "Maryland",
+#'                     "Oregon",
+#'                     "California",
+#'                     "New York",
+#'                     "Pennsylvania",
+#'                     "Minnesota",
+#'                     "Oregon",
+#'                     "Nevada",
+#'                     "California",
+#'                     "Florida",
+#'                     "Colorado",
+#'                     "Wyoming"))
 #' match_forecast_county(counties_to_parse)
 #' @importFrom dplyr %>%
 #'
@@ -359,7 +362,7 @@ parse_damage <- function(damage_vector){
   value_table <- dplyr::data_frame(letter_damage = c(NA, "K", "M", "B", "T"),
                                    value_damage = 10 ^ c(0, 3, 6, 9, 12))
 
-  out <- data_frame(damage_vector) %>%
+  out <- dplyr::data_frame(damage_vector) %>%
     dplyr::mutate_(num_damage = ~ stringr::str_extract(damage_vector, "[0-9.]+"),
                    num_damage = ~ as.numeric(num_damage),
                    letter_damage = ~ stringr::str_extract(damage_vector, "[A-Z]+"),

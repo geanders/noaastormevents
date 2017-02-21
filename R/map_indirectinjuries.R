@@ -6,6 +6,7 @@
 #' @inheritParams map_events
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
+#' @inheritParams find_events
 #'
 #' @examples \dontrun{
 #' map_indirect_injuries(date_range = c("1999-09-10", "1999-09-30"))
@@ -19,7 +20,7 @@
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_indirect_injuries <- function(date_range = NULL, event_type = NULL, east_only = TRUE,
+map_indirect_injuries <- function(date_range = NULL, event_types = NULL, east_only = TRUE,
                                   dist_limit = NULL, storm = NULL, add_tracks = FALSE){
 
   utils::data(county.regions, package = "choroplethrMaps")
@@ -34,7 +35,7 @@ map_indirect_injuries <- function(date_range = NULL, event_type = NULL, east_onl
                       "west virginia", "wisconsin")
 
   map_data <- find_events(date_range = date_range, storm = storm, dist_limit = dist_limit,
-                          event_type = event_type) %>%
+                          event_types = event_types) %>%
     dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
     dplyr::rename_(region = ~ fips, value = ~ indirect_injuries) %>%
     dplyr::full_join(county.regions, by = "region") %>%

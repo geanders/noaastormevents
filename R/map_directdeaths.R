@@ -6,6 +6,7 @@
 #' @inheritParams map_events
 #' @inheritParams create_storm_data
 #' @inheritParams adjust_storm_data
+#' @inheritParams find_events
 #'
 #' @examples \dontrun{
 #' map_direct_deaths(date_range = c("1999-09-01", "1999-09-30"))
@@ -21,7 +22,7 @@
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_direct_deaths <- function(date_range = NULL, event_type = NULL,
+map_direct_deaths <- function(date_range = NULL, event_types = NULL,
                               east_only = TRUE, dist_limit = NULL, storm = NULL,
                               add_tracks = FALSE){
 
@@ -37,7 +38,7 @@ map_direct_deaths <- function(date_range = NULL, event_type = NULL,
                       "west virginia", "wisconsin")
 
   map_data <- find_events(date_range = date_range, storm = storm, dist_limit = dist_limit,
-                          event_type = event_type) %>%
+                          event_types = event_types) %>%
     dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
     dplyr::rename_(region = ~ fips, value = ~ direct_deaths) %>%
     dplyr::full_join(county.regions, by = "region") %>%

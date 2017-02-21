@@ -59,16 +59,16 @@ find_events <- function(date_range = NULL, event_types = NULL,
   # single event is larger than for all others in the state in that year combined and reset
   # those damages to missing
   if(clean_damage){
-    storm_data_NONA <- storm_data %>%
+    storm_data <- storm_data %>%
       dplyr::group_by_(~ state) %>%
-      dplyr::mutate_(state_crop_damage = sum(damage_crops),
+      dplyr::mutate_(state_crop_damage = ~ sum(damage_crops),
                      damage_crops = ~ ifelse((state_crop_damage - damage_crops) < damage_crops,
                                              NA, damage_crops),
-                     state_property_damage = sum(damage_property),
+                     state_property_damage = ~ sum(damage_property),
                      damage_property = ~ ifelse((state_property_damage - damage_property) < damage_property,
                                                 NA, damage_crops)) %>%
       dplyr::ungroup() %>%
-      dplyr::select_(~ -state_crop_damage, - state_property_damage)
+      dplyr::select_(quote(-state_crop_damage), quote(-state_property_damage))
   }
 
   if(!include_ids){
