@@ -20,13 +20,16 @@
 #'
 #' # Events within a certain distance and time range of a tropical storm
 #' find_events(storm = "Floyd-1999", dist_limit = 200)
+#'
+#' # Limit output to events that are floods or flash floods
+#' find_events(storm = "Floyd-1999", dist_limit = 200, event_types = c("Flood", "Flash Flood"))
 #'}
 #'
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
 #'
 #' @export
-find_events <- function(date_range = NULL, event_type = NULL,
+find_events <- function(date_range = NULL, event_types = NULL,
                         dist_limit = NULL, storm = NULL,
                         include_narratives = FALSE,
                         include_ids = FALSE){
@@ -36,19 +39,11 @@ find_events <- function(date_range = NULL, event_type = NULL,
 
   storm_data <- create_storm_data(date_range = processed_inputs$date_range,
                                   storm = processed_inputs$storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
-                   ~ EPISODE_ID, ~EVENT_ID, ~ STATE, ~ CZ_TYPE, ~ CZ_NAME,
-                   ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ SOURCE,
-                   ~ EPISODE_NARRATIVE, ~ EVENT_NARRATIVE) %>%
-    setNames(tolower(names(.))) %>%
+    clean_storm_data(include_narratives = include_narratives) %>%
     adjust_storm_data(date_range = processed_inputs$date_range,
-                      event_type = event_type, dist_limit = dist_limit,
+                      event_type = event_type,
+                      dist_limit = dist_limit,
                       storm = processed_inputs$storm)
-
-  if(!include_narratives){
-    storm_data <- storm_data %>%
-      dplyr::select_(~ -event_narrative, ~ -episode_narrative)
-  }
 
   if(!include_ids){
     storm_data <- storm_data %>%
