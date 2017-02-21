@@ -4,20 +4,25 @@
 \alias{map_damage_crops}
 \title{Map crops damaged for a date range}
 \usage{
-map_damage_crops(date_range = NULL, event_type = NULL, east_only = TRUE,
-  dist_limit = NULL, storm = NULL, add_tracks = FALSE)
+map_damage_crops(date_range = NULL, event_types = NULL, east_only = TRUE,
+  dist_limit = NULL, storm = NULL, add_tracks = FALSE,
+  clean_damage = FALSE)
 }
 \arguments{
 \item{date_range}{A character vector of length two with the start and end
 dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 
-\item{event_type}{Specifies the types of storm events should be included.}
+\item{event_types}{Character vector with the types of storm events that should be kept.
+The default value (NULL) keeps all types of events. See the "Details" vignette for this
+package for more details on possible event types.}
 
 \item{east_only}{A logical value specifying whether to restrict the map to
 the eastern half of the United States (default is TRUE).}
 
-\item{dist_limit}{If selected, the distance (in kilometers) that a county
-must be from the storm's path to be included.}
+\item{dist_limit}{A numeric scalar with the distance (in kilometers) that a county
+must be from the storm's path to be included. The default (NULL) does not eliminate any
+events based on distance from a storm's path. This option should only be used when also
+specifying a storm with the \code{storm} parameter.}
 
 \item{storm}{A character string with the name of the storm to pull storm
 events data for. This string must follow the format
@@ -27,6 +32,17 @@ extended hurricane best tracks, which covers 1988 to 2015.}
 
 \item{add_tracks}{A logical value specifying whether to add the tracks of
 a hurricane to the map (default = FALSE).}
+
+\item{clean_damage}{TRUE / FALSE of whether additional cleaning should be
+done to try to exclude incorrect damage listings. If TRUE, any property
+or crop damages for which the listing for that single event exceeds all
+other damages in the state combined for the event dataset, the damages for
+that event listing will be set to missing. Default is FALSE (i.e., this
+additional check is not performed). In some cases, it seems that a single
+listing by forecast zone gives the state total for damages, and this option
+may help in identifying and excluding such listings (for example, one listing in
+North Carolina for Hurricane Floyd seems to be the state total for damages, rather
+than a county-specific damage estimate).}
 }
 \description{
 This function maps all crops damaged listed with a starting date within a
@@ -41,6 +57,7 @@ map_damage_crops(date_range = c("1999-09-10", "1999-09-30"))
 map_damage_crops(date_range = c("1999-09-10", "1999-09-30"),
    dist_limit = 100, storm = "Floyd-1999", add_tracks = TRUE)
 map_damage_crops(storm = "Floyd-1999", add_tracks = TRUE)
+map_damage_crops(storm = "Floyd-1999", add_tracks = TRUE, clean_damage = TRUE)
 }
 
 }

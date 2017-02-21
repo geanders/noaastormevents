@@ -4,20 +4,24 @@
 \alias{map_indirect_deaths}
 \title{Map indirect deaths for a date range}
 \usage{
-map_indirect_deaths(date_range = NULL, event_type = NULL,
+map_indirect_deaths(date_range = NULL, event_types = NULL,
   east_only = TRUE, dist_limit = NULL, storm = NULL, add_tracks = FALSE)
 }
 \arguments{
 \item{date_range}{A character vector of length two with the start and end
 dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 
-\item{event_type}{Specifies the types of storm events should be included.}
+\item{event_types}{Character vector with the types of storm events that should be kept.
+The default value (NULL) keeps all types of events. See the "Details" vignette for this
+package for more details on possible event types.}
 
 \item{east_only}{A logical value specifying whether to restrict the map to
 the eastern half of the United States (default is TRUE).}
 
-\item{dist_limit}{If selected, the distance (in kilometers) that a county
-must be from the storm's path to be included.}
+\item{dist_limit}{A numeric scalar with the distance (in kilometers) that a county
+must be from the storm's path to be included. The default (NULL) does not eliminate any
+events based on distance from a storm's path. This option should only be used when also
+specifying a storm with the \code{storm} parameter.}
 
 \item{storm}{A character string with the name of the storm to pull storm
 events data for. This string must follow the format

@@ -47,4 +47,53 @@ This function tries to match the \code{cz_name} of each event to
 \note{
 This function does not provide any matches for events outside
    of the continental U.S.
+
+You may want to hand-check that event listings with names like "Lake", "Mountain", and
+   "Park" have not been unintentionally linked to a county like "Lake County". While such
+   examples seem rare in the example data used to develop this function (NOAA Storm Events
+   for 2015), it can sometimes happen. To do so, you can use the \code{str_detect} function
+   from the \code{stringr} package.
+}
+\examples{
+counties_to_parse <- dplyr::data_frame(
+           event_id = c(1:19),
+           cz_name = c("Suffolk",
+                       "Eastern Greenbrier",
+                       "Ventura County Mountains",
+                       "Central And Southeast Montgomery",
+                       "Western Cape May",
+                       "San Diego County Coastal Areas",
+                       "Blount/Smoky Mountains",
+                       "St. Mary's",
+                       "Central & Eastern Lake County",
+                       "Mountains Southwest Shasta County To Northern Lake County",
+                       "Kings (Brooklyn)",
+                       "Lower Bucks",
+                       "Central St. Louis",
+                       "Curry County Coast",
+                       "Lincoln County Except The Sheep Range",
+                       "Shasta Lake/North Shasta County",
+                       "Coastal Palm Beach County",
+                       "Larimer & Boulder Counties Between 6000 & 9000 Feet",
+                       "Yellowstone National Park"),
+          state = c("Virginia",
+                    "West Virginia",
+                    "California",
+                    "Maryland",
+                    "New Jersey",
+                    "California",
+                    "Tennessee",
+                    "Maryland",
+                    "Oregon",
+                    "California",
+                    "New York",
+                    "Pennsylvania",
+                    "Minnesota",
+                    "Oregon",
+                    "Nevada",
+                    "California",
+                    "Florida",
+                    "Colorado",
+                    "Wyoming"))
+match_forecast_county(counties_to_parse)
 }

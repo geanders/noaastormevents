@@ -4,19 +4,24 @@
 \alias{adjust_storm_data}
 \title{Adjust storm data}
 \usage{
-adjust_storm_data(storm_data, date_range = NULL, event_type = NULL,
+adjust_storm_data(storm_data, date_range = NULL, event_types = NULL,
   dist_limit = NULL, storm = NULL)
 }
 \arguments{
-\item{storm_data}{A dataset of storm data.}
+\item{storm_data}{A dataset of storm data. This dataset must include certain columns given
+in the NOAA Storm Events datasets for which this package was created.}
 
 \item{date_range}{A character vector of length two with the start and end
 dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 
-\item{event_type}{Specifies the types of storm events should be included.}
+\item{event_types}{Character vector with the types of storm events that should be kept.
+The default value (NULL) keeps all types of events. See the "Details" vignette for this
+package for more details on possible event types.}
 
-\item{dist_limit}{If selected, the distance (in kilometers) that a county
-must be from the storm's path to be included.}
+\item{dist_limit}{A numeric scalar with the distance (in kilometers) that a county
+must be from the storm's path to be included. The default (NULL) does not eliminate any
+events based on distance from a storm's path. This option should only be used when also
+specifying a storm with the \code{storm} parameter.}
 
 \item{storm}{A character string with the name of the storm to pull storm
 events data for. This string must follow the format
@@ -25,6 +30,5 @@ Currently, this functionality only works for storms included in the
 extended hurricane best tracks, which covers 1988 to 2015.}
 }
 \description{
-This function adjusts a set of storm data based on user selections on
-date range, distance limit to a storm, etc.
+Adjusts storm data based on user selections on date range, distance limit to a storm, etc.
 }
