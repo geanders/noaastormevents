@@ -1,61 +1,3 @@
-#' Find all damaged property listings for date range
-#'
-#' This function will find all of the property damaged in the US for a specified
-#' date range.
-#'
-#' @inheritParams create_storm_data
-#' @inheritParams adjust_storm_data
-#'
-#' @examples \dontrun{
-#' find_damage_property(date_range = c("1999-09-01", "1999-09-30"))
-#'
-#' find_damage_property(date_range = c("1999-10-16", "1999-10-18"),
-#'    storm = "Floyd-1999", dist_limit = 200)
-#'
-#' find_damage_property(storm = "Floyd-1999")
-#'
-#' find_damage_property(storm = "Floyd-1999", dist_limit = 20)
-#' }
-#'
-#' @importFrom dplyr %>%
-#'
-#' @export
-find_damage_property <- function(date_range = NULL, event_type = NULL,
-                              dist_limit = NULL, storm = NULL){
-
-  processed_inputs <- process_input_args(date_range = date_range, storm = storm)
-  date_range <- processed_inputs$date_range
-  storm <- processed_inputs$storm
-
-  storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
-                   ~ STATE, ~ CZ_TYPE, ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
-                   ~ CZ_FIPS, ~ DAMAGE_PROPERTY) %>%
-    setNames(tolower(names(.))) %>%
-    adjust_storm_data(date_range = date_range, event_type = event_type,
-                      dist_limit = dist_limit, storm = storm)
-
-
-  # Convert property values (e.g., from "5K" to 5000)
-  storm_data <- storm_data %>%
-    dplyr::mutate_(damage_property = ~ parse_damage(damage_property))
-
-  storm_data_NONA <- storm_data %>%
-    dplyr::group_by_(~ STATE) %>%
-    dplyr::filter_(~ !is.na(damage_property)) %>%
-    dplyr::mutate_(damage_property = ~ ifelse(sum(damage_property) - damage_property <
-                                              damage_property,NA ,damage_property)) %>%
-    dplyr::ungroup()
-
-  storm_data <- storm_data %>%
-    dplyr::filter_(~ is.na(damage_property)) %>%
-    dplyr::full_join(storm_data_NONA, by = c("STATE","begin_date", "end_date", "state_county_name",
-                                             "CZ_TYPE", "type", "fips", "damage_property"))
-
-
-  return(storm_data)
-}
-
 #' Map property damaged for a date range
 #'
 #' This function maps all property damaged listed with a starting date within a
@@ -92,9 +34,8 @@ map_damage_property <- function(date_range = NULL, event_type = NULL,
                       "tennessee", "texas", "vermont", "virginia",
                       "west virginia", "wisconsin")
 
-  map_data <- find_damage_property(date_range = date_range,
-                                storm = storm, dist_limit = dist_limit,
-                                event_type = event_type) %>%
+  map_data <- find_events(date_range = date_range, storm = storm, dist_limit = dist_limit,
+                          event_type = event_type) %>%
     dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
     dplyr::rename_(region = ~ fips, value = ~ damage_property) %>%
     dplyr::full_join(county.regions, by = "region") %>%
