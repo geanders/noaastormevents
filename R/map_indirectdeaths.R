@@ -1,40 +1,3 @@
-#' Find all indirect death listings for date range
-#'
-#' This function will find all of the indirect deaths in the US for a specified
-#' date range.
-#'
-#' @inheritParams create_storm_data
-#' @inheritParams adjust_storm_data
-#'
-#' @examples \dontrun{
-#' find_indirect_deaths(date_range = c("1999-09-10", "1999-09-30"))
-#'
-#' find_indirect_deaths(date_range = c("1999-09-10", "1999-09-30"),
-#'    storm = "Floyd-1999", dist_limit = 200)
-#' }
-#'
-#' @importFrom dplyr %>%
-#' @importFrom lubridate %within%
-#'
-#' @export
-find_indirect_deaths <- function(date_range = NULL, event_type = NULL,
-                                 dist_limit = NULL, storm = NULL){
-
-  processed_inputs <- process_input_args(date_range = date_range, storm = storm)
-  date_range <- processed_inputs$date_range
-  storm <- processed_inputs$storm
-
-  storm_data <- create_storm_data(date_range = date_range,  storm = storm) %>%
-    dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
-                   ~ STATE, ~ CZ_TYPE, ~ CZ_NAME, ~ EVENT_TYPE, ~ STATE_FIPS,
-                   ~ CZ_FIPS, ~ DEATHS_INDIRECT) %>%
-    setNames(tolower(names(.))) %>%
-    adjust_storm_data(date_range = date_range, event_type = event_type,
-                      dist_limit = dist_limit, storm = storm)
-
-  return(storm_data)
-}
-
 #' Map indirect deaths for a date range
 #'
 #' This function maps all indirect deaths listed with a starting date within a
@@ -70,8 +33,8 @@ map_indirect_deaths <- function(date_range = NULL, event_type = NULL,
                       "tennessee", "texas", "vermont", "virginia",
                       "west virginia", "wisconsin")
 
-  map_data <- find_indirect_deaths(date_range = date_range, storm = storm,
-                                 dist_limit = dist_limit,event_type = event_type) %>%
+  map_data <- find_events(date_range = date_range, storm = storm, dist_limit = dist_limit,
+                          event_type = event_type) %>%
     dplyr::mutate_(fips = ~ as.numeric(fips)) %>%
     dplyr::rename_(region = ~ fips, value = ~ indirect_deaths) %>%
     dplyr::full_join(county.regions, by = "region") %>%
