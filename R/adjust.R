@@ -1,12 +1,50 @@
+#' Clean storm dataset
+#'
+#' Cleans the storm dataset to prepare for further processing. This includes changing all
+#' variable names to lowercase, removing some unneeded columns, and removing the narratives
+#' if requested by the user.
+#'
+#' @inheritParams find_events
+#' @inheritParams adjust_storm_data
+#'
+#' @return A cleaned version of the dataset input to the function.
+#'
+#' @importFrom dplyr %>%
+clean_storm_data <- function(storm_data, include_narratives){
+  storm_data <- storm_data %>%
+    stats::setNames(tolower(names(.))) %>%
+    dplyr::select_(~ begin_yearmonth, ~ begin_day, ~ end_yearmonth, ~ end_day,
+                   ~ episode_id, ~ event_id, ~ state, ~ cz_type, ~ cz_name,
+                   ~ event_type, ~ state_fips, ~ cz_fips, ~ source,
+                   ~ injuries_direct, ~ injuries_indirect, ~ deaths_direct,
+                   ~ deaths_indirect, ~ damage_property, ~ damage_crops,
+                   ~ episode_narrative, ~ event_narrative) %>%
+    dplyr::mutate_(state = ~ stringr::str_to_title(state),
+                   cz_name = ~ stringr::str_to_title(cz_name),
+                   damage_property = ~ parse_damage(damage_property),
+                   damage_crops = ~ parse_damage(damage_crops))
+
+  if(!include_narratives){
+    storm_data <- storm_data %>%
+      dplyr::select_(~ -event_narrative, ~ -episode_narrative)
+  }
+
+  return(storm_data)
+}
+
 #' Adjust storm data
 #'
-#' This function adjusts a set of storm data based on user selections on
-#' date range, distance limit to a storm, etc.
+#' Adjusts storm data based on user selections on date range, distance limit to a storm, etc.
 #'
-#' @param storm_data A dataset of storm data.
-#' @param event_type Specifies the types of storm events should be included.
-#' @param dist_limit If selected, the distance (in kilometers) that a county
-#'    must be from the storm's path to be included.
+#' @param storm_data A dataset of storm data. This dataset must include certain columns given
+#'    in the NOAA Storm Events datasets for which this package was created.
+#' @param event_types Character vector with the types of storm events that should be kept.
+#'    The default value (NULL) keeps all types of events. See the "Details" vignette for this
+#'    package for more details on possible event types.
+#' @param dist_limit A numeric scalar with the distance (in kilometers) that a county
+#'    must be from the storm's path to be included. The default (NULL) does not eliminate any
+#'    events based on distance from a storm's path. This option should only be used when also
+#'    specifying a storm with the \code{storm} parameter.
 #' @inheritParams create_storm_data
 #'
 #' @importFrom dplyr %>%
@@ -14,13 +52,8 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
                               event_type = NULL, dist_limit = NULL,
                               storm = NULL) {
 
-  utils::data(county.regions, package = "choroplethrMaps")
-  county.regions <- county.regions %>%
-    tidyr::unite_("state_county_name", c("state.name", "county.name"), sep = " ")
-
   # Clean up storm events reported by forecast zone rather than county
   # (cz_type == "Z")
-  storm_data <- dplyr::tbl_df(storm_data)
   storm_data_z <- storm_data %>%
     dplyr::filter_(~ cz_type == "Z") %>%
     match_forecast_county()
@@ -30,13 +63,10 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
     dplyr::mutate_(fips = ~ as.numeric(paste0(state_fips, sprintf("%03d", cz_fips))))
 
   storm_data <- dplyr::bind_rows(storm_data_c, storm_data_z) %>%
-    dplyr::rename_(type = ~ event_type) %>%
-    dplyr::mutate_(begin_day = ~ sprintf("%02d", begin_day),
-                   end_day =  ~ sprintf("%02d", end_day)) %>%
-    tidyr::unite_("begin_date", c("begin_yearmonth", "begin_day"), sep = "") %>%
-    tidyr::unite_("end_date", c("end_yearmonth", "end_day"), sep = "") %>%
+    tidyr::unite_("begin_date", c("begin_yearmonth", "begin_day"), sep = "-") %>%
+    tidyr::unite_("end_date", c("end_yearmonth", "end_day"), sep = "-") %>%
     dplyr::mutate_(begin_date = ~ lubridate::ymd(begin_date),
-                   end_date = ~ lubridate::ymd(end_date))%>%
+                   end_date = ~ lubridate::ymd(end_date)) %>%
     dplyr::filter_(~ !is.na(fips)) %>%
     dplyr::arrange_(~ begin_date)
 
@@ -82,16 +112,11 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
                      ~ -latest_date)
   }
 
-  # If the event_type is specified, filter by that
-  if(!is.null(event_type)) {
-    storm_data <- suppressWarnings(dplyr::filter_(storm_data,
-                                                  ~ tolower(type) ==
-                                                    tolower(event_type)))
+  # If the `event_types`` is specified, filter by that
+  if(!is.null(event_types)) {
+    storm_data <- storm_data %>%
+      dplyr::filter_(~ tolower(event_type) %in% stringr::str_to_lower(event_types))
   }
-
-  storm_data <- storm_data %>%
-    dplyr::mutate_(state = ~ stringr::str_to_title(state))
-
 
   return(storm_data)
 }
