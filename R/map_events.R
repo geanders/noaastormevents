@@ -51,7 +51,7 @@ find_events <- function(date_range = NULL, event_types = NULL,
                                   storm = processed_inputs$storm) %>%
     clean_storm_data(include_narratives = include_narratives) %>%
     adjust_storm_data(date_range = processed_inputs$date_range,
-                      event_type = event_type,
+                      event_types = event_types,
                       dist_limit = dist_limit,
                       storm = processed_inputs$storm)
 

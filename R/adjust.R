@@ -49,7 +49,7 @@ clean_storm_data <- function(storm_data, include_narratives){
 #'
 #' @importFrom dplyr %>%
 adjust_storm_data <- function(storm_data, date_range = NULL,
-                              event_type = NULL, dist_limit = NULL,
+                              event_types = NULL, dist_limit = NULL,
                               storm = NULL) {
 
   # Clean up storm events reported by forecast zone rather than county
