@@ -57,7 +57,7 @@ process_input_args <- function(date_range = NULL, storm = NULL){
   if(!is.null(storm)){
     storm_year <- as.numeric(gsub("[^0-9]", "", storm))
     if(nchar(storm_year) != 4){
-      stop("`storm` must fall the format `[storm name]-[4-digit storm year]`")
+      stop("`storm` must follow the format `[storm name]-[4-digit storm year]`")
     }
   }
   if(!is.null(date_range) & !is.null(storm)){
