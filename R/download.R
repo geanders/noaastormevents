@@ -82,5 +82,7 @@ create_storm_data <- function(date_range = NULL, storm = NULL,
     stop("You must specify either `date_range` or `storm`.")
   }
 
+  storm_data <- dplyr::tbl_df(storm_data)
+
   return(storm_data)
 }
