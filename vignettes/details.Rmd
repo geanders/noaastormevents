@@ -9,6 +9,19 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r echo = FALSE}
+not_cran <- Sys.getenv("NOT_CRAN") == "true"
+if (!not_cran) {
+    knitr::opts_chunk$set(eval = FALSE)
+    msg <- paste("Note: Examples in this vignette are set to not run on CRAN. If you would", 
+                 "like to build this vignette locally, you can do so by first setting the",
+                 "environmental variable 'NOT_CRAN' to 'true' on your computer and then ",
+                 "rebuilding the vignette.")
+    msg <- paste(strwrap(msg), collapse="\n")
+    message(msg)
+}
+```
+
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 library(ggplot2)
 library(stringr)
@@ -869,8 +882,9 @@ county_damage_2015 %>%
 
 The following figure shows the top 50 episodes in terms of damages (property and crop damage combined) in 2015:
 
-```{r fig.height = 7, fig.width = 5, fig.align = "center"}
+```{r fig.height = 10, fig.width = 7, fig.align = "center", echo = FALSE}
 ex <- county_events_2015 %>% 
+  filter(str_to_lower(state) %in% as.character(state.fips$polyname)) %>% 
   unite(begin_date, begin_yearmonth, begin_day, sep = "-") %>% 
   mutate(begin_date = ymd(begin_date)) %>% 
   unite(end_date, end_yearmonth, end_day, sep = "-") %>% 
@@ -904,9 +918,9 @@ ggplot(ex, aes(x = begin_date, y = n, color = state)) +
         axis.ticks.y = element_blank(),
         axis.line.y = element_blank()) + 
   geom_text(aes(label = event_type, x = begin_date - 2), 
-            hjust = "right", size = 2) + 
+            hjust = "right", size = 2, color = "black") + 
   geom_text(aes(label = damage_text, x = end_date + 2), 
-            hjust = "left", size = 2) +  
+            hjust = "left", size = 2, color = "black") +  
   labs(color = "") + 
   scale_x_date(name = "Episode date", 
                breaks = ymd(c(20150101, 20150301, 20150501, 

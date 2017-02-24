@@ -9,6 +9,19 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r echo = FALSE}
+not_cran <- Sys.getenv("NOT_CRAN") == "true"
+if (!not_cran) {
+    knitr::opts_chunk$set(eval = FALSE)
+    msg <- paste("Note: Examples in this vignette are set to not run on CRAN. If you would", 
+                 "like to build this vignette locally, you can do so by first setting the",
+                 "environmental variable 'NOT_CRAN' to 'true' on your computer and then ",
+                 "rebuilding the vignette.")
+    msg <- paste(strwrap(msg), collapse="\n")
+    message(msg)
+}
+```
+
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 library(noaastormevents)
 ```
@@ -41,13 +54,8 @@ The package has two main types of functionalities. First, it has a number of fun
 
 For example, the `find_events` function will create a dataframe with all storm event listings within a specified time frame. For example, the following code creates a dataframe with all events from the NOAA Storm Events Database listed as beginning between September 14 and 18, 1999 (a time window relevant for Hurricane Floyd, which caused extensive damage, especially from flooding):
 
-```{r eval = FALSE}
+```{r}
 sept_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
-```
-
-```{r eval = 2:3, echo = c(3)}
-save(sept_1999_events, file = "data/sept_1999_events.RData")
-load("data/sept_1999_events.RData")
 head(sept_1999_events)
 ```
 
@@ -66,12 +74,8 @@ In some cases, a user may wish to identify all storm events listings that were c
 
 Event listings are pulled for all events that occured within a five-day window of the day the storm was closest to each county and that were within a user-specified distance of the storm track. For example, to create a dataset with all event listings for counties within 300 kilometers (`dist_limit` option) of the path of Hurricane Floyd (`storm = "Floyd-1999"`) and for which the event began within a five-day window of the storm's closest approach, the user can run:
 
-```{r eval = FALSE, echo = 1}
+```{r}
 floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 300)
-save(floyd_events, file = "data/floyd_events.RData")
-```
-```{r echo = 2}
-load("data/floyd_events.RData")
 head(floyd_events)
 ```
 
@@ -95,7 +99,7 @@ Once `find_events` has been used to create a dataset of storm event listings, th
 ```{r message = FALSE, warning = FALSE}
 library(dplyr)
 floyd_events %>%
-  group_by(type) %>%
+  group_by(event_type) %>%
   summarize(n = n()) %>%
   arrange(desc(n)) %>%
   knitr::kable(col.names = c("Event type", "Number of events"),
@@ -107,14 +111,14 @@ Similarly, you could create a summary with the states in which the most events w
 
 ```{r}
 floyd_events %>%
-  group_by(state, type) %>%
+  group_by(state, event_type) %>%
   summarize(n = n()) %>%
   ungroup() %>%
   arrange(state, desc(n)) %>%
-  mutate(type = paste0(type, " (", n, ")")) %>%
+  mutate(event_type = paste0(event_type, " (", n, ")")) %>%
   group_by(state) %>%
   summarize(Total = sum(n),
-            Events = paste(type, collapse = ", ")) %>%
+            Events = paste(event_type, collapse = ", ")) %>%
   ungroup() %>%
   arrange(desc(Total)) %>%
   knitr::kable()
@@ -128,36 +132,45 @@ Here are some examples:
 
 Mapping all counties that had at least one event over a date range:
 
-```{r}
-map_events(date_range = c("1999-09-14", "1999-09-18"))
+```{r fig.width = 6, fig.height = 5}
+event_data <- find_events(date_range = c("1999-09-14", "1999-09-18"))
+map_events(event_data)
 ```
 
 Mapping any county with at least one event, not restricting to only the eastern half of the country:
 
-```{r}
-map_events(storm = "Floyd-1999", dist_limit = 300,
-           east_only = FALSE)
+```{r fig.width = 6, fig.height = 5}
+floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 300) 
+floyd_events %>% 
+  map_events(east_only = FALSE)
 ```
 
 Mapping the number of events in each county within a certain date range:
 
-```{r}
-map_events(storm = "Floyd-1999", dist_limit = 300,
-           plot_type = "number of events")
+```{r fig.width = 6, fig.height = 5}
+floyd_events %>% 
+  map_events(plot_type = "number of events")
+```
+
+Mapping the crop damage reported in each county within a certain date range:
+
+```{r fig.width = 6, fig.height = 5}
+floyd_events %>%   
+  map_events(plot_type = "crop damage")
+```
+
+Mapping the property damage reported in each county within a certain date range:
+
+```{r fig.width = 6, fig.height = 5}
+floyd_events %>% 
+  map_events(plot_type = "property damage")
 ```
 
 Mapping the number of events, but only counting counties that were within 200 kilometers of the track of Hurricane Floyd in 1999, with the hurricane's track added to the plot:
 
-```{r}
-map_events(storm = "Floyd-1999", dist_limit = 200, 
-           add_tracks = TRUE, plot_type = "number of events")
-```
-
-Mapping the number of all events that happened under the influence of Hurricane Floyd in 1999, with the hurricane's track added to the plot::
-
-```{r}
-map_events(storm = "Floyd-1999", dist_limit = 300, add_tracks = TRUE,
-           plot_type = "number of events")
+```{r fig.width = 6, fig.height = 5}
+floyd_events %>% 
+  map_events(plot_type = "number of events", storm = "Floyd-1999", add_tracks = TRUE)
 ```
 
 ## Details of how the package works
