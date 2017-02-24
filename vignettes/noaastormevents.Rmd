@@ -13,7 +13,7 @@ vignette: >
 # not_cran <- Sys.getenv("NOT_CRAN") == "true"
 # print(not_cran)
 # if (!not_cran) {
-    knitr::opts_chunk$set(eval = FALSE)
+#    knitr::opts_chunk$set(eval = FALSE)
 #     msg <- paste("Note: Examples in this vignette are set to not run on CRAN. If you would", 
 #                  "like to build this vignette locally, you can do so by first setting the",
 #                  "environmental variable 'NOT_CRAN' to 'true' on your computer and then ",
