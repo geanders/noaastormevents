@@ -4,28 +4,18 @@
 \alias{map_events}
 \title{Map storm events for a date range}
 \usage{
-map_events(date_range = NULL, event_types = NULL, east_only = TRUE,
-  plot_type = "any events", dist_limit = NULL, storm = NULL,
-  add_tracks = FALSE, clean_damage = FALSE)
+map_events(event_data, east_only = TRUE, plot_type = "any events",
+  storm = NULL, add_tracks = FALSE)
 }
 \arguments{
-\item{date_range}{A character vector of length two with the start and end
-dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
-
-\item{event_types}{Character vector with the types of storm events that should be kept.
-The default value (NULL) keeps all types of events. See the "Details" vignette for this
-package for more details on possible event types.}
+\item{event_data}{A dataframe of event data, as returned by the \code{find_events}
+function.}
 
 \item{east_only}{A logical value specifying whether to restrict the map to
 the eastern half of the United States (default is TRUE).}
 
 \item{plot_type}{Specifies the type of plot wanted. It can be either "any
 events" or "number of events".}
-
-\item{dist_limit}{A numeric scalar with the distance (in kilometers) that a county
-must be from the storm's path to be included. The default (NULL) does not eliminate any
-events based on distance from a storm's path. This option should only be used when also
-specifying a storm with the \code{storm} parameter.}
 
 \item{storm}{A character string with the name of the storm to pull storm
 events data for. This string must follow the format
@@ -35,32 +25,44 @@ extended hurricane best tracks, which covers 1988 to 2015.}
 
 \item{add_tracks}{A logical value specifying whether to add the tracks of
 a hurricane to the map (default = FALSE).}
-
-\item{clean_damage}{TRUE / FALSE of whether additional cleaning should be
-done to try to exclude incorrect damage listings. If TRUE, any property
-or crop damages for which the listing for that single event exceeds all
-other damages in the state combined for the event dataset, the damages for
-that event listing will be set to missing. Default is FALSE (i.e., this
-additional check is not performed). In some cases, it seems that a single
-listing by forecast zone gives the state total for damages, and this option
-may help in identifying and excluding such listings (for example, one listing in
-North Carolina for Hurricane Floyd seems to be the state total for damages, rather
-than a county-specific damage estimate).}
 }
 \description{
 This function maps all storm events listed with a starting date within a
 specified date range.
 }
+\note{
+Indirect deaths and injuries seem to be reported very rarely, so it is
+   likely that trying to map either of these outcomes will result in a note that
+   no indirect deaths / injuries were reported for the selected events.
+}
 \examples{
 \dontrun{
-map_events(date_range = c("1999-09-10", "1999-09-30"))
-map_events(date_range = c("1999-09-01", "1999-09-30"),
-   east_only = FALSE, event_type = c("Flood","Flash Flood"))
-map_events(date_range = c("1999-09-10", "1999-09-30"),
-   plot_type = "number of events")
-map_events(date_range = c("1999-09-10", "1999-09-30"),
-   dist_limit = 100, storm = "Floyd-1999",
-   add_tracks = TRUE, plot_type = "number of events")
+# Map for events pulled by a date range
+event_data <- find_events(date_range = c("1999-09-10", "1999-09-30"))
+map_events(event_data)
+map_events(event_data, plot_type = "number of events")
+
+# Map for a specific type of event
+event_data <- find_events(date_range = c("1999-09-10", "1999-09-30"),
+                          event_types = c("Flood","Flash Flood"))
+map_events(event_data, east_only = FALSE)
+
+# Map for events identified based on a hurricane storm track
+event_data <- find_events(storm = "Floyd-1999", dist_limit = 300)
+map_events(event_data, plot_type = "number of events",
+           storm = "Floyd-1999", add_tracks = TRUE)
+map_events(event_data, plot_type = "crop damage",
+           storm = "Floyd-1999", add_tracks = TRUE)
+map_events(event_data, plot_type = "property damage",
+           storm = "Floyd-1999", add_tracks = TRUE)
+map_events(event_data, plot_type = "direct deaths")
+
+event_data <- find_events(date_range = c("1999-01-01", "1999-12-31"))
+map_events(event_data, plot_type = "direct deaths")
+map_events(event_data, plot_type = "indirect deaths")
+map_events(event_data, plot_type = "direct injuries")
+map_events(event_data, plot_type = "indirect injuries")
+map_events(event_data, plot_type = "crop damage")
 }
 
 }
