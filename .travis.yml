@@ -5,7 +5,7 @@ cache: packages
 sudo: false
 warnings_are_errors: false
 
-env:
+global:
   - NOT_CRAN = true
 
 r_github_packages:
