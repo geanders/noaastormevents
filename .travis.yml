@@ -5,8 +5,9 @@ cache: packages
 sudo: false
 warnings_are_errors: false
 
-global:
-  - NOT_CRAN = true
+env:
+  global:
+    - NOT_CRAN = true
 
 r_github_packages:
   - geanders/hurricaneexposuredata
