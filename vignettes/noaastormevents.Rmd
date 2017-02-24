@@ -10,7 +10,7 @@ vignette: >
 ---
 
 ```{r echo = FALSE}
-not_cran <- Sys.getenv("NOT_CRAN") == "blah"
+not_cran <- Sys.getenv("NOT_CRAN") == "true"
 print(not_cran)
 if (!not_cran) {
    knitr::opts_chunk$set(eval = FALSE)
