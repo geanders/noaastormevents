@@ -6,3 +6,6 @@
 *.pdf
 writing/writing_files
 inst/doc
+.DS_Store
+*/.DS_Store
+*/.Rapp.history
