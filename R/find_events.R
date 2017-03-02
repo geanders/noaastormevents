@@ -44,6 +44,8 @@ find_events <- function(date_range = NULL, event_types = NULL,
                         include_narratives = FALSE,
                         include_ids = FALSE, clean_damage = FALSE){
 
+  if(!is.null(storm)) hasData()
+
   processed_inputs <- process_input_args(date_range = date_range,
                                          storm = storm)
 

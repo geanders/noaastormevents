@@ -52,6 +52,8 @@
 map_events <- function(event_data, east_only = TRUE, plot_type = "any events",
                        storm = NULL, add_tracks = FALSE){
 
+  if(!is.null(storm)) hasData()
+
   county_map_data <- get_county_map(east_only = east_only)
   county_states <- unique(stringr::str_replace(county_map_data$polyname, "[,].+", ""))
 
