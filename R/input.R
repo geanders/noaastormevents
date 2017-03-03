@@ -18,9 +18,10 @@
 #'    was last updated, which changes frequently. The method used here is
 #'    robust to changes in this "last updated" date within the file names.
 #'
-#' @examples
+#' @examples \dontrun{
 #' find_file_name(year = 1999)
 #' find_file_name(year = 2003, file_type = "fatalities")
+#' }
 #'
 #' @export
 find_file_name <- function(year = NULL, file_type = "details") {
