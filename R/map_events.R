@@ -5,8 +5,9 @@
 #'
 #' @param event_data A dataframe of event data, as returned by the \code{find_events}
 #'    function.
-#' @param east_only A logical value specifying whether to restrict the map to
-#'    the eastern half of the United States (default is TRUE).
+#' @param states A character string specifying either a state name or names or one of
+#'    "all" (map all states in the continental US) or "east" (plot states in the
+#'    Eastern half of the US. The default is "east".
 #' @param add_tracks A logical value specifying whether to add the tracks of
 #'    a hurricane to the map (default = FALSE).
 #' @param plot_type Specifies the type of plot wanted. It can be either "any
@@ -26,14 +27,16 @@
 #' # Map for a specific type of event
 #' event_data <- find_events(date_range = c("1999-09-10", "1999-09-30"),
 #'                           event_types = c("Flood","Flash Flood"))
-#' map_events(event_data, east_only = FALSE)
+#' map_events(event_data, states = "north carolina", plot_type = "number of events")
+#' map_events(event_data, states = "all")
 #'
 #' # Map for events identified based on a hurricane storm track
 #' event_data <- find_events(storm = "Floyd-1999", dist_limit = 300)
 #' map_events(event_data, plot_type = "number of events",
 #'            storm = "Floyd-1999", add_tracks = TRUE)
 #' map_events(event_data, plot_type = "crop damage",
-#'            storm = "Floyd-1999", add_tracks = TRUE)
+#'            storm = "Floyd-1999", add_tracks = TRUE,
+#'            states = c("north carolina", "virginia", "maryland"))
 #' map_events(event_data, plot_type = "property damage",
 #'            storm = "Floyd-1999", add_tracks = TRUE)
 #' map_events(event_data, plot_type = "direct deaths")
@@ -49,12 +52,12 @@
 #' @importFrom dplyr %>%
 #'
 #' @export
-map_events <- function(event_data, east_only = TRUE, plot_type = "any events",
+map_events <- function(event_data, states = "east", plot_type = "any events",
                        storm = NULL, add_tracks = FALSE){
 
   if(!is.null(storm)) hasData()
 
-  county_map_data <- get_county_map(east_only = east_only)
+  county_map_data <- get_county_map(states = states)
   county_states <- unique(stringr::str_replace(county_map_data$polyname, "[,].+", ""))
 
   map_data <- event_data %>%
@@ -67,109 +70,48 @@ map_events <- function(event_data, east_only = TRUE, plot_type = "any events",
       dplyr::mutate_(value = ~ factor(n > 0 & !is.na(n), levels = c(TRUE, FALSE),
                                       labels = c("Event(s)", "No Event")))
   } else if (plot_type == "number of events"){
+    scale_name <- "Number of events"
     map_data <- map_data %>%
       dplyr::count_(~ fips) %>%
-      dplyr::right_join(county_map_data, by = "fips") %>%
-      dplyr::mutate_(value = ~ ifelse(is.na(n), 0, n))
-    if(max(map_data$value) <= 9){
-      map_data <- map_data %>%
-        dplyr::mutate_(value = ~ factor(value, levels = 0:max(value)))
-    } else {
-      map_data <- map_data %>%
-        dplyr::mutate_(value = ~ cut(value,
-                                     breaks = round(seq(from = 0, to = max(value), length.out = 9)),
-                                     include.lowest = TRUE))
+      dplyr::rename_(.dots = list("value" = "n")) %>%
+      dplyr::right_join(county_map_data, by = "fips")
+  } else if (plot_type %in% c("crop damage", "property damage")){
+    if(plot_type == "crop damage"){
+      map_data <- dplyr::rename_(map_data, .dots = list("value" = "damage_crops"))
+      scale_name <- "Crop damage"
+    } else if(plot_type == "property damage"){
+      map_data <- dplyr::rename_(map_data, .dots = list("value" = "damage_property"))
+      scale_name <- "Property damage"
     }
-  } else if (plot_type == "crop damage"){
-    if(max(map_data$damage_crops) == 0) return("No crop damage reported for selected events.")
+    if(max(map_data$value) == 0){
+      return(paste("No", plot_type,"reported for selected events."))
+    }
     map_data <- map_data %>%
       dplyr::group_by_(~ fips) %>%
-      dplyr::summarize_(value = ~ sum(damage_crops)) %>%
+      dplyr::summarize_(value = ~ sum(value)) %>%
       dplyr::right_join(county_map_data, by = "fips") %>%
-      dplyr::mutate_(value = ~ ifelse(is.na(value), 0, value),
-                     value = ~ cut(value,
-                                   breaks = c(signif(10 ** seq(0, ceiling(log10(max(value))),
-                                                                  length.out = 9),
-                                                  digits = 1)[1:8], max(value)),
-                                   include.lowest = TRUE),
-                     value = ~ forcats::fct_relabel(value, convert_damage_costs))
-  } else if (plot_type == "property damage"){
-    if(max(map_data$damage_property) == 0) return("No property damage reported for selected events.")
+      dplyr::mutate_(value = ~ ifelse(value == 0, NA, value))
+  } else if (plot_type %in% c("direct deaths", "indirect deaths", "direct injuries", "indirect injuries")){
+    if(plot_type == "direct deaths"){
+      map_data <- dplyr::rename_(map_data, .dots = list("value" = "deaths_direct"))
+      scale_name <- "Direct deaths"
+    } else if(plot_type == "indirect deaths"){
+      map_data <- dplyr::rename_(map_data, .dots = list("value" = "deaths_indirect"))
+      scale_name <- "Indirect deaths"
+    } else if(plot_type == "direct injuries"){
+      map_data <- dplyr::rename_(map_data, .dots = list("value" = "injuries_direct"))
+      scale_name <- "Direct injuries"
+    } else if(plot_type == "indirect injuries"){
+      map_data <- dplyr::rename_(map_data, .dots = list("value" = "injuries_indirect"))
+      scale_name <- "Indirect injuries"
+    }
+    if(max(map_data$value) == 0){
+      return(paste("No", plot_type,"reported for selected events."))
+    }
     map_data <- map_data %>%
       dplyr::group_by_(~ fips) %>%
-      dplyr::summarize_(value = ~ sum(damage_property)) %>%
-      dplyr::right_join(county_map_data, by = "fips") %>%
-      dplyr::mutate_(value = ~ ifelse(is.na(value), 0, value),
-                     value = ~ cut(value,
-                                   breaks = c(signif(10 ** seq(0, ceiling(log10(max(value))),
-                                                             length.out = 9),
-                                                   digits = 1)[1:8], max(value)),
-                                   include.lowest = TRUE),
-                     value = ~ forcats::fct_relabel(value, convert_damage_costs))
-  } else if (plot_type == "direct deaths"){
-    if(max(map_data$deaths_direct) == 0) return("No direct deaths reported for selected events.")
-    map_data <- map_data %>%
-      dplyr::group_by_(~ fips) %>%
-      dplyr::summarize_(value = ~ sum(deaths_direct, na.rm = TRUE)) %>%
-      dplyr::right_join(county_map_data, by = "fips") %>%
-      dplyr::mutate_(value = ~ ifelse(is.na(value), 0, value))
-    if(max(map_data$value) <= 9){
-      map_data <- map_data %>%
-        dplyr::mutate_(value = ~ factor(value, levels = 0:max(value)))
-    } else {
-      map_data <- map_data %>%
-        dplyr::mutate_(value = ~ cut(value,
-                                     breaks = round(seq(from = 0, to = max(value), length.out = 9)),
-                                     include.lowest = TRUE))
-    }
-  } else if (plot_type == "indirect deaths"){
-      if(max(map_data$deaths_indirect) == 0) return("No indirect deaths reported for selected events.")
-      map_data <- map_data %>%
-      dplyr::group_by_(~ fips) %>%
-      dplyr::summarize_(value = ~ sum(deaths_indirect, na.rm = TRUE)) %>%
-      dplyr::right_join(county_map_data, by = "fips") %>%
-      dplyr::mutate_(value = ~ ifelse(is.na(value), 0, value))
-      if(max(map_data$value) <= 9){
-        map_data <- map_data %>%
-          dplyr::mutate_(value = ~ factor(value, levels = 0:max(value)))
-      } else {
-        map_data <- map_data %>%
-          dplyr::mutate_(value = ~ cut(value,
-                                       breaks = round(seq(from = 0, to = max(value), length.out = 9)),
-                                       include.lowest = TRUE))
-    }
-  } else if (plot_type == "direct injuries"){
-    if(max(map_data$injuries_direct) == 0) return("No direct injuries reported for selected events.")
-    map_data <- map_data %>%
-      dplyr::group_by_(~ fips) %>%
-      dplyr::summarize_(value = ~ sum(injuries_direct, na.rm = TRUE)) %>%
-      dplyr::right_join(county_map_data, by = "fips") %>%
-      dplyr::mutate_(value = ~ ifelse(is.na(value), 0, value))
-    if(max(map_data$value) <= 9){
-      map_data <- map_data %>%
-        dplyr::mutate_(value = ~ factor(value, levels = 0:max(value)))
-    } else {
-      map_data <- map_data %>%
-        dplyr::mutate_(value = ~ cut(value,
-                                     breaks = round(seq(from = 0, to = max(value), length.out = 9)),
-                                     include.lowest = TRUE))
-    }
-  } else if (plot_type == "indirect injuries"){
-    if(max(map_data$injuries_indirect) == 0) return("No indirect injuries reported for selected events.")
-    map_data <- map_data %>%
-      dplyr::group_by_(~ fips) %>%
-      dplyr::summarize_(value = ~ sum(injuries_indirect, na.rm = TRUE)) %>%
-      dplyr::right_join(county_map_data, by = "fips") %>%
-      dplyr::mutate_(value = ~ ifelse(is.na(value), 0, value))
-    if(max(map_data$value) <= 9){
-      map_data <- map_data %>%
-        dplyr::mutate_(value = ~ factor(value, levels = 0:max(value)))
-    } else {
-      map_data <- map_data %>%
-        dplyr::mutate_(value = ~ cut(value,
-                                     breaks = round(seq(from = 0, to = max(value), length.out = 9)),
-                                     include.lowest = TRUE))
-    }
+      dplyr::summarize_(value = ~ sum(value, na.rm = TRUE)) %>%
+      dplyr::right_join(county_map_data, by = "fips")
   }
 
   out <- map_data %>%
@@ -183,61 +125,40 @@ map_events <- function(event_data, east_only = TRUE, plot_type = "any events",
     ggplot2::coord_map()
 
   if (plot_type == "any events"){
-    out <- out + ggplot2::scale_fill_manual(name = "", values = c("#e6550d", "white"), drop = FALSE)
-  } else if (plot_type == "number of events"){
-    map_palette <- RColorBrewer::brewer.pal(9, name = "Reds")
-    map_palette[1] <- "#ffffff"
-    if (length(levels(map_data$value)) <= 9){
-      map_palette <- map_palette[1:length(levels(map_data$value))]
-    }
-    out <- out + ggplot2::scale_fill_manual(name = "# Events", values = map_palette, drop = FALSE)
-  } else if (plot_type == "crop damage"){
-    out <- out + viridis::scale_fill_viridis(name = "Crop damage ($)",
-                                             option = "B", direction = -1,
-                                             begin = 0.2, end = 0.9, discrete = TRUE,
-                                             na.translate = FALSE, drop = FALSE)
-  } else if (plot_type == "property damage"){
-    out <- out + viridis::scale_fill_viridis(name = "Property damage ($)",
-                                             option = "B", direction = -1,
-                                             begin = 0.2, end = 0.9, discrete = TRUE,
-                                             na.translate = FALSE, drop = FALSE)
-  } else if (plot_type == "direct deaths"){
-    map_palette <- RColorBrewer::brewer.pal(9, name = "Reds")
-    map_palette[1] <- "#ffffff"
-    if (length(levels(map_data$value)) <= 9){
-      map_palette <- map_palette[1:length(levels(map_data$value))]
-    }
     out <- out +
-      ggplot2::scale_fill_manual(name = "# Direct Deaths", values = map_palette, drop = FALSE)
-  } else if (plot_type == "indirect deaths"){
-    map_palette <- RColorBrewer::brewer.pal(9, name = "Reds")
-    map_palette[1] <- "#ffffff"
-    if (length(levels(map_data$value)) <= 9){
-      map_palette <- map_palette[1:length(levels(map_data$value))]
-    }
-    out <- out +
-      ggplot2::scale_fill_manual(name = "# Indirect Deaths", values = map_palette, drop = FALSE)
-  } else if (plot_type == "direct injuries"){
-    map_palette <- RColorBrewer::brewer.pal(9, name = "Reds")
-    map_palette[1] <- "#ffffff"
-    if (length(levels(map_data$value)) <= 9){
-      map_palette <- map_palette[1:length(levels(map_data$value))]
-    }
-    out <- out +
-      ggplot2::scale_fill_manual(name = "# Direct Injuries", values = map_palette, drop = FALSE)
-  } else if (plot_type == "indirect injuries"){
-    map_palette <- RColorBrewer::brewer.pal(9, name = "Reds")
-    map_palette[1] <- "#ffffff"
-    if (length(levels(map_data$value)) <= 9){
-      map_palette <- map_palette[1:length(levels(map_data$value))]
-    }
-    out <- out +
-      ggplot2::scale_fill_manual(name = "# Indirect Injuries", values = map_palette, drop = FALSE)
+      ggplot2::scale_fill_manual(name = "", values = c("#e6550d", "white"), drop = FALSE)
+  } else if (plot_type %in% c("crop damage", "property damage")){
+    out <- out + viridis::scale_fill_viridis(name = scale_name, option = "B",
+                                             begin = 0.2, end = 0.9, trans = "log10",
+                                             breaks = 10**(1:10),
+                                             labels = paste0("$",
+                                                             formatC(10**(1:10), format = "f",
+                                                              big.mark = ",", digits = 0)),
+                                             na.value = "white")
+  }  else if (plot_type %in% c("number of events", "direct deaths", "indirect deaths",
+                               "direct injuries", "indirect injuries")){
+    out <- out + viridis::scale_fill_viridis(name = scale_name,
+                                             na.value = "white")
   }
 
   if(add_tracks){
-    out <- hurricaneexposure::map_tracks(storms = storm, plot_object = out,
-                                         color = "black", alpha = 0.75)
+    hurr_track <- hurricaneexposuredata::hurr_tracks %>%
+      dplyr::filter_(~ storm_id == storm)
+    if(!(states[1] %in% c("east", "all"))){
+      hurr_track <- hurr_track %>%
+        dplyr::filter_(~ min(out$data$long) - 2 <= longitude &
+                         longitude <= max(out$data$long) + 2) %>%
+        dplyr::filter_(~ min(out$data$lat) - 2 <= latitude &
+                         latitude <= max(out$data$lat) + 2)
+    } else {
+      hurr_track <- hurr_track %>%
+        dplyr::filter_(~ -106.65037 <= longitude & longitude <= -67.00742) %>%
+        dplyr::filter_(~ 25.12993 <= latitude & latitude <= 47.48101)
+    }
+    out <- out +
+      ggplot2::geom_path(data = hurr_track,
+                         ggplot2::aes_(x = ~ longitude, y = ~ latitude),
+                         color = "red", alpha = 0.9)
   }
 
   return(out)
@@ -252,13 +173,12 @@ map_events <- function(event_data, east_only = TRUE, plot_type = "any events",
 #'    if the user specifies \code{east_only}.
 #'
 #' @importFrom dplyr %>%
-get_county_map <- function(east_only = TRUE){
+get_county_map <- function(states = "east"){
 
-  map_data <- ggplot2::map_data(map = "county") %>%
-    dplyr::filter_(~ !(region %in% c("alaska", "hawaii")))
+  states <- stringr::str_to_lower(states)
 
-  if(east_only){
-    eastern_states <- c("alabama", "arkansas", "connecticut", "delaware",
+  if(states[1] == "east"){
+    states <- c("alabama", "arkansas", "connecticut", "delaware",
                         "district of columbia", "florida", "georgia", "illinois",
                         "indiana", "iowa", "kansas", "kentucky", "louisiana",
                         "maine", "maryland", "massachusetts", "michigan",
@@ -267,10 +187,13 @@ get_county_map <- function(east_only = TRUE){
                         "pennsylvania", "rhode island", "south carolina",
                         "tennessee", "texas", "vermont", "virginia",
                         "west virginia", "wisconsin")
-
-    map_data <- map_data %>%
-      dplyr::filter_(~ region %in% eastern_states)
+  } else if (states[1] == "all"){
+    states <- stringr::str_to_lower(state.name)
+    states <- states[!(states %in% c("alaska", "hawaii"))]
   }
+
+  map_data <- ggplot2::map_data(map = "county") %>%
+    dplyr::filter_(~ region %in% states)
 
   county.fips <- maps::county.fips %>%
     dplyr::mutate_(polyname = ~ as.character(polyname)) %>%
@@ -284,25 +207,3 @@ get_county_map <- function(east_only = TRUE){
   return(map_data)
 }
 
-#' Convert labels for damage costs to a prettier format
-#'
-#' @param x The levels of a factor, as formatted by \code{cut} for crop or
-#'    property damage values.
-#'
-#' @examples
-#' crop_dmg_levels <- c("[0,20]", "(20,600]", "(600,1e+04]", "(1e+04,3e+05]")
-#' convert_damage_costs(crop_dmg_levels)
-#'
-#' @importFrom dplyr %>%
-#'
-#' @export
-convert_damage_costs <- function(x){
-  x_nums <- sapply(x, stringr::str_extract, pattern = "([0-9e+,].+)") %>%
-    sapply(stringr::str_replace, pattern = "]", replacement = "") %>%
-    stringr::str_split(",", simplify = TRUE) %>%
-    dplyr::tbl_df() %>%
-    dplyr::mutate_each("as.numeric") %>%
-    dplyr::mutate_each(dplyr::funs(formatC(., format = "f", digits = 0, big.mark = ","))) %>%
-    tidyr::unite_(col = "value", from = c("V1", "V2"), sep = "--")
-  return(paste0("$", as.character(x_nums$value)))
-}
