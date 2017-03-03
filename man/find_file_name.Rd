@@ -29,7 +29,9 @@ This function creates a list of all file names available on
    robust to changes in this "last updated" date within the file names.
 }
 \examples{
+\dontrun{
 find_file_name(year = 1999)
 find_file_name(year = 2003, file_type = "fatalities")
+}
 
 }
