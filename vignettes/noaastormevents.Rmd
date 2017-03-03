@@ -11,7 +11,6 @@ vignette: >
 
 ```{r echo = FALSE}
 not_cran <- Sys.getenv("NOT_CRAN") == "true"
-print(not_cran)
 if (!not_cran) {
    knitr::opts_chunk$set(eval = FALSE)
     msg <- paste("Note: Examples in this vignette are set to not run on CRAN. If you would",
@@ -142,36 +141,48 @@ Mapping any county with at least one event, not restricting to only the eastern 
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 300) 
-floyd_events %>% 
-  map_events(east_only = FALSE)
+floyd_events %>% map_events(states = "all")
 ```
 
 Mapping the number of events in each county within a certain date range:
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events %>% 
-  map_events(plot_type = "number of events")
+  map_events(plot_type = "number of events",
+             states = c("florida", "georgia", "south carolina", "north carolina",
+                        "virginia", "maryland", "delaware", "pennsylvania",
+                        "new jersey", "new york", "connecticut", "rhode island",
+                        "massachusetts", "vermont", "new hampshire", "maine", 
+                        "west virginia"))
 ```
 
 Mapping the crop damage reported in each county within a certain date range:
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events %>%   
-  map_events(plot_type = "crop damage")
+  map_events(plot_type = "crop damage",
+             states = c("north carolina", "virginia", "maryland"))
 ```
 
 Mapping the property damage reported in each county within a certain date range:
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events %>% 
-  map_events(plot_type = "property damage")
+  map_events(plot_type = "property damage",
+             states = c("florida", "georgia", "south carolina", "north carolina",
+                        "virginia", "maryland", "delaware", "pennsylvania",
+                        "new jersey", "new york", "connecticut", "rhode island",
+                        "massachusetts", "vermont", "new hampshire", "maine", 
+                        "west virginia"))
 ```
 
-Mapping the number of events, but only counting counties that were within 200 kilometers of the track of Hurricane Floyd in 1999, with the hurricane's track added to the plot:
+Adding the hurricane's track to a plot:
 
 ```{r fig.width = 6, fig.height = 5}
-floyd_events %>% 
-  map_events(plot_type = "number of events", storm = "Floyd-1999", add_tracks = TRUE)
+floyd_events %>%   
+  map_events(plot_type = "crop damage",
+             states = c("north carolina", "virginia", "maryland"),
+             storm = "Floyd-1999", add_tracks = TRUE)
 ```
 
 ## Details of how the package works
