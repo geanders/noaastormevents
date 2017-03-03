@@ -4,15 +4,16 @@
 \alias{map_events}
 \title{Map storm events for a date range}
 \usage{
-map_events(event_data, east_only = TRUE, plot_type = "any events",
+map_events(event_data, states = "east", plot_type = "any events",
   storm = NULL, add_tracks = FALSE)
 }
 \arguments{
 \item{event_data}{A dataframe of event data, as returned by the \code{find_events}
 function.}
 
-\item{east_only}{A logical value specifying whether to restrict the map to
-the eastern half of the United States (default is TRUE).}
+\item{states}{A character string specifying either a state name or names or one of
+"all" (map all states in the continental US) or "east" (plot states in the
+Eastern half of the US. The default is "east".}
 
 \item{plot_type}{Specifies the type of plot wanted. It can be either "any
 events" or "number of events".}
@@ -45,14 +46,16 @@ map_events(event_data, plot_type = "number of events")
 # Map for a specific type of event
 event_data <- find_events(date_range = c("1999-09-10", "1999-09-30"),
                           event_types = c("Flood","Flash Flood"))
-map_events(event_data, east_only = FALSE)
+map_events(event_data, states = "north carolina", plot_type = "number of events")
+map_events(event_data, states = "all")
 
 # Map for events identified based on a hurricane storm track
 event_data <- find_events(storm = "Floyd-1999", dist_limit = 300)
 map_events(event_data, plot_type = "number of events",
            storm = "Floyd-1999", add_tracks = TRUE)
 map_events(event_data, plot_type = "crop damage",
-           storm = "Floyd-1999", add_tracks = TRUE)
+           storm = "Floyd-1999", add_tracks = TRUE,
+           states = c("north carolina", "virginia", "maryland"))
 map_events(event_data, plot_type = "property damage",
            storm = "Floyd-1999", add_tracks = TRUE)
 map_events(event_data, plot_type = "direct deaths")

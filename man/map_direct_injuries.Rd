@@ -15,9 +15,6 @@ dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
 The default value (NULL) keeps all types of events. See the "Details" vignette for this
 package for more details on possible event types.}
 
-\item{east_only}{A logical value specifying whether to restrict the map to
-the eastern half of the United States (default is TRUE).}
-
 \item{dist_limit}{A numeric scalar with the distance (in kilometers) that a county
 must be from the storm's path to be included. The default (NULL) does not eliminate any
 events based on distance from a storm's path. This option should only be used when also

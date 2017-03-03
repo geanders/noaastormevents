@@ -4,11 +4,12 @@
 \alias{get_county_map}
 \title{Get map data for counties}
 \usage{
-get_county_map(east_only = TRUE)
+get_county_map(states = "east")
 }
 \arguments{
-\item{east_only}{A logical value specifying whether to restrict the map to
-the eastern half of the United States (default is TRUE).}
+\item{states}{A character string specifying either a state name or names or one of
+"all" (map all states in the continental US) or "east" (plot states in the
+Eastern half of the US. The default is "east".}
 }
 \value{
 A dataframe with map data pulled using the \code{map_data} function in
