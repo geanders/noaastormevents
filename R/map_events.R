@@ -10,8 +10,9 @@
 #'    Eastern half of the US. The default is "east".
 #' @param add_tracks A logical value specifying whether to add the tracks of
 #'    a hurricane to the map (default = FALSE).
-#' @param plot_type Specifies the type of plot wanted. It can be either "any
-#'    events" or "number of events".
+#' @param plot_type Specifies the type of plot wanted. It can be "any
+#'    events", "number of events", "direct deaths", "indirect deaths",
+#'    "direct injuries", "indirect injuries", "property damage", or "crop damage".
 #' @inheritParams create_storm_data
 #'
 #' @note Indirect deaths and injuries seem to be reported very rarely, so it is

@@ -15,8 +15,9 @@ function.}
 "all" (map all states in the continental US) or "east" (plot states in the
 Eastern half of the US. The default is "east".}
 
-\item{plot_type}{Specifies the type of plot wanted. It can be either "any
-events" or "number of events".}
+\item{plot_type}{Specifies the type of plot wanted. It can be "any
+events", "number of events", "direct deaths", "indirect deaths",
+"direct injuries", "indirect injuries", "property damage", or "crop damage".}
 
 \item{storm}{A character string with the name of the storm to pull storm
 events data for. This string must follow the format
