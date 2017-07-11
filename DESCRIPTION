@@ -1,8 +1,8 @@
 Package: noaastormevents
 Type: Package
 Title: Explore NOAA Storm Events Database
-Version: 0.0.0.9000
-Date: 2017-03-02
+Version: 0.1.0
+Date: 2017-07-11
 Authors@R: c(person("Brooke", "Anderson",
     email = "brooke.anderson@colostate.edu", role = c("aut", "cre")),
     person("Ziyu", "Chen",
@@ -47,4 +47,4 @@ Suggests:
     testthat (>= 1.0.2),
     tibble (>= 1.2.0)
 VignetteBuilder: knitr
-Additional_repositories: http://geanders.github.io/drat
+Additional_repositories: https://geanders.github.io/drat
