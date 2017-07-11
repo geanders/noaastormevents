@@ -32,27 +32,26 @@ This package can be used to explore and map data from [NOAA's Storm Events Datab
 
 While the online database does not have a structured API, this package uses regular expressions to search the listings of available files to identify the filename for a queried year and download that year's data to a user's R session. The package functions then filter the downloaded storm event listings based to the dates, locations, event types, and other search limitations specified by the user. In particular, this package can be used to identify storm event listings that were close in location and time to Atlantic basin tropical storm tracks. 
 
-Several types of events can be queried and mapped with this package: 
+The package has two main functions: 
 
-- **Storm events:** (package functions `find_events` and `map_events`)
-- **Direct deaths:** (package functions `find_direct_deaths` and `map_direct_deaths`)
-- **Direct injuries:** (package functions `find_direct_injuries` and `map_direct_injuries`)
-- **Indirect deaths:** (package functions `find_indirect_deaths` and `map_indirect_deaths`)
-- **Indirect injuries:** (package functions `find_indirect_injuries` and `map_indirect_injuries`)
-- **Property damage:** (package functions `find_damage_property` and `map_damage_property`)
-- **Crop damage:** (package functions `find_damage_crops` and `map_damage_crops`)
+- `find_events`: Create a dataframe with event listings by county based on user-specified parameters (e.g., date range, specific tropical storm, type of event) from the NOAA Storm Events database
+- `map_events`: Create a map showing the geographic distribution by county of certain features of an events dataframe (e.g., whether or not a county had an event, number of events per county, total property damage in a county across event listings). 
 
-Some events are listed in the original database by forecast zone rather than county. For these observations, the package functions attempts to match the observation with the appropriate county. However, there are some events listed by forecast zone that cannot be matched to county, and so are excluded from results returned by this package. Further, there may be occasional errors in this matching, so we include a marker returned datasets indicating which events were listed by forecast zone rather than county, to allow further quality control checks by the user for his or her specific applications of the package. 
+While this package aims to create and map events data by county, some events are listed in the original database by forecast zone rather than county. For these observations, the package functions attempts to match the observation with the appropriate county. However, there are some events listed by forecast zone that cannot be matched to county, and so are excluded from results returned by this package. Further, there may be occasional errors in this matching, so we include a marker returned datasets indicating which events were listed by forecast zone rather than county, to allow further quality control checks by the user for his or her specific applications of the package. 
 
-It is important for users to note that there are limitations to this storm events database. In particular, listings can be somewhat subjective. A lack of event listing in the database should not be considered definitive proof that storm conditions did not exist at a location at a certain time. Further, the database has changed over time in terms of which types of events are included. R users should review the Storm Event Database's documentation, which is available at [the database's website](https://www.ncdc.noaa.gov/stormevents/), to be sure they understand how to use and interpret event listings from the database. 
+The `noaastormevents` package includes options that allow users to find events based on proximity to a tropical storm. To use this functionality, the user must have the `hurricaneexposuredata` package, available from a drat repository, installed locally. This package can be installed by running: 
 
-## Simple example
+```{r eval = FALSE}
+library(drat)
+addRepo("geanders")
+install.packages("hurricaneexposuredata")
+```
 
-### Creating a storm events dataset
+It is important for users to note that there are limitations to this storm events database. In particular, listings can be somewhat subjective. A lack of event listing in the database should not be considered definitive proof that storm conditions did not exist at a location at a certain time. Further, the database has changed over time in terms of which types of events are included. R users should review the Storm Event Database's documentation, which is available at [the database's website](https://www.ncdc.noaa.gov/stormevents/), to be sure they understand how to use and interpret event listings from the database. Further, the `noaastormevents` package includes a "Details" vignette with more details on this storm events data and how it is processed by functions in this package. 
 
-The package has two main types of functionalities. First, it has a number of functions (the `find_*` family of functions in the package) that can be used to create dataframes of event listings. These functions differ only in the type of event listing (storm events, direct deaths, property damage, etc.). Second, the package has a number of functions (the `map_*` family of functions) that can be used to map storm event listings; again, these functions differ only in the type of event listing they query.
+## Creating storm events datasets
 
-For example, the `find_events` function will create a dataframe with all storm event listings within a specified time frame. For example, the following code creates a dataframe with all events from the NOAA Storm Events Database listed as beginning between September 14 and 18, 1999 (a time window relevant for Hurricane Floyd, which caused extensive damage, especially from flooding):
+The package has two main functions. First, the `find_events` function can be used to create a dataframe with all storm event listings within a specified time frame. For example, the following code creates a dataframe with all events from the NOAA Storm Events Database listed as beginning between September 14 and 18, 1999 (a time window relevant for Hurricane Floyd, which caused extensive damage, especially from flooding):
 
 ```{r}
 sept_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
@@ -70,9 +69,11 @@ The code call returns a data frame with a subset of data from the Storm Events D
 - `fips`: Five-digit county (Federal Information Processing Standard) FIPS code. This code uniquely identifies each U.S. county.
 - `source`: The source of the storm event listing (e.g., trained spotter, emergency manager, general public, law enforcement)
 
-In some cases, a user may wish to identify all storm events listings that were close in time and place to a tropical storm. The `noaastormevents` package therefore alls users to search for events close in time and location to a tropical storm. To do this, the package draws on data and functions in the `hurricaneexposure` and `hurricaneexposuredata` packages (in development on GitHub) to match storm event listings against tropical storm "best tracks" data, which provides 6-hour observations of storm strength and location. 
+[more columns currently returned by `find_events`]
 
-Event listings are pulled for all events that occured within a five-day window of the day the storm was closest to each county and that were within a user-specified distance of the storm track. For example, to create a dataset with all event listings for counties within 300 kilometers (`dist_limit` option) of the path of Hurricane Floyd (`storm = "Floyd-1999"`) and for which the event began within a five-day window of the storm's closest approach, the user can run:
+In some cases, a user may wish to identify all storm events listings that were close in time and place to a tropical storm track, which can be done using the ... option of the `find_events` function. To do this, the package draws on data and functions in the packages `hurricaneexposure` (available on CRAN) and `hurricaneexposuredata` (available through a drat repository) to match storm event listings against tropical storm "best tracks" data, which has been interpolated down to 15-minute observations of storm location through the `hurricaneexposuredata` and `hurricaneexposure` packages [?-- doublecheck-- are we matching to original 6-hour observations or the 15-minute downscaling?]. 
+
+Event listings are pulled for all events that occured within a five-day window of the day the storm was closest to each county and that were in counties within a user-specified distance of the storm track. For example, to create a dataset with all event listings for counties within 300 kilometers (`dist_limit` option) of the path of Hurricane Floyd (`storm = "Floyd-1999"`) for a five-day window of the storm's closest approach to each county, the user can run:
 
 ```{r}
 floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 300)
@@ -125,26 +126,41 @@ floyd_events %>%
 ```
 
 
-### Mapping storm events
+## Mapping storm events
 
-The package has a number of functions for mapping storm event listings from this database. For example, the `map_events` function allows you to map all events in the database with a starting date within a specified range. It also has some options specific to tropical storm research, including mapping only events with tropical storm-related tags or only events that happened in counties within a certain distance of the track of a specific tropical storm. 
-Here are some examples: 
+The package also has a function, `map_events`, for mapping several different features from the storm event dataframes returned by `find_events`. This function is meant to provide reasonable defaults for many maps a user might want to create with this data, but in some cases might now provide the exact map a user would like to create. In that case, we recommend the user try the `choroplethr` package, which can be used to map US county data as long as the data includes county FIPS codes, as the dataframes returned by `find_events` do. 
 
-Mapping all counties that had at least one event over a date range:
+The `map_events` function allows you to create maps of several features of the dataframe returned by `find_events`: 
+
+- "any events": Map whether or not a county had any listed events
+- "number of events": Map the number of events listed for a county
+- "direct deaths": Map the total count of direct deaths across all events listed for a county
+- "direct injuries": Map the total count of direct injuries across all events listed for a county
+- "indirect deaths": Map the total count of direct deaths across all events listed for a county
+- "indirect injuries": Map the total count of direct injuries across all events listed for a county
+- "property damage": Map the total property damage across all events listed for a county
+- "crop damage": Map the total crop damage across all events listed for a county
+
+The maps for property and crop damage use a logarithmic scale, while others use an untransformed scale. While the function allows mapping indirect injuries and deaths, in practice is seems these are rarely listed in recent Storm Events data, so these may not create informative maps.
+
+The `map_events` function inputs a dataframe as created by `find_events`. For example, which counties had events listed that started between September 14 and 18, 2009, you can run:
 
 ```{r fig.width = 6, fig.height = 5}
 event_data <- find_events(date_range = c("1999-09-14", "1999-09-18"))
 map_events(event_data)
 ```
 
-Mapping any county with at least one event, not restricting to only the eastern half of the country:
+Because the first argument of `map_events` is a dataframe, you can also use the pipe operator (`%>%`) to pipe the results of a call to `find_events` directly into `map_events`, as shown in the next example.
+
+The `map_events` function includes a `states` option, to allow the user to limit the map to a subset of states (only states in the continental US can be included). This option also allows the inputs of "east" (the default, maps only states in the eastern half of the United States) and "all" (maps all states in the continental US). To create a map of all events within 300 km of the track of Hurricane Floyd with start dates in a five-day window of the storm's closest date to each county, and to map all continental states, you can run:
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 300) 
-floyd_events %>% map_events(states = "all")
+floyd_events %>% 
+  map_events(states = "all")
 ```
 
-Mapping the number of events in each county within a certain date range:
+If you instead would like to limit the map to states along the East Coast, you could instead run:
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events %>% 
@@ -156,7 +172,7 @@ floyd_events %>%
                         "west virginia"))
 ```
 
-Mapping the crop damage reported in each county within a certain date range:
+The maps for crop and property damage use a logarithmic scale, which typically shows differences in these measurements better than an untransformed scale. For example, here is the call and resulting map to map crop damage associated with Hurricane Floyd in North Carolina, Virginia, and Maryland:
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events %>%   
@@ -164,7 +180,7 @@ floyd_events %>%
              states = c("north carolina", "virginia", "maryland"))
 ```
 
-Mapping the property damage reported in each county within a certain date range:
+Property damage can be mapped in a similar way: 
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events %>% 
@@ -176,7 +192,7 @@ floyd_events %>%
                         "west virginia"))
 ```
 
-Adding the hurricane's track to a plot:
+The track of a tropical storm can be added to a map by specifying the name of the storm with the `storm` argument and setting `add_tracks` to `TRUE`:
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events %>%   
@@ -185,48 +201,6 @@ floyd_events %>%
              storm = "Floyd-1999", add_tracks = TRUE)
 ```
 
-## Details of how the package works
+## Find out more
 
-### Linking forecast zones to counties
-
-Some events are reported by forecast zone rather than county; these events are reported using "Z" for the "CZ_ZONE" variable in the original Storm Events Database data. Rather than dropping all of these events, the `noaastormevents` functions attempt to match each of these events to an appropriate U.S. county.
-
-To match these events to counties, functions in `noaastormevents` attempt to match the "cz_name" and "state_name" for the event to a real county and state name for a U.S county. For forecast zone events, the "cz_name" will often include qualifiers describing the part of a county in which an event occurred (e.g., "eastern", "southwest", "lower", "central", "interior"). A number of these qualifiers are removed from "cz_name" before trying to match this name with a real county name. In rare cases, this cleaning might be removing part of a true county name, but in practice it seems that more county matches can be correctly identified by removing these potential qualifiers. The functions also remove forward slashes and anything that comes after them (e.g., "Albemarle / Charlottesville" is changed to "Albemarle"). 
-
-For all events that are identified by county (`cz_type` is "C"), the "cz_fips" column gives the county's FIPS directly. Therefore, matching by county name is not required for these events, and they are therefore likely more reliably linked to a county that the events reported by forecast zone.
-
-We include a column called `cz_type` in the final data returned by the `find_*` family of functions. This column takes the value "C" is the event was reported by county and "Z" if it was reported by forecast zone. Therefore, if a user decides to exclude all events listed by forecast zone, he or she can use this column to filter. In other cases, a user may wish to include these events, but perform additional quality control checks to correct any incorrect county matching in the storm events pulled for his or her specific application.
-
-### Package interaction with the NOAA Storm Events website
-
-The `noaastormevents` package pulls data posted online by the National Centers for Environmental Information (NCEI; formally, the National Climatic Data Center [NCDC]). The NCEI currently includes comma-separated files covering different elements of the Storm Events database, with separate files for each year, which are available [here](http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/). 
-
-For each year, there are three file types: 
-
-- `"details"`
-- `"fatalities"`
-- `"locations"`
-
-The file names all follow a consistent format (anything in square brackets is replaced by its value in each file name): 
-
-```
-StormEvents_[file type]-ftp_v[version number]_d[storm year]_c[date file created].csv.gz
-```
-
-More details on these file naming conventions are available from NCEI through a [README file](http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/README).
-
-Because these file names include the date the file was created, these file names can change with time, and we don't know *a priori* what the name of the file for each year will be. However, if we have a list of available file names, it is possible to determine which corresponds to which year, by matching the year of data you'd like to the year within the `_d[storm year]_` part of the file name. 
-
-One function in the `noaastormevents` package, `find_file_name`, uses the `readHTMLTable` function from the `XML` package to read all the file names from the online repository of files and, from this list, identify the appropriate file for the year requested. For example, to determine the "details" file name for 1999, you can run: 
-
-```{r}
-find_file_name(year = 1999)
-```
-
-While the default is to find the name of the "details" file type for a year, you can also use the `file_type` argument to pull any of the three file types. For example, to find out the name of the "fatalities" file for 1999, you could run: 
-
-```{r}
-find_file_name(year = 1999, file_type = "fatalities")
-```
-
-Files are compressed using gzip compression. 
+There are many more details describing how this package works, as well as details on the Storm Events data, in the "Details" vignette that also comes with this package. 

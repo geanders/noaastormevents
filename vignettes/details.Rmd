@@ -133,7 +133,8 @@ hurr_tracks %>%
         distinct() %>%
         separate(storm_id, into = c("storm_name", "Year"), sep = "-") %>%
         group_by(Year) %>%
-        summarize(Storms = paste(storm_name, collapse = ", ")) %>%
+        summarize(Storms = paste(storm_name, collapse = ", ")) %>% 
+        as.data.frame() %>% 
         pander::pander(justify = "cl", split.cells = c("20%","80%"))
 ```
 
@@ -411,6 +412,7 @@ events_2015 %>%
   summarize(with_loc = paste(EVENT_TYPE, collapse = ", ")) %>%
   rename(` ` = perc_non_miss, 
          `Event types` = with_loc) %>%
+  as.data.frame() %>% 
   pander::pander(split.cells = c(20, 60),
                  justify = "rl")
 ```
@@ -546,6 +548,7 @@ events_2015 %>%
   sample_n(8) %>%
   mutate(STATE = str_to_title(STATE),
          CZ_NAME = str_to_title(CZ_NAME)) %>%
+  as.data.frame() %>% 
   pander::pander(split.cells = c(15, 15, 50), justify = "ccl")
 ```
 
@@ -643,6 +646,7 @@ continental_events %>%
   dplyr::rename(`Word type` = word_type,
                 Words = words,
                 `# events` = n_events) %>%
+  as.data.frame() %>% 
   pander::pander(split.cells = c(10, 50, 10), big.mark = ",", justify = "llc")
 ```
 
@@ -776,6 +780,7 @@ Usually, it seems that the cost per events within an episode do not overlap, so 
 county_events_2015 %>%
   filter(episode_id == "100823" & fips == 45035) %>%
   select(event_type, contains("damage"), cz_name, state, event_narrative, episode_narrative) %>% 
+  as.data.frame() %>% 
   pander::pander()
 ```
 
@@ -785,6 +790,7 @@ However, there are a few cases where it appears that costs might be duplicated o
 county_events_2015 %>%
   filter(episode_id == "99142" & fips == 2023) %>%
   select(event_type, contains("damage"), cz_name, state, event_narrative, episode_narrative) %>% 
+  as.data.frame() %>% 
   pander::pander()
 ```
 
@@ -830,6 +836,7 @@ county_damage_2015 %>%
          `Total damage` = episode_damage,
          Counties = location,
          Narrative = episode_narrative) %>% 
+  as.data.frame() %>% 
   pander::pander(split.cells = c(5, 5, 15, 35), justify = "lcll") 
 ```
 
