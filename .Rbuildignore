@@ -8,3 +8,4 @@
 ^writing$
 ^script_for_hurr_exposure$
 ^\.travis\.yml$
+^cran-comments\.md$
