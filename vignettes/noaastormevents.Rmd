@@ -140,7 +140,7 @@ The `map_events` function allows you to create maps of several features of the d
 - "property damage": Map the total property damage across all events listed for a county
 - "crop damage": Map the total crop damage across all events listed for a county
 
-The maps for property and crop damage use a logarithmic scale, while others use an untransformed scale. While the function allows mapping indirect injuries and deaths, in practice is seems these are rarely listed in recent Storm Events data, so these may not create informative maps.
+The maps for property and crop damage use a logarithmic scale, while others use an untransformed scale. Listings for all events within a county in the input dataframe are summed to create county-level values to map. While the function allows mapping indirect injuries and deaths, in practice is seems these are rarely listed in recent Storm Events data, so these may not create informative maps.
 
 The `map_events` function inputs a dataframe as created by `find_events`. For example, which counties had events listed that started between September 14 and 18, 2009, you can run:
 
@@ -159,7 +159,7 @@ floyd_events %>%
   map_events(states = "all")
 ```
 
-If you instead would like to limit the map to states along the East Coast, you could instead run:
+If you instead would like to limit the map to states along the East Coast and plot the number of reported events per county, you could instead run:
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events %>% 
@@ -191,7 +191,7 @@ floyd_events %>%
                         "west virginia"))
 ```
 
-The track of a tropical storm can be added to a map by specifying the name of the storm with the `storm` argument and setting `add_tracks` to `TRUE`:
+The track of a tropical storm can be added to a map by specifying the name of the storm with the `storm` argument and setting `add_tracks` to `TRUE`. For example, the track of Hurricane Floyd can be added to a map of crop damage in North Carolina, Virginia, and Maryland from the example dataframe with the call:
 
 ```{r fig.width = 6, fig.height = 5}
 floyd_events %>%   
