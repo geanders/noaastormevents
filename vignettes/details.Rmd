@@ -11,7 +11,6 @@ vignette: >
 
 ```{r echo = FALSE}
 not_cran <- Sys.getenv("NOT_CRAN") == "true"
-print(not_cran)
 if (!not_cran) {
     knitr::opts_chunk$set(eval = FALSE)
     msg <- paste("Note: Examples in this vignette are set to not run on CRAN. If you would",
@@ -40,7 +39,7 @@ This vignette provides more details on how the `noaastormevents` package interac
 
 ## Structure of NOAA Storm Events data
 
-The NOAA Storm Events data is available online at https://www.ncdc.noaa.gov/stormevents/. This website includes documentation on the data, as well as a page that allows bulk data download of yearly csv files either through ftp or http (https://www.ncdc.noaa.gov/stormevents/ftp.jsp). Data is available from January 1950 and tends to be updated to within a few months of present. 
+The NOAA Storm Events data is available online at https://www.ncdc.noaa.gov/stormevents/. That website includes documentation on the data, as well as a page that allows bulk data download of yearly csv files either through ftp or http (https://www.ncdc.noaa.gov/stormevents/ftp.jsp). Data is available from January 1950 and tends to be updated to within a few months of present. 
 
 Data is stored in bulk by year in compressed comma-separated files (`.csv.gz` files). Each year has three compressed files available: 
 
@@ -48,7 +47,7 @@ Data is stored in bulk by year in compressed comma-separated files (`.csv.gz` fi
 - `StormEvents_fatalities` file 
 - `StormEvents_loations` file 
 
-File names for each file include both the year of the data (e.g., "1950") and the date the file was last modified (e.g., "20170120"). Files are given regular names other than these two specifications. This regular naming scheme allows us to use regular expressions on all listed file names to identify the exact name of a file for a specific year, as explained in the next section. 
+File names for each file include both the year of the data (e.g., "1950") and the date the file was last modified (e.g., "20170120"). Files are given regular names other than these two specifications. This regular naming scheme allows us to use regular expressions in code within the `noaastormevents` package on all listed file names to identify the exact name of a file for a specific year, as explained in the next section. 
 
 The size of all three file types has increased with time (see figure below; note that the y-axis is log 10). The largest file for any given year is the "Details" file. Most file sizes increased substantially in 1996 (dotted vertical line), when the database dramatically expanded the types of events it included. Before 1996, the database covered tornadoes and, for some years, a few other types of events. From 1996, the database expanded to include events like floods, tropical storms, snow storms, etc. While "Locations" files exist in the database for early years, they contain no information until 1996. See the documentation at the NOAA Storm Events database website for more information on the coverage of the database at different times across its history.
 
@@ -93,7 +92,7 @@ htmltab::htmltab(doc = url, which = 1, rm_nodata_cols = FALSE) %>%
 
 The database data is stored in files separated by year, so the file for an entire year is identified and downloaded when a user asks for event listings from any time or any type of event that year. For example, if a user wants to list flood events from the week of Hurricane Floyd in 1999, functions in the `noaastormevents` package would first identify and download the full "Details" data file for 1999 and then filter down to flood events starting in the correct week. 
 
-To identify the online file path for a specific year, the `find_file_name` function uses the `htmltab` function (from the package of the same name) to create a dataframe listing all files available for download from the NOAA Storm Events database. The function then uses regular expressions to identify the file name in that listing for the requested year. For example, the name of the file with "Details" information for 1999 can be determined with:
+To identify the online file path for a specific year, the `find_file_name` function in the `noaastormevents` package uses the `htmltab` function (from the package of the same name) to create a dataframe listing all files available for download from the NOAA Storm Events database. The function then uses regular expressions to identify the file name in that listing for the requested year. For example, the name of the file with "Details" information for 1999 can be determined with:
 
 ```{r}
 find_file_name(year = "1999", file_type = "detail")
@@ -105,7 +104,9 @@ Here is the full definition of the `find_file_name` function:
 find_file_name
 ```
 
-Once the file name has been determined, a function in the package then downloads that file to the user's computer. For some years, files are very large, so this download can take a little while. To avoid downloading data from the same year more than once within an R session, the downloading function stores the downloaded data for that year in a temporary environment in the R user's session. In later requests for the same year, the function will first check for data from this year in the temporary environment and only download the data from the online database if it is not already saved to the user's computer. 
+Typically, this function will only be used internally rather than called directly by a user.
+
+Once the file name has been determined, a function in the package then downloads that file to the user's computer. For some years, files are very large, so this download can take a little while. To avoid downloading data from the same year more than once within an R session, the downloading function stores the downloaded data for that year in a temporary environment in the R user's session. In later requests for the same year, the function will first check for data from this year in the temporary environment and only download the data from the online database if it is not already available on the user's computer. 
 
 This environment is created to be temporary, which means that it is deleted at the end of the current R session. While some packages that access online databases cache any downloaded data in a way that persists between R sessions, we chose not to do that and instead only cache within an R session, but delete all data at the close of the R session. This is because some of the Storm Event files are very large, and most users will likely only want to keep a small subset of the data for a given year (e.g., only flood events during the week of Hurricane Floyd). It would be wasteful of memory to cache all the 1999 data indefinitely on the user's computer in this case; instead, the user should use our package to create the desired subset of the data and then explicitly store that subset locally to use in future analysis. 
 
@@ -158,6 +159,8 @@ This raw data has `r ncol(events_2015)` columns. This includes:
 - some metrics that are specific to event types (e.g., `FLOOD_CAUSE`, `CATEGORY`, `TOR_F_SCALE`, `TOR_LENGTH`, `TOR_WIDTH`)
 
 ### Event types
+
+The following sections provide some summary statistics for data from this database for a single year (2015), to help users better understand the available data. Users may want to conduct similar data analysis themselves with the set of data they pull from the NOAA Storm Events database relevant to a particular research project. The code from this vignette (available at the package's GitHub repository) can serve as a starting point for that. 
 
 In the 2015 event listings, here are the types of events and the number of reported events for each: 
 
@@ -502,6 +505,8 @@ events_2015 %>%
                align = "lcccc")
 ```
 
+For events reported by county, here are maps showing distributions in the number of events reported in 2015:
+
 ```{r message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6, fig.align = "center", echo = FALSE}
 events_2015 %>%
   filter(CZ_TYPE == "C") %>%
@@ -676,7 +681,7 @@ continental_events %>%
   knitr::kable()
 ```
 
-For the events listed by forecast zone that could be successfully matched to a county
+For the events listed by forecast zone that could be successfully matched to a county, here are the geographic distributions in event counts in 2015:
 
 ```{r message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6, fig.align = "center", echo = FALSE}
 z_events_2015 %>%
