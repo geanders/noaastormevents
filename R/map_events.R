@@ -189,7 +189,7 @@ get_county_map <- function(states = "east"){
                         "tennessee", "texas", "vermont", "virginia",
                         "west virginia", "wisconsin")
   } else if (states[1] == "all"){
-    states <- stringr::str_to_lower(state.name)
+    states <- stringr::str_to_lower(data.sets::state.name)
     states <- states[!(states %in% c("alaska", "hawaii"))]
   }
 
