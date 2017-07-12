@@ -17,3 +17,5 @@ before_script:
 
 r_github_packages:
   - geanders/hurricaneexposuredata
+  - cran/tigris
+  - cran/choroplethr
