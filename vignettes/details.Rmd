@@ -149,10 +149,10 @@ events_2015 <- create_storm_data(date_range = c("2015-01-01", "2015-12-31"))
 slice(events_2015, 1:3)
 ```
 
-This raw data has `r ncol(events_2015)` columns. This includes:
+This raw data has 51 columns. This includes:
 
 - the date and time of the beginning and end of the event (`BEGIN_YEARMONTH`, `BEGIN_DAY`, `BEGIN_TIME`, `BEGIN_DATE_TIME`, `END_YEARMONTH`, `END_DAY`, `END_TIME`, `END_DATE_TIME`)
-- unique IDs for the event and the epidsode, which can be used to link listings for events and episodes across the three types of files ("details", "locations", and "fatalities") (`EPISODE_ID`, `EVENT_ID`). Note that there are more unique event IDs (`r prettyNum(length(unique(events_2015$EVENT_ID)), big.mark = ",")` for the 2015 events data) than unique episode IDs (`r prettyNum(length(unique(events_2015$EPISODE_ID)), big.mark = ",")` for the 2015 events data)
+- unique IDs for the event and the epidsode, which can be used to link listings for events and episodes across the three types of files ("details", "locations", and "fatalities") (`EPISODE_ID`, `EVENT_ID`). Note that there are more unique event IDs (57,779 for the 2015 events data) than unique episode IDs (9,511 for the 2015 events data)
 - the type of event (`EVENT_TYPE`)
 - the location of the event (`CZ_TYPE`, `CZ_FIPS`, `CZ_NAME`, `BEGIN_AZIMUTH`, `BEGIN_LOCATION`, `END_LOCATION`, `END_AZIMUTH`, `BEGIN_LAT`, `BEGIN_LON`, `END_LAT`, `END_LON`)
 - description and impacts of the event (`EPISODE_NARRATIVE`, `EVENT_NARRATIVE`, `INJURIES_DIRECT`, `INJURIES_INDIRECT`, `DEATHS_DIRECT`, `DEATHS_INDIRECT`, `DAMAGE_PROPERTY`, `DAMAGE_CROPS`)
@@ -584,7 +584,7 @@ z_events_2015 <- events_2015 %>%
   match_forecast_county()
 ```
 
-In the 2015 events data, there are `r prettyNum(nrow(z_events_2015), big.mark = ",")` events listed by forecast zone rather than county. Once the `match_forecast_county` function is applied to these events, `r prettyNum(sum(!is.na(z_events_2015$fips)), big.mark = ",")` events were linked to a county (`r round(100 * mean(!is.na(z_events_2015$fips)))`%) while `r prettyNum(sum(is.na(z_events_2015$fips)), big.mark = ",")` events (`r round(100 * mean(is.na(z_events_2015$fips)))`%) could not be matched to a county.
+In the 2015 events data, there are 22,664 events listed by forecast zone rather than county. Once the `match_forecast_county` function is applied to these events, 16,405 events were linked to a county (72%) while 6,259 events (28%) could not be matched to a county.
 
 ```{r echo = FALSE}
 outside_events <- z_events_2015 %>%
@@ -596,7 +596,7 @@ outside_events <- z_events_2015 %>%
   filter(is.na(fips)) 
 ```
 
-Of the events not matched to a county, `r prettyNum(nrow(outside_events), big.mark = ",")` events were outside the continental U.S. (i.e., in Hawaii, Alaska, U.S. territories, or waters): 
+Of the events not matched to a county, 2,997 events were outside the continental U.S. (i.e., in Hawaii, Alaska, U.S. territories, or waters): 
 
 ```{r echo = FALSE}
 outside_events %>%
@@ -617,7 +617,7 @@ continental_events <- z_events_2015 %>%
   filter(is.na(fips)) 
 ```
 
-This left `r prettyNum(nrow(continental_events), big.mark = ",")` events in the continental U.S. that were listed by forecast zone but could not be linked to a county by the `match_forecast_county` function. Most of these events had a value for `cz_name` with words related to mountains, water, adjacency (e.g., "area of", "vicinity of"), or a few other word types (e.g., "desert", "hwy"). The following table gives the number of these remaining unmatched events with words from each of these categories (note: the `cz_name` for an event may have words from more than one of these categories, in which case it would be counted in this table under both categories). 
+This left 3,262 events in the continental U.S. that were listed by forecast zone but could not be linked to a county by the `match_forecast_county` function. Most of these events had a value for `cz_name` with words related to mountains, water, adjacency (e.g., "area of", "vicinity of"), or a few other word types (e.g., "desert", "hwy"). The following table gives the number of these remaining unmatched events with words from each of these categories (note: the `cz_name` for an event may have words from more than one of these categories, in which case it would be counted in this table under both categories). 
 
 ```{r echo = FALSE}
 mountain_words <- c("mountains", "mountain", "valley", "valleys", "divide", "range",
@@ -819,7 +819,7 @@ a <- county_damage_2015 %>%
   count()
 ```
 
-Of the times when a county had two or more events as part of the same episode in 2015, in `r formatC(a[a$zero_range == FALSE, ]$n, big.mark = ",")` (`r round(100 * a[a$zero_range == FALSE, ]$n / (sum(a[ , "n"])))`%) cases the damage costs were not identical across the event listings for the county and episode, while in `r formatC(a[a$zero_range == TRUE, ]$n, big.mark = ",")` cases (`r round(100 * a[a$zero_range == TRUE, ]$n / (sum(a[ , "n"])))`%) the cost listings were identical across event listings (as shown in the cases just given). If using damage cost estimates for research, it may be wise to hand-check for cases where damage cost estimates are duplicated across different events in a way that prevents summing across events to get the cumulative episode total cost. 
+Of the times when a county had two or more events as part of the same episode in 2015, in 3,136 (87%) cases the damage costs were not identical across the event listings for the county and episode, while in 452 cases (13%) the cost listings were identical across event listings (as shown in the cases just given). If using damage cost estimates for research, it may be wise to hand-check for cases where damage cost estimates are duplicated across different events in a way that prevents summing across events to get the cumulative episode total cost. 
 
 When costs were summed over all event and county listings in an episode, here are the ten episodes in the 2015 dataset with the highest total damage costs (combining property and crop damage):
 
