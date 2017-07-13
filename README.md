@@ -1,5 +1,5 @@
 
-[![Build Status](https://travis-ci.org/zailchen/noaastormevents.svg?branch=master)](https://travis-ci.org/zailchen/noaastormevents)
+[![Build Status](https://travis-ci.org/geanders/noaastormevents.svg?branch=master)](https://travis-ci.org/zailchen/noaastormevents)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 Description of package
