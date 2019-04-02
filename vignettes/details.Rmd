@@ -152,7 +152,7 @@ slice(events_2015, 1:3)
 This raw data has 51 columns. This includes:
 
 - the date and time of the beginning and end of the event (`BEGIN_YEARMONTH`, `BEGIN_DAY`, `BEGIN_TIME`, `BEGIN_DATE_TIME`, `END_YEARMONTH`, `END_DAY`, `END_TIME`, `END_DATE_TIME`)
-- unique IDs for the event and the epidsode, which can be used to link listings for events and episodes across the three types of files ("details", "locations", and "fatalities") (`EPISODE_ID`, `EVENT_ID`). Note that there are more unique event IDs (57,779 for the 2015 events data) than unique episode IDs (9,511 for the 2015 events data)
+- unique IDs for the event and the episode, which can be used to link listings for events and episodes across the three types of files ("details", "locations", and "fatalities") (`EPISODE_ID`, `EVENT_ID`). Note that there are more unique event IDs (57,779 for the 2015 events data) than unique episode IDs (9,511 for the 2015 events data)
 - the type of event (`EVENT_TYPE`)
 - the location of the event (`CZ_TYPE`, `CZ_FIPS`, `CZ_NAME`, `BEGIN_AZIMUTH`, `BEGIN_LOCATION`, `END_LOCATION`, `END_AZIMUTH`, `BEGIN_LAT`, `BEGIN_LON`, `END_LAT`, `END_LON`)
 - description and impacts of the event (`EPISODE_NARRATIVE`, `EVENT_NARRATIVE`, `INJURIES_DIRECT`, `INJURIES_INDIRECT`, `DEATHS_DIRECT`, `DEATHS_INDIRECT`, `DAMAGE_PROPERTY`, `DAMAGE_CROPS`)
@@ -487,7 +487,7 @@ events_2015 %>%
   facet_wrap(~ EVENT_TYPE, ncol = 3)
 ```
 
-Some events are reported by forecast zone (`CZTYPE` of "Z") rather than county (`CZTYPE` of "C"). Specific types of events are typically either always reported for a county or always reported for a forecast zone (see table below). Events typically reported by county include floods ("Flash Flood", "Flood", "Debris Flow"), tornado-like events ("Tornado", "Funnel Cloud", "Dust Devil"), and a few other events often related to thunderstorms ("Thunderstorm Wind", "Hail", "Heavy Rain", "Lightning"). Events typically reported by forecast zone include severe winter weather ("Winter Weather", "Winter Storm", "Heavy Snow", "Cold/Wind Chill", "Extreme Cold/Wind Chill", "Blizzard", "Frost/Freeze", "Ice Storm", "Sleet", "Lake-Effect Snow", "Avalance", "Freezing Fog"), extreme heat ("Heat", "Excessive Heat", "Drought"), events related to the water or coast ("Marine Thunderstorm Wind", "High Surf", "Coastal Flood", "Waterspout", "Astronomical Low Tide", "Rip Current", "Tropical Storm", "Marine High Wind", "Marine Hail", "Marine Strong Wind", "Hurricane", "Seiche", "Storm Surge/Tide", "Tropical Depression", "Marine Dense Fog", "Sneakerwave", "Tsunami"), and a few others ("High Wind", "Dense Fog", "Strong Wind", "Wildfire", "Dust Storm", "Dense Smoke").
+Some events are reported by forecast zone (`CZTYPE` of "Z") rather than county (`CZTYPE` of "C"). Specific types of events are typically either always reported for a county or always reported for a forecast zone (see table below). Events typically reported by county include floods ("Flash Flood", "Flood", "Debris Flow"), tornado-like events ("Tornado", "Funnel Cloud", "Dust Devil"), and a few other events often related to thunderstorms ("Thunderstorm Wind", "Hail", "Heavy Rain", "Lightning"). Events typically reported by forecast zone include severe winter weather ("Winter Weather", "Winter Storm", "Heavy Snow", "Cold/Wind Chill", "Extreme Cold/Wind Chill", "Blizzard", "Frost/Freeze", "Ice Storm", "Sleet", "Lake-Effect Snow", "Avalanche", "Freezing Fog"), extreme heat ("Heat", "Excessive Heat", "Drought"), events related to the water or coast ("Marine Thunderstorm Wind", "High Surf", "Coastal Flood", "Waterspout", "Astronomical Low Tide", "Rip Current", "Tropical Storm", "Marine High Wind", "Marine Hail", "Marine Strong Wind", "Hurricane", "Seiche", "Storm Surge/Tide", "Tropical Depression", "Marine Dense Fog", "Sneakerwave", "Tsunami"), and a few others ("High Wind", "Dense Fog", "Strong Wind", "Wildfire", "Dust Storm", "Dense Smoke").
 
 ```{r echo = FALSE}
 events_2015 %>%
@@ -716,7 +716,7 @@ z_events_2015 %>%
   labs(fill = "Number of events")
 ```
 
-When using this function, and for event listings generated using this function, the user may want to hand-check that event lisings with names like "Lake" and "Mountain" in the `cz_name` column are not erroneously matched to counties with names like "Lake County" and "Mountain County". Code like the following can be used for these checks (in this case, checking a dataframe of event listings named `z_events_2015` that is output from `match_forecast_county` and so has `fips` added for each event listing, if a match could be found): 
+When using this function, and for event listings generated using this function, the user may want to hand-check that event listings with names like "Lake" and "Mountain" in the `cz_name` column are not erroneously matched to counties with names like "Lake County" and "Mountain County". Code like the following can be used for these checks (in this case, checking a dataframe of event listings named `z_events_2015` that is output from `match_forecast_county` and so has `fips` added for each event listing, if a match could be found): 
 
 ```{r eval = FALSE}
 z_events_2015 %>% 
