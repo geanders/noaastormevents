@@ -10,23 +10,24 @@
 #' @return A cleaned version of the dataset input to the function.
 #'
 #' @importFrom dplyr %>%
+#' @importFrom rlang .data
 clean_storm_data <- function(storm_data, include_narratives){
   storm_data <- storm_data %>%
     stats::setNames(tolower(names(.))) %>%
-    dplyr::select_(~ begin_yearmonth, ~ begin_day, ~ end_yearmonth, ~ end_day,
-                   ~ episode_id, ~ event_id, ~ state, ~ cz_type, ~ cz_name,
-                   ~ event_type, ~ state_fips, ~ cz_fips, ~ source,
-                   ~ injuries_direct, ~ injuries_indirect, ~ deaths_direct,
-                   ~ deaths_indirect, ~ damage_property, ~ damage_crops,
-                   ~ episode_narrative, ~ event_narrative) %>%
-    dplyr::mutate_(state = ~ stringr::str_to_title(state),
-                   cz_name = ~ stringr::str_to_title(cz_name),
-                   damage_property = ~ parse_damage(damage_property),
-                   damage_crops = ~ parse_damage(damage_crops))
+    dplyr::select(.data$begin_yearmonth, .data$begin_day, .data$end_yearmonth, .data$end_day,
+                   .data$episode_id, .data$event_id, .data$state, .data$cz_type, .data$cz_name,
+                   .data$event_type, .data$state_fips, .data$cz_fips, .data$source,
+                   .data$injuries_direct, .data$injuries_indirect, .data$deaths_direct,
+                   .data$deaths_indirect, .data$damage_property, .data$damage_crops,
+                   .data$episode_narrative, .data$event_narrative) %>%
+    dplyr::mutate(state = stringr::str_to_title(.data$state),
+                  cz_name = stringr::str_to_title(.data$cz_name),
+                  damage_property = parse_damage(.data$damage_property),
+                   damage_crops = parse_damage(.data$damage_crops))
 
   if(!include_narratives){
     storm_data <- storm_data %>%
-      dplyr::select_(~ -event_narrative, ~ -episode_narrative)
+      dplyr::select(-.data$event_narrative, -.data$episode_narrative)
   }
 
   return(storm_data)
@@ -48,6 +49,7 @@ clean_storm_data <- function(storm_data, include_narratives){
 #' @inheritParams create_storm_data
 #'
 #' @importFrom dplyr %>%
+#' @importFrom rlang .data
 adjust_storm_data <- function(storm_data, date_range = NULL,
                               event_types = NULL, dist_limit = NULL,
                               storm = NULL) {
@@ -55,30 +57,31 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
   # Clean up storm events reported by forecast zone rather than county
   # (cz_type == "Z")
   storm_data_z <- storm_data %>%
-    dplyr::filter_(~ cz_type == "Z") %>%
+    dplyr::filter(.data$cz_type == "Z") %>%
     match_forecast_county()
 
   storm_data_c <- storm_data %>%
-    dplyr::filter_(~ cz_type == "C") %>%
-    dplyr::mutate_(fips = ~ as.numeric(paste0(state_fips, sprintf("%03d", cz_fips))))
+    dplyr::filter(.data$cz_type == "C") %>%
+    dplyr::mutate(fips = as.numeric(paste0(.data$state_fips,
+                                           sprintf("%03d", .data$cz_fips))))
 
   storm_data <- dplyr::bind_rows(storm_data_c, storm_data_z) %>%
-    tidyr::unite_("begin_date", c("begin_yearmonth", "begin_day"), sep = "-") %>%
-    tidyr::unite_("end_date", c("end_yearmonth", "end_day"), sep = "-") %>%
-    dplyr::mutate_(begin_date = ~ lubridate::ymd(begin_date),
-                   end_date = ~ lubridate::ymd(end_date)) %>%
-    dplyr::filter_(~ !is.na(fips)) %>%
-    dplyr::arrange_(~ begin_date)
+    tidyr::unite("begin_date", c("begin_yearmonth", "begin_day"), sep = "-") %>%
+    tidyr::unite("end_date", c("end_yearmonth", "end_day"), sep = "-") %>%
+    dplyr::mutate(begin_date = lubridate::ymd(.data$begin_date),
+                   end_date = lubridate::ymd(.data$end_date)) %>%
+    dplyr::filter(!is.na(.data$fips)) %>%
+    dplyr::arrange(.data$begin_date)
 
   # Pull closest distance data if the storm is provided
   if(!is.null(storm)){
     distance_df <- hurricaneexposuredata::closest_dist %>%
-      dplyr::filter_(~ storm_id == storm) %>%
-      dplyr::select_(~ -closest_time_utc, ~ -local_time) %>%
-      dplyr::mutate_(closest_date = ~ lubridate::ymd(closest_date),
-                     earliest_date = ~ closest_date - lubridate::ddays(2),
-                     latest_date = ~ closest_date + lubridate::ddays(2),
-                     fips = ~ as.numeric(fips))
+      dplyr::filter(.data$storm_id == storm) %>%
+      dplyr::select(-.data$closest_time_utc, -.data$local_time) %>%
+      dplyr::mutate(closest_date = lubridate::ymd(.data$closest_date),
+                     earliest_date = .data$closest_date - lubridate::ddays(2),
+                     latest_date = .data$closest_date + lubridate::ddays(2),
+                     fips = as.numeric(.data$fips))
     storm_data <- storm_data %>%
       dplyr::left_join(distance_df, by = "fips")
   }
@@ -86,14 +89,14 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
   # If a date range is included, filter only on that for date
   if(!is.null(date_range)){
     storm_data <- storm_data %>%
-      dplyr::filter_(~ !is.na(begin_date) &
-                      begin_date %within% lubridate::interval(date_range[1],
-                                                              date_range[2]))
+      dplyr::filter(!is.na(.data$begin_date) &
+                      .data$begin_date %within%
+                      lubridate::interval(date_range[1], date_range[2]))
   } else if (!is.null(storm)){ ## Otherwise, if possible use the storm dates from "closest_dates" to pick dates
    storm_data <- storm_data %>%
-     dplyr::filter_(~ !is.na(begin_date)) %>%
-     dplyr::filter_(~ earliest_date <= begin_date &
-                      begin_date <= latest_date)
+     dplyr::filter(!is.na(.data$begin_date)) %>%
+     dplyr::filter(.data$earliest_date <= .data$begin_date &
+                      .data$begin_date <= .data$latest_date)
   }
 
   # If a distance limit is specified, filter by that
@@ -102,24 +105,24 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
       stop("To use `dist_limit`, `storm` must be specified.")
     }
     storm_data <- storm_data %>%
-      dplyr::filter_(~ storm_dist <= dist_limit)
+      dplyr::filter(.data$storm_dist <= dist_limit)
   }
 
   # Clean up some extras put in `storm_data` to filter by time and location
   if(!is.null(storm)){
     storm_data <- storm_data %>%
-      dplyr::select_(~ -storm_dist, ~ -closest_date, ~ -earliest_date,
-                     ~ -latest_date)
+      dplyr::select(-.data$storm_dist, -.data$closest_date, -.data$earliest_date,
+                     -.data$latest_date)
   }
 
   # If the `event_types`` is specified, filter by that
   if(!is.null(event_types)) {
     storm_data <- storm_data %>%
-      dplyr::filter_(~ tolower(event_type) %in% stringr::str_to_lower(event_types))
+      dplyr::filter(tolower(.data$event_type) %in% stringr::str_to_lower(event_types))
   }
 
   storm_data <- storm_data %>%
-    dplyr::select_(~ - state_fips, ~ -cz_fips)
+    dplyr::select(-.data$state_fips, -.data$cz_fips)
 
   return(storm_data)
 }
@@ -212,120 +215,129 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 #'                     "Wyoming"))
 #' match_forecast_county(counties_to_parse)
 #' @importFrom dplyr %>%
+#' @importFrom rlang .data
 #'
 #' @export
 match_forecast_county <- function(storm_data_z){
   # Use the data `county.fips` to get county FIPS codes
   utils::data(county.fips, package = "maps")
   county.fips <- county.fips %>%
-    tidyr::separate_("polyname", c("state", "cz_name"), sep = ",") %>%
-    dplyr::mutate_(cz_name = ~ stringr::str_replace(cz_name, ":.+", "")) %>%
-    dplyr::distinct_()
+    tidyr::separate("polyname", c("state", "cz_name"), sep = ",") %>%
+    dplyr::mutate(cz_name = stringr::str_replace(.data$cz_name, ":.+", "")) %>%
+    dplyr::distinct()
 
   small_data <- storm_data_z %>%
     dplyr::tbl_df() %>%
-    dplyr::select_("event_id", "state", "cz_name") %>%
-    dplyr::filter_(~ !(state %in% c("GULF OF MEXICO", "GUAM", "ATLANTIC NORTH",
+    dplyr::select("event_id", "state", "cz_name") %>%
+    dplyr::filter(!(.data$state %in% c("GULF OF MEXICO", "GUAM", "ATLANTIC NORTH",
                                     "LAKE HURON", "LAKE ST CLAIR", "AMERICAN SAMOA",
                                     "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN",
                                     "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
                                     "LAKE ONTARIO", "VIRGIN ISLANDS", "HAWAII", "ALASKA"))) %>%
-    dplyr::mutate_(state = ~ stringr::str_to_lower(state),
-                   cz_name = ~ stringr::str_to_lower(cz_name),
-                   cz_name = ~stringr::str_replace_all(cz_name, "[.'``]", ""))
+    dplyr::mutate(state = stringr::str_to_lower(.data$state),
+                   cz_name = stringr::str_to_lower(.data$cz_name),
+                   cz_name = stringr::str_replace_all(.data$cz_name, "[.'``]", ""))
 
   # First, try to match `cz_name` to county name in `county.fips`
   a <- small_data %>%
     dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::mutate_(fips = ~ ifelse(state == "district of columbia", 11001, fips),
-                   fips = ~ ifelse(state == "virginia" & cz_name == "chesapeake", 51550, fips),
-                   fips = ~ ifelse(state == "alabama" & cz_name == "dekalb", 1049, fips)) %>%
-    dplyr::filter_(~ !is.na(fips)) %>%
-    dplyr::select_("event_id", "fips")
-  small_data <- dplyr::filter_(small_data, ~ !(event_id %in% a$event_id))
+    dplyr::mutate(fips = ifelse(.data$state == "district of columbia", 11001, .data$fips),
+                  fips = ifelse(.data$state == "virginia" & .data$cz_name == "chesapeake",
+                                51550, .data$fips),
+                  fips = ifelse(.data$state == "alabama" & .data$cz_name == "dekalb",
+                                1049, .data$fips)) %>%
+    dplyr::filter(!is.na(.data$fips)) %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% a$event_id))
 
   # Next, for county names with 'county' in them, try to match the word before 'county'
   # to county name in `county.fips`. Then check the two words before 'county', then the
   # one and two words before 'counties'
   b <- small_data %>%
-    dplyr::mutate_(cz_name = ~ stringr::str_match(cz_name, "([a-z]*+)\\s(county|cnty)")[ , 2]) %>%
-    dplyr::filter_(~ !is.na(cz_name)) %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "([a-z]*+)\\s(county|cnty)")[ , 2]) %>%
+    dplyr::filter(!is.na(.data$cz_name)) %>%
     dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::filter_(~ !is.na(fips))  %>%
-    dplyr::select_("event_id", "fips")
-  small_data <- dplyr::filter_(small_data, ~ !(event_id %in% b$event_id))
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% b$event_id))
 
   c <- small_data %>%
-    dplyr::mutate_(cz_name = ~ stringr::str_match(cz_name, "([a-z]*+\\s[a-z]*+)\\scounty")[ , 2]) %>%
-    dplyr::filter_(~ !is.na(cz_name)) %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "([a-z]*+\\s[a-z]*+)\\scounty")[ , 2]) %>%
+    dplyr::filter(!is.na(.data$cz_name)) %>%
     dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::filter_(~ !is.na(fips))  %>%
-    dplyr::select_("event_id", "fips")
-  small_data <- dplyr::filter_(small_data, ~ !(event_id %in% c$event_id))
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% c$event_id))
 
   d <- small_data %>%
-    dplyr::mutate_(cz_name = ~ stringr::str_match(cz_name, "([a-z]*+)\\scounties")[ , 2]) %>%
-    dplyr::filter_(~ !is.na(cz_name)) %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "([a-z]*+)\\scounties")[ , 2]) %>%
+    dplyr::filter(!is.na(.data$cz_name)) %>%
     dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::filter_(~ !is.na(fips))  %>%
-    dplyr::select_("event_id", "fips")
-  small_data <- dplyr::filter_(small_data, ~ !(event_id %in% d$event_id))
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% d$event_id))
 
   e <- small_data %>%
-    dplyr::mutate_(cz_name = ~ stringr::str_match(cz_name, "([a-z]*+\\s[a-z]*+)\\scounties")[ , 2]) %>%
-    dplyr::filter_(~ !is.na(cz_name)) %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "([a-z]*+\\s[a-z]*+)\\scounties")[ , 2]) %>%
+    dplyr::filter(!is.na(.data$cz_name)) %>%
     dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::filter_(~ !is.na(fips))  %>%
-    dplyr::select_("event_id", "fips")
-  small_data <- dplyr::filter_(small_data, ~ !(event_id %in% e$event_id))
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% e$event_id))
 
   # Next, pull out the last word in `cz_name` and try to match it to the county name
   # in `county.fips`. The check the last two words in `cz_name`.
   f <- small_data %>%
-    dplyr::mutate_(cz_name = ~ stringr::str_match(cz_name, "[a-z]*+$")[ , 1]) %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name, "[a-z]*+$")[ , 1]) %>%
     dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::filter_(~ !is.na(fips))  %>%
-    dplyr::select_("event_id", "fips")
-  small_data <- dplyr::filter_(small_data, ~ !(event_id %in% f$event_id))
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% f$event_id))
 
   g <- small_data %>%
-    dplyr::mutate_(cz_name = ~ stringr::str_match(cz_name, "[a-z]*+\\s[a-z]*+$")[ , 1]) %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "[a-z]*+\\s[a-z]*+$")[ , 1]) %>%
     dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::filter_(~ !is.na(fips))  %>%
-    dplyr::select_("event_id", "fips")
-  small_data <- dplyr::filter_(small_data, ~ !(event_id %in% g$event_id))
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% g$event_id))
 
   h <- small_data %>%
-    dplyr::mutate_(cz_name = ~ stringr::str_match(cz_name, "[a-z]*+\\s[a-z]*+\\s[a-z]*+$")[ , 1]) %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "[a-z]*+\\s[a-z]*+\\s[a-z]*+$")[ , 1]) %>%
     dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::filter_(~ !is.na(fips))  %>%
-    dplyr::select_("event_id", "fips")
-  small_data <- dplyr::filter_(small_data, ~ !(event_id %in% h$event_id))
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% h$event_id))
 
   # Next, pull any words right before a slash and check that against the county name.
   # Then try removing anything in parentheses in `cz_name` before matching.
   i <- small_data %>%
-    dplyr::mutate_(cz_name = ~ stringr::str_match(cz_name, "^([a-z]*+)/")[ , 2]) %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name, "^([a-z]*+)/")[ , 2]) %>%
     dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::filter_(~ !is.na(fips))  %>%
-    dplyr::select_("event_id", "fips")
-  small_data <- dplyr::filter_(small_data, ~ !(event_id %in% i$event_id))
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% i$event_id))
 
   j <- small_data %>%
-    dplyr::mutate_(cz_name = ~ stringr::str_replace(cz_name, "\\s\\(.+", "")) %>%
+    dplyr::mutate(cz_name = stringr::str_replace(.data$cz_name, "\\s\\(.+", "")) %>%
     dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::filter_(~ !is.na(fips))  %>%
-    dplyr::select_("event_id", "fips")
-  small_data <- dplyr::filter_(small_data, ~ !(event_id %in% j$event_id))
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% j$event_id))
 
   matched_data <- dplyr::bind_rows(a, b, c, d, e, f, g, h, i, j) %>%
-    dplyr::mutate_(fips = ~ ifelse(fips == 49049, NA, fips)) # Utah County, Utah is getting wrong matches
+    dplyr::mutate(fips = ifelse(.data$fips == 49049, NA, .data$fips)) # Utah County, Utah is getting wrong matches
 
   storm_data_z <- storm_data_z %>%
     dplyr::left_join(matched_data, by = "event_id") %>%
-    dplyr::mutate_(fips = ~ ifelse(stringr::str_detect(stringr::str_to_lower(cz_name),
+    dplyr::mutate(fips = ifelse(stringr::str_detect(stringr::str_to_lower(.data$cz_name),
                                                        "national park"),
-                                   NA, fips)) # Park County, Wyoming is getting wrong matches. Likely, this may happen in other states, as well.
+                                   NA, .data$fips)) # Park County, Wyoming is getting wrong matches. Likely, this may happen in other states, as well.
 
   return(storm_data_z)
 }
@@ -356,20 +368,21 @@ match_forecast_county <- function(storm_data_z){
 #' parse_damage(damage_crops)
 #'
 #' @importFrom dplyr %>%
+#' @importFrom rlang .data
 #'
 #' @export
 parse_damage <- function(damage_vector){
-  value_table <- dplyr::data_frame(letter_damage = c(NA, "K", "M", "B", "T"),
-                                   value_damage = 10 ^ c(0, 3, 6, 9, 12))
+  value_table <- dplyr::tibble(letter_damage = c(NA, "K", "M", "B", "T"),
+                               value_damage = 10 ^ c(0, 3, 6, 9, 12))
 
-  out <- dplyr::data_frame(damage_vector) %>%
-    dplyr::mutate_(num_damage = ~ stringr::str_extract(damage_vector, "[0-9.]+"),
-                   num_damage = ~ as.numeric(num_damage),
-                   letter_damage = ~ stringr::str_extract(damage_vector, "[A-Z]+"),
-                   letter_damage = ~ stringr::str_to_upper(letter_damage)) %>%
+  out <- dplyr::tibble(damage_vector) %>%
+    dplyr::mutate(num_damage = stringr::str_extract(.data$damage_vector, "[0-9.]+"),
+                  num_damage = as.numeric(.data$num_damage),
+                  letter_damage = stringr::str_extract(.data$damage_vector, "[A-Z]+"),
+                  letter_damage = stringr::str_to_upper(.data$letter_damage)) %>%
     dplyr::left_join(value_table, by = "letter_damage") %>%
-    dplyr::mutate_(damage_vector = ~ num_damage * value_damage,
-                   damage_vector = ~ ifelse(is.na(damage_vector), 0, damage_vector))
+    dplyr::mutate(damage_vector = .data$num_damage * .data$value_damage,
+                  damage_vector = ifelse(is.na(.data$damage_vector), 0, .data$damage_vector))
 
   return(out$damage_vector)
 }

@@ -51,6 +51,7 @@
 #' }
 #'
 #' @importFrom dplyr %>%
+#' @importFrom rlang .data
 #'
 #' @export
 map_events <- function(event_data, states = "east", plot_type = "any events",
@@ -62,65 +63,66 @@ map_events <- function(event_data, states = "east", plot_type = "any events",
   county_states <- unique(stringr::str_replace(county_map_data$polyname, "[,].+", ""))
 
   map_data <- event_data %>%
-    dplyr::filter_(~ stringr::str_to_lower(state) %in% county_states)
+    dplyr::filter(stringr::str_to_lower(.data$state) %in% county_states)
 
   if(plot_type == "any events"){
     map_data <- map_data %>%
-      dplyr::count_(~ fips) %>%
+      dplyr::count(.data$fips) %>%
       dplyr::right_join(county_map_data, by = "fips") %>%
-      dplyr::mutate_(value = ~ factor(n > 0 & !is.na(n), levels = c(TRUE, FALSE),
+      dplyr::mutate(value = factor(.data$n > 0 & !is.na(.data$n), levels = c(TRUE, FALSE),
                                       labels = c("Event(s)", "No Event")))
   } else if (plot_type == "number of events"){
     scale_name <- "Number of events"
     map_data <- map_data %>%
-      dplyr::count_(~ fips) %>%
-      dplyr::rename_(.dots = list("value" = "n")) %>%
+      dplyr::count(.data$fips) %>%
+      dplyr::rename(value = .data$n) %>%
       dplyr::right_join(county_map_data, by = "fips")
   } else if (plot_type %in% c("crop damage", "property damage")){
     if(plot_type == "crop damage"){
-      map_data <- dplyr::rename_(map_data, .dots = list("value" = "damage_crops"))
+      map_data <- dplyr::rename(map_data, value = .data$damage_crops)
       scale_name <- "Crop damage"
     } else if(plot_type == "property damage"){
-      map_data <- dplyr::rename_(map_data, .dots = list("value" = "damage_property"))
+      map_data <- dplyr::rename(map_data, value = .data$damage_property)
       scale_name <- "Property damage"
     }
     if(max(map_data$value) == 0){
       return(paste("No", plot_type,"reported for selected events."))
     }
     map_data <- map_data %>%
-      dplyr::group_by_(~ fips) %>%
-      dplyr::summarize_(value = ~ sum(value)) %>%
+      dplyr::group_by(.data$fips) %>%
+      dplyr::summarize(value = sum(.data$value)) %>%
       dplyr::right_join(county_map_data, by = "fips") %>%
-      dplyr::mutate_(value = ~ ifelse(value == 0, NA, value))
+      dplyr::mutate(value = ifelse(.data$value == 0, NA, .data$value))
   } else if (plot_type %in% c("direct deaths", "indirect deaths", "direct injuries", "indirect injuries")){
     if(plot_type == "direct deaths"){
-      map_data <- dplyr::rename_(map_data, .dots = list("value" = "deaths_direct"))
+      map_data <- dplyr::rename(map_data, value = .data$deaths_direct)
       scale_name <- "Direct deaths"
     } else if(plot_type == "indirect deaths"){
-      map_data <- dplyr::rename_(map_data, .dots = list("value" = "deaths_indirect"))
+      map_data <- dplyr::rename(map_data, value = .data$deaths_indirect)
       scale_name <- "Indirect deaths"
     } else if(plot_type == "direct injuries"){
-      map_data <- dplyr::rename_(map_data, .dots = list("value" = "injuries_direct"))
+      map_data <- dplyr::rename(map_data, value = .data$injuries_direct)
       scale_name <- "Direct injuries"
     } else if(plot_type == "indirect injuries"){
-      map_data <- dplyr::rename_(map_data, .dots = list("value" = "injuries_indirect"))
+      map_data <- dplyr::rename(map_data, value = .data$injuries_indirect)
       scale_name <- "Indirect injuries"
     }
     if(max(map_data$value) == 0){
       return(paste("No", plot_type,"reported for selected events."))
     }
     map_data <- map_data %>%
-      dplyr::group_by_(~ fips) %>%
-      dplyr::summarize_(value = ~ sum(value, na.rm = TRUE)) %>%
+      dplyr::group_by(.data$fips) %>%
+      dplyr::summarize(value = sum(.data$value, na.rm = TRUE)) %>%
       dplyr::right_join(county_map_data, by = "fips")
   }
 
   out <- map_data %>%
     ggplot2::ggplot() +
-    ggplot2::geom_polygon(ggplot2::aes_(x = ~ long, y = ~ lat, group = ~ group, fill = ~ value),
+    ggplot2::geom_polygon(ggplot2::aes(x = .data$long, y = .data$lat,
+                                       group = .data$group, fill = .data$value),
                           color = "darkgray", size = 0.1) +
     ggplot2::geom_polygon(data = ggplot2::map_data("state", region = county_states),
-                          ggplot2::aes_(x = ~ long, y = ~ lat, group = ~ group),
+                          ggplot2::aes(x = .data$long, y = .data$lat, group = .data$group),
                           fill = NA, color = "black", size = 0.2) +
     ggplot2::theme_void() +
     ggplot2::coord_map()
@@ -144,21 +146,21 @@ map_events <- function(event_data, states = "east", plot_type = "any events",
 
   if(add_tracks){
     hurr_track <- hurricaneexposuredata::hurr_tracks %>%
-      dplyr::filter_(~ storm_id == storm)
+      dplyr::filter(.data$storm_id == storm)
     if(!(states[1] %in% c("east", "all"))){
       hurr_track <- hurr_track %>%
-        dplyr::filter_(~ min(out$data$long) - 2 <= longitude &
-                         longitude <= max(out$data$long) + 2) %>%
-        dplyr::filter_(~ min(out$data$lat) - 2 <= latitude &
-                         latitude <= max(out$data$lat) + 2)
+        dplyr::filter(min(out$data$long) - 2 <= .data$longitude &
+                         .data$longitude <= max(out$data$long) + 2) %>%
+        dplyr::filter(min(out$data$lat) - 2 <= .data$latitude &
+                         .data$latitude <= max(out$data$lat) + 2)
     } else {
       hurr_track <- hurr_track %>%
-        dplyr::filter_(~ -106.65037 <= longitude & longitude <= -67.00742) %>%
-        dplyr::filter_(~ 25.12993 <= latitude & latitude <= 47.48101)
+        dplyr::filter(-106.65037 <= .data$longitude & .data$longitude <= -67.00742) %>%
+        dplyr::filter(25.12993 <= .data$latitude & .data$latitude <= 47.48101)
     }
     out <- out +
       ggplot2::geom_path(data = hurr_track,
-                         ggplot2::aes_(x = ~ longitude, y = ~ latitude),
+                         ggplot2::aes(x = .data$longitude, y = .data$latitude),
                          color = "red", alpha = 0.9)
   }
 
@@ -174,6 +176,8 @@ map_events <- function(event_data, states = "east", plot_type = "any events",
 #'    if the user specifies \code{east_only}.
 #'
 #' @importFrom dplyr %>%
+#' @importFrom rlang .data
+#'
 get_county_map <- function(states = "east"){
 
   states <- stringr::str_to_lower(states)
@@ -194,14 +198,14 @@ get_county_map <- function(states = "east"){
   }
 
   map_data <- ggplot2::map_data(map = "county") %>%
-    dplyr::filter_(~ region %in% states)
+    dplyr::filter(.data$region %in% states)
 
   county.fips <- maps::county.fips %>%
-    dplyr::mutate_(polyname = ~ as.character(polyname)) %>%
-    dplyr::mutate_(polyname = ~ stringr::str_replace(polyname,
+    dplyr::mutate(polyname = as.character(.data$polyname)) %>%
+    dplyr::mutate(polyname = stringr::str_replace(.data$polyname,
                                                        ":.+", ""))
   map_data <- map_data %>%
-    tidyr::unite_(col = "polyname", from = c("region", "subregion"),
+    tidyr::unite(col = "polyname", from = c("region", "subregion"),
                   sep = ",") %>%
     dplyr::left_join(county.fips, by = "polyname")
 

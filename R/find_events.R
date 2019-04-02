@@ -37,6 +37,7 @@
 #'
 #' @importFrom dplyr %>%
 #' @importFrom lubridate %within%
+#' @importFrom rlang .data
 #'
 #' @export
 find_events <- function(date_range = NULL, event_types = NULL,
@@ -62,20 +63,22 @@ find_events <- function(date_range = NULL, event_types = NULL,
   # those damages to missing
   if(clean_damage){
     storm_data <- storm_data %>%
-      dplyr::group_by_(~ state) %>%
-      dplyr::mutate_(state_crop_damage = ~ sum(damage_crops),
-                     damage_crops = ~ ifelse((state_crop_damage - damage_crops) < damage_crops,
-                                             NA, damage_crops),
-                     state_property_damage = ~ sum(damage_property),
-                     damage_property = ~ ifelse((state_property_damage - damage_property) < damage_property,
-                                                NA, damage_crops)) %>%
+      dplyr::group_by(.data$state) %>%
+      dplyr::mutate(state_crop_damage = sum(.data$damage_crops),
+                     damage_crops = ifelse((.data$state_crop_damage -
+                                              .data$damage_crops) < .data$damage_crops,
+                                             NA, .data$damage_crops),
+                     state_property_damage = sum(.data$damage_property),
+                     damage_property = ifelse((.data$state_property_damage -
+                                                 .data$damage_property) < .data$damage_property,
+                                                NA, .data$damage_crops)) %>%
       dplyr::ungroup() %>%
-      dplyr::select_(quote(-state_crop_damage), quote(-state_property_damage))
+      dplyr::select(-.data$state_crop_damage, -.data$state_property_damage)
   }
 
   if(!include_ids){
     storm_data <- storm_data %>%
-      dplyr::select_(~ -event_id, ~ -episode_id)
+      dplyr::select(-.data$event_id, -.data$episode_id)
   }
 
   return(storm_data)
