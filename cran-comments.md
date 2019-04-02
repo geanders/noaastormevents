@@ -9,8 +9,8 @@
 
 * The previous version of this package was archived on CRAN because it requires a package
 that was archived by CRAN. That package dependency (hurricaneexposure) has now been updated and
-is again available on CRAN. This package has been updated to require the latest version of that
-dependency package. 
+is again available on CRAN. The noaastormevent package has been updated to require the latest 
+version of that dependency package. 
 * This package suggests a package in a non-mainstream repository (a drat repository). On the Windows build, this results in the NOTE "Package suggested but not available for checking".
 * The Windows build lists some possibly mis-spelled words in DESCRIPTION. We have confirmed that these words are spelled correctly. 
 
