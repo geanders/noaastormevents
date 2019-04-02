@@ -48,3 +48,5 @@ Suggests:
     tibble (>= 2.0.1)
 VignetteBuilder: knitr
 Additional_repositories: https://geanders.github.io/drat
+Language: en-US
+Encoding: UTF-8
