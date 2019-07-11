@@ -49,6 +49,8 @@ find_file_name <- function(year = NULL, file_type = "details") {
 #'    user inputs to arguments in a main package function.
 #'
 #' @inheritParams create_storm_data
+#'
+#' #' @importFrom dplyr %>%
 process_input_args <- function(date_range = NULL, storm = NULL){
 
   if(!is.null(date_range)){
@@ -56,7 +58,8 @@ process_input_args <- function(date_range = NULL, storm = NULL){
     date_range_years <- lubridate::year(date_range)
   }
   if(!is.null(storm)){
-    storm_year <- as.numeric(gsub("[^0-9]", "", storm))
+    storm_year <- stringr::str_extract(storm, "\\-[0-9].+") %>%
+      stringr::str_remove("\\-")
     if(nchar(storm_year) != 4){
       stop("`storm` must follow the format `[storm name]-[4-digit storm year]`")
     }
