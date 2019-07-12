@@ -208,6 +208,8 @@ include:
 | 2013 | Andrea, Dorian, Karen                                                       |
 | 2014 | Arthur                                                                      |
 | 2015 | Ana, Bill, Claudette                                                        |
+| 2016 | Bonnie, Colin, Td08, Hermine, Julia, Matthew                                |
+| 2017 | Cindy, Emily, Harvey, Ptc10, Irma, Jose, Nate, Philippe                     |
 
 Once `find_events` has been used to create a dataset of storm event
 listings, the dataset can be explored. The user can do things like
