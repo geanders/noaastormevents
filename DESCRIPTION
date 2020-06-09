@@ -5,7 +5,9 @@ Version: 0.1.1.9
 Authors@R: c(person("Brooke", "Anderson",
     email = "brooke.anderson@colostate.edu", role = c("aut", "cre")),
     person("Ziyu", "Chen",
-    email = "zailchen17@icloud.com", role = "aut"))
+    email = "zailchen17@icloud.com", role = "aut"),
+    person("Therese", "Kondash",
+    email = "theresekondash@gmail.com", role = "aut"))
 Description: Allows users to explore and plot data from the
     National Oceanic and Atmospheric Administration (NOAA) 
     Storm Events database through R for United States counties. 
@@ -31,6 +33,7 @@ Imports:
     maps (>= 3.3.0),
     plyr (>= 1.8.4),
     RColorBrewer (>= 1.1.2),
+    RCurl (>= 1.98-1), 
     rlang (>= 0.3.3),
     stringr (>= 1.4.0),
     tidyr (>= 0.8.3),
