@@ -25,10 +25,10 @@
 #'
 #' @export
 find_file_name <- function(year = NULL, file_type = "details") {
-  url <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
+  url <- paste0("https://www1.ncdc.noaa.gov/pub/data/swdi/",
                 "stormevents/csvfiles/")
-  page <- htmltab::htmltab(doc = url, which = 1, rm_nodata_cols = FALSE)
-  all_file_names <- page$Name
+  page <- RCurl::getURL(url)
+  all_file_names <- XML::getHTMLLinks(page)
   file_year <- paste0("_d",year,"_")
   file_name <- grep(file_type, grep(file_year, all_file_names, value = TRUE),
                     value = TRUE)
