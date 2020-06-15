@@ -29,7 +29,7 @@ While the online database does not have a structured API, this package uses regu
 The package has two main functions: 
 
 - `find_events`: Create a dataframe with event listings by county based on user-specified parameters (e.g., date range, specific tropical storm, type of event) from the NOAA Storm Events database
-- `map_events`: Create a map showing the geographic distribution by county of certain features of an events dataframe (e.g., whether or not a county had an event, number of events per county, total property damage in a county across event listings). 
+- `map_events`: Create a map showing the geographic distribution by county of certain features of an event's dataframe (e.g., whether or not a county had an event, number of events per county, total property damage in a county across event listings). 
 
 While this package aims to create and map events data by county, some events are listed in the original database by forecast zone rather than county. For these observations, the package functions attempts to match the observation with the appropriate county. However, there are some events listed by forecast zone that cannot be matched to county, and so are excluded from results returned by this package. Further, there may be occasional errors in this matching, so we include a marker returned datasets indicating which events were listed by forecast zone rather than county, to allow further quality control checks by the user for his or her specific applications of the package. 
 
