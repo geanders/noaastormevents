@@ -250,7 +250,7 @@ events_2015 %>%
   theme_void()
 ```
 
-For these episodes with the most events in 2015, the following graph shows the number of events reported for the episode. One of the episode was a winter storm, another was heavy rains and floods, while the rest of the episodes included high winds, hail, tornadoes, rain, and / or flooding. 
+For these episodes with the most events in 2015, the following graph shows the number of events reported for the episode. One of the episodes was a winter storm, another was heavy rains and floods, while the rest of the episodes included high winds, hail, tornadoes, rain, and / or flooding. 
 
 ```{r echo = FALSE, fig.align = "center", fig.width = 6, fig.height = 4}
 top_episodes <- events_2015 %>%
