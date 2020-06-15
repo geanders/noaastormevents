@@ -569,7 +569,7 @@ Within the code in `noaastormevents`, the `match_forecast_county` is used to try
 4. Next, pull any words right before a slash and check that against the county name.
 5. Finally, try removing anything in parentheses in `cz_name` before matching.
 
-In addition, there are a few final steps in cleaning the data. First, all listings with "Utah" in the `cz_name` are set to missing-- while there is a Utah County, Utah, from inspection of event listings in 2015, events in Utah with "Utah" in `cz_name` often referred to parts of the state, rather than to the county. Further, any event with "National Park" listed in `cz_name` is set to not match with a county FIPS. In Wyoming, Park County was being match to a `cz_name` for Yellowstone National Park, and this could be a problem in other states, so this extra check was included. 
+In addition, there are a few final steps in cleaning the data. First, all listings with "Utah" in the `cz_name` are set to missing-- while there is a Utah County, Utah, from inspection of event listings in 2015, events in Utah with "Utah" in `cz_name` often referred to parts of the state, rather than to the county. Further, any event with "National Park" listed in `cz_name` is set to not match with a county FIPS. In Wyoming, Park County was being matched to a `cz_name` for Yellowstone National Park, and this could be a problem in other states, so this extra check was included. 
 
 ```{r echo = FALSE}
 z_events_2015 <- events_2015 %>%
