@@ -565,7 +565,7 @@ Within the code in `noaastormevents`, the `match_forecast_county` is used to try
    to county name in `county.fips`. Then check the two words before 'county', then the
    one and two words before 'counties'.
 3. Next, pull out the last word in `cz_name` and try to match it to the county name
-  in `county.fips`. The check the last two words in `cz_name`, then check the last three words in `cz_name`.
+  in `county.fips`. Then check the last two words in `cz_name`, then check the last three words in `cz_name`.
 4. Next, pull any words right before a slash and check that against the county name.
 5. Finally, try removing anything in parentheses in `cz_name` before matching.
 
