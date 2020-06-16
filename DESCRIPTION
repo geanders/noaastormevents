@@ -36,9 +36,11 @@ Imports:
     RCurl (>= 1.98-1.2), 
     rlang (>= 0.4.6),
     stringr (>= 1.4.0),
+    tibble (>= 3.0.1),
     tidyr (>= 1.1.0),
     viridis (>= 0.5.1),
     XML (>= 3.99-0.3)
+    
 RoxygenNote: 6.1.1
 Depends:
     R (>= 3.5)
