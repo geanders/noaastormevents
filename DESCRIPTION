@@ -40,7 +40,6 @@ Imports:
     tidyr (>= 1.1.0),
     viridis (>= 0.5.1),
     XML (>= 3.99-0.3)
-    
 RoxygenNote: 6.1.1
 Depends:
     R (>= 3.5)
