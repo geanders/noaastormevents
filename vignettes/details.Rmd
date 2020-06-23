@@ -31,6 +31,7 @@ library(forcats)
 library(dplyr)
 library(tidyr)
 library(viridis)
+library(magrittr)
 
 library(noaastormevents)
 ```
@@ -873,7 +874,7 @@ county_damage_2015 %>%
 
 The following graph shows the distribution of events between those with listed damage costs greater than $0 and those without.
 
-```{r echo = FALSE, fig.width = 6, fig.height = 7, error= TRUE}
+```{r echo = FALSE, fig.width = 6, fig.height = 7}
 county_damage_2015 %>% 
   filter(!is.na(amount)) %>% 
   group_by(event_id) %>% 
@@ -885,7 +886,8 @@ county_damage_2015 %>%
                             labels = c("Damage", "No damage"))) %>% 
   group_by(event_type, no_damage) %>% 
   count() %>% 
-  ggplot(aes(x = fct_reorder(event_type, n, fun = sum), y = n, fill = no_damage)) + 
+  mutate(event_type = as_factor(event_type)) %>% 
+  ggplot(aes(x = fct_reorder(event_type, n, .fun = sum), y = n, fill = no_damage)) + 
   geom_bar(stat = "identity") + 
   coord_flip() + 
   theme_classic() + 
@@ -897,7 +899,9 @@ county_damage_2015 %>%
 
 The following figure shows the top 50 episodes in terms of damages (property and crop damage combined) in 2015:
 
-```{r fig.height = 10, fig.width = 7, fig.align = "center", echo = FALSE, error= TRUE}
+```{r fig.height = 10, fig.width = 7, fig.align = "center", echo = FALSE}
+library(maps)
+data(state.fips)
 ex <- county_events_2015 %>% 
   filter(str_to_lower(state) %in% as.character(state.fips$polyname)) %>% 
   unite(begin_date, begin_yearmonth, begin_day, sep = "-") %>% 
