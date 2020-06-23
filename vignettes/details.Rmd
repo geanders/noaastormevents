@@ -165,6 +165,7 @@ The following sections provide some summary statistics for data from this databa
 
 In the 2015 event listings, here are the types of events and the number of reported events for each: 
 
+
 ```{r echo = FALSE}
 events_2015 %>%
   group_by(EVENT_TYPE) %>%
@@ -872,7 +873,7 @@ county_damage_2015 %>%
 
 The following graph shows the distribution of events between those with listed damage costs greater than $0 and those without.
 
-```{r echo = FALSE, fig.width = 6, fig.height = 7}
+```{r echo = FALSE, fig.width = 6, fig.height = 7, error= TRUE}
 county_damage_2015 %>% 
   filter(!is.na(amount)) %>% 
   group_by(event_id) %>% 
@@ -896,7 +897,7 @@ county_damage_2015 %>%
 
 The following figure shows the top 50 episodes in terms of damages (property and crop damage combined) in 2015:
 
-```{r fig.height = 10, fig.width = 7, fig.align = "center", echo = FALSE}
+```{r fig.height = 10, fig.width = 7, fig.align = "center", echo = FALSE, error= TRUE}
 ex <- county_events_2015 %>% 
   filter(str_to_lower(state) %in% as.character(state.fips$polyname)) %>% 
   unite(begin_date, begin_yearmonth, begin_day, sep = "-") %>% 
