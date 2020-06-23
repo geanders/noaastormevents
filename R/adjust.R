@@ -227,7 +227,7 @@ match_forecast_county <- function(storm_data_z){
     dplyr::distinct()
 
   small_data <- storm_data_z %>%
-    dplyr::tbl_df() %>%
+    tibble::as_tibble() %>%
     dplyr::select("event_id", "state", "cz_name") %>%
     dplyr::filter(!(.data$state %in% c("GULF OF MEXICO", "GUAM", "ATLANTIC NORTH",
                                     "LAKE HURON", "LAKE ST CLAIR", "AMERICAN SAMOA",
