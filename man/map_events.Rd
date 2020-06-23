@@ -4,8 +4,13 @@
 \alias{map_events}
 \title{Map storm events for a date range}
 \usage{
-map_events(event_data, states = "east", plot_type = "any events",
-  storm = NULL, add_tracks = FALSE)
+map_events(
+  event_data,
+  states = "east",
+  plot_type = "any events",
+  storm = NULL,
+  add_tracks = FALSE
+)
 }
 \arguments{
 \item{event_data}{A dataframe of event data, as returned by the \code{find_events}
