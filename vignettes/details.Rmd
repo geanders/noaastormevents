@@ -31,6 +31,7 @@ library(forcats)
 library(dplyr)
 library(tidyr)
 library(viridis)
+library(magrittr)
 
 library(noaastormevents)
 ```
@@ -164,6 +165,7 @@ This raw data has 51 columns. This includes:
 The following sections provide some summary statistics for data from this database for a single year (2015), to help users better understand the available data. Users may want to conduct similar data analysis themselves with the set of data they pull from the NOAA Storm Events database relevant to a particular research project. The code from this vignette (available at the package's GitHub repository) can serve as a starting point for that. 
 
 In the 2015 event listings, here are the types of events and the number of reported events for each: 
+
 
 ```{r echo = FALSE}
 events_2015 %>%
@@ -884,7 +886,8 @@ county_damage_2015 %>%
                             labels = c("Damage", "No damage"))) %>% 
   group_by(event_type, no_damage) %>% 
   count() %>% 
-  ggplot(aes(x = fct_reorder(event_type, n, fun = sum), y = n, fill = no_damage)) + 
+  mutate(event_type = as_factor(event_type)) %>% 
+  ggplot(aes(x = fct_reorder(event_type, n, .fun = sum), y = n, fill = no_damage)) + 
   geom_bar(stat = "identity") + 
   coord_flip() + 
   theme_classic() + 
@@ -897,6 +900,8 @@ county_damage_2015 %>%
 The following figure shows the top 50 episodes in terms of damages (property and crop damage combined) in 2015:
 
 ```{r fig.height = 10, fig.width = 7, fig.align = "center", echo = FALSE}
+library(maps)
+data(state.fips)
 ex <- county_events_2015 %>% 
   filter(str_to_lower(state) %in% as.character(state.fips$polyname)) %>% 
   unite(begin_date, begin_yearmonth, begin_day, sep = "-") %>% 
