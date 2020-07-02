@@ -4,8 +4,13 @@
 \alias{adjust_storm_data}
 \title{Adjust storm data}
 \usage{
-adjust_storm_data(storm_data, date_range = NULL, event_types = NULL,
-  dist_limit = NULL, storm = NULL)
+adjust_storm_data(
+  storm_data,
+  date_range = NULL,
+  event_types = NULL,
+  dist_limit = NULL,
+  storm = NULL
+)
 }
 \arguments{
 \item{storm_data}{A dataset of storm data. This dataset must include certain columns given

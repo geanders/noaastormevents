@@ -4,8 +4,7 @@
 \alias{create_storm_data}
 \title{Get storm data based on date range or storm name}
 \usage{
-create_storm_data(date_range = NULL, storm = NULL,
-  file_type = "details")
+create_storm_data(date_range = NULL, storm = NULL, file_type = "details")
 }
 \arguments{
 \item{date_range}{A character vector of length two with the start and end

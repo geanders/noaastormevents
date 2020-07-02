@@ -4,9 +4,15 @@
 \alias{find_events}
 \title{Find all event listings for date range}
 \usage{
-find_events(date_range = NULL, event_types = NULL, dist_limit = NULL,
-  storm = NULL, include_narratives = FALSE, include_ids = FALSE,
-  clean_damage = FALSE)
+find_events(
+  date_range = NULL,
+  event_types = NULL,
+  dist_limit = NULL,
+  storm = NULL,
+  include_narratives = FALSE,
+  include_ids = FALSE,
+  clean_damage = FALSE
+)
 }
 \arguments{
 \item{date_range}{A character vector of length two with the start and end
