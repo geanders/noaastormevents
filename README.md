@@ -1,7 +1,5 @@
 
-[![Build
-Status](https://travis-ci.org/geanders/noaastormevents.svg?branch=master)](https://travis-ci.org/zailchen/noaastormevents)
-
+<!-- [![Build Status](https://travis-ci.org/geanders/noaastormevents.svg?branch=master)](https://travis-ci.org/zailchen/noaastormevents) -->
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ## Description of package
@@ -210,7 +208,6 @@ currently include:
 | 2016 | Bonnie, Colin, Eight, Hermine, Julia, Matthew                               |
 | 2017 | Cindy, Emily, Harvey, Irma, Jose, Nate, Philippe                            |
 | 2018 | Alberto, Chris, Florence, Gordon, Michael                                   |
-| Two  | Twenty                                                                      |
 
 Once `find_events` has been used to create a dataset of storm event
 listings, the dataset can be explored. The user can do things like

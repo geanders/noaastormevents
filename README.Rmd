@@ -2,7 +2,7 @@
 output: github_document
 ---
 
-[![Build Status](https://travis-ci.org/geanders/noaastormevents.svg?branch=master)](https://travis-ci.org/zailchen/noaastormevents)
+<!-- [![Build Status](https://travis-ci.org/geanders/noaastormevents.svg?branch=master)](https://travis-ci.org/zailchen/noaastormevents) -->
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -83,6 +83,7 @@ hurr_tracks %>%
   tidyr::separate(storm_id, c("storm", "year")) %>%
   dplyr::select(storm, year) %>%
   dplyr::distinct() %>%
+  dplyr::filter(!stringr::str_detect(year, "[a-zA-Z]")) %>% 
   dplyr::group_by(year) %>% 
   dplyr::summarize(storms = paste(storm, collapse = ", ")) %>% 
   knitr::kable()
