@@ -56,7 +56,7 @@ download_storm_data <- function(year, file_type = "details"){
 #' floyd_data2 <- create_storm_data(storm = "Floyd-1999")
 #' }
 #'
-#' @importFrom dplyr %>%
+#' @importFrom magrittr %>%
 #'
 #' @export
 create_storm_data <- function(date_range = NULL, storm = NULL,

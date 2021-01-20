@@ -50,7 +50,7 @@ find_file_name <- function(year = NULL, file_type = "details") {
 #'
 #' @inheritParams create_storm_data
 #'
-#' #' @importFrom dplyr %>%
+#' @importFrom magrittr %>%
 process_input_args <- function(date_range = NULL, storm = NULL){
 
   if(!is.null(date_range)){
