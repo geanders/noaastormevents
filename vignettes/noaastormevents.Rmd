@@ -73,7 +73,7 @@ The code call returns a data frame with a subset of data from the Storm Events D
 
 In some cases, a user may wish to identify all storm events listings that were close in time and place to a tropical storm track, which can be done using the `storm` option of the `find_events` function. To do this, the package draws on data and functions in the packages `hurricaneexposure` (available on CRAN) and `hurricaneexposuredata` (available through a drat repository) to match storm event listings against tropical storm "best tracks" data through the `hurricaneexposuredata` and `hurricaneexposure` packages. 
 
-Event listings are pulled for all events that occured within a five-day window of the day the storm was closest to each county and that were in counties within a user-specified distance of the storm track. For example, to create a dataset with all event listings for counties within 300 kilometers (`dist_limit` option) of the path of Hurricane Floyd (`storm = "Floyd-1999"`) for a five-day window of the storm's closest approach to each county, the user can run:
+Event listings are pulled for all events that occurred within a five-day window of the day the storm was closest to each county and that were in counties within a user-specified distance of the storm track. For example, to create a dataset with all event listings for counties within 300 kilometers (`dist_limit` option) of the path of Hurricane Floyd (`storm = "Floyd-1999"`) for a five-day window of the storm's closest approach to each county, the user can run:
 
 ```{r}
 floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 300)
