@@ -6,6 +6,16 @@
 \usage{
 process_input_args(date_range = NULL, storm = NULL)
 }
+\arguments{
+\item{date_range}{A character vector of length two with the start and end
+dates to pull data for (e.g., \code{c("1999-10-16", "1999-10-18")}).}
+
+\item{storm}{A character string with the name of the storm to pull storm
+events data for. This string must follow the format
+"[storm-name]-[4-digit storm year]" (e.g., \code{"Floyd-1999"}).
+Currently, this functionality only works for storms included in the
+extended hurricane best tracks, which covers 1988 to 2015.}
+}
 \value{
 A list with date ranges and storm identification based on
    user inputs to arguments in a main package function.
