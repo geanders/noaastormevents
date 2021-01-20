@@ -9,7 +9,6 @@
 
 * This package has been updated in this version to remove a dependency on a package that is being archived on CRAN (`htmltab`)
 * This package suggests a package in a non-mainstream repository (a drat repository). On the Windows build, this results in the NOTE "Package suggested but not available for checking".
-* The Windows build lists some possibly mis-spelled words in DESCRIPTION. We have confirmed that these words are spelled correctly. 
 
 ## Reverse dependencies
 
