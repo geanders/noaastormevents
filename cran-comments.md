@@ -5,12 +5,9 @@
 
 ## R CMD check results
 
-0 errors | 0 warnings | 2 notes
+0 errors | 0 warnings | 0 notes
 
-* The previous version of this package was archived on CRAN because it requires a package
-that was archived by CRAN. That package dependency (hurricaneexposure) has now been updated and
-is again available on CRAN. The noaastormevent package has been updated to require the latest 
-version of that dependency package. 
+* This package has been updated in this version to remove a dependency on a package that is being archived on CRAN (`htmltab`)
 * This package suggests a package in a non-mainstream repository (a drat repository). On the Windows build, this results in the NOTE "Package suggested but not available for checking".
 * The Windows build lists some possibly mis-spelled words in DESCRIPTION. We have confirmed that these words are spelled correctly. 
 
