@@ -27,7 +27,8 @@
 find_file_name <- function(year = NULL, file_type = "details") {
   url <- paste0("https://www1.ncdc.noaa.gov/pub/data/swdi/",
                 "stormevents/csvfiles/")
-  page <- RCurl::getURL(url)
+
+  page<-readLines(curl::curl(url))
   all_file_names <- XML::getHTMLLinks(page)
   file_year <- paste0("_d",year,"_")
   file_name <- grep(file_type, grep(file_year, all_file_names, value = TRUE),
