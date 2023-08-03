@@ -1,0 +1,90 @@
+---
+title: "find_events"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{find_events}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(noaastormevents)
+```
+
+One of the primary functions of `noaastormevents` is `find_events`. This function allows user to retrieve storm event listings from a specified time frame. These listings are retrieved from the the NOAA Storm Events Database and comprised into a dataframe with the following columns:
+
+- `begin_date`: The date the event began
+- `end_date`: The date the event ended
+- `state`: The state in which the event occurred
+- `cz_type`: Whether the event was listed by county or by forecast zone (Where possible, events that are listed by forecast zone are linked to the appropriate county FIPS code and therefore not excluded from this returned dataframe. However, this column is included to allow users to perform quality control on events listed by forecast zone (`CZ_TYPE` of "Z").)
+- `cz_name`: The name of the county (or other area name) in which the event occurred. 
+- `event_type`: Event type (e.g., "Flood", "Lightning", "Tornado", "Wildfire"). See [the NOAA Storm Events documentation](https://www.ncdc.noaa.gov/stormevents/pd01016005curr.pdf) for definitions of these event types
+- `source`: The source of the storm event listing (e.g., trained spotter, emergency manager, general public, law enforcement)
+- `injuries_direct`, `injuries_indirect`, `deaths_direct`, `deaths_indirect`, `damage_property`, `damage_crops`: Estimates of damage from the event to human health, property, and crops. For damages, initial values in the database (e.g., `"5K"`) have been converted where possible to numeric values (e.g., `5000`). See the "Details" vignette for more details on this process.
+- `fips`: Five-digit county (Federal Information Processing Standard) FIPS code. This code uniquely identifies each U.S. county. If the event was reported by forecast zone (`cz_type` of `Z`), code within the package has used regular expressions to try to correctly match the area name to a county FIPS (see the "Details" vignette for more details on this process).
+
+For example, a user can run the following code to pull all storm event listings from September 14, 1999 to September 18, 1999
+
+```{r}
+sept_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
+head(sept_1999_events)
+```
+
+
+In addition, `find_events` can focus on events specified by the `event_types` argument. If a user only wants data on hurricane events from the same date range specified above, they could run:
+
+```{r}
+sept_1999_hurricane_events <- find_events(date_range = c("1999-09-14", "1999-09-18"), event_types = c("Hurricane (Typhoon)"))
+head(sept_1999_hurricane_events)
+```
+
+Further, users can also filter events within proximity to a specified tropical storm track. For this additional specification, the package calls on the packages `hurricaneexposure` (available on CRAN) and `hurricaneexposuredata` (available through a drat repository). Data and functions from these packages help match storm events to tropical storm events by storm name and proximity. These can be specified using the `storm`, and `dist_limit` options in the function. 
+
+Event listings are pulled for all events that occurred within a five-day window of the day the storm was closest to each county and that were in counties within a user-specified distance of the storm track. For example, to create a dataset with all event listings for counties within 300 kilometers (`dist_limit` option) of the path of Hurricane Floyd (`storm = "Floyd-1999"`) for a five-day window of the storm's closest approach to each county, the user can run:
+
+```{r}
+floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 300)
+head(floyd_events)
+```
+
+Note that the storm ID includes a storm name ("Floyd") and year ("1999"). Both must be specified, as storm names are not retired until they are used for a very severe storm. This functionality will only work for storms included in the `hurricaneexposuredata` package. 
+
+Once `find_events` has been used to create a dataset of storm event listings, the dataset can be explored. The user can do things like determine the number of events of each type that occurred near in time and location to a storm's track. For example, here is a summary of numbers of different types of events for Hurricane Floyd, created using `dplyr` tools:
+
+
+```{r message = FALSE, warning = FALSE}
+library(dplyr)
+floyd_events %>%
+  group_by(event_type) %>%
+  summarize(n = n()) %>%
+  arrange(desc(n)) %>%
+  knitr::kable(col.names = c("Event type", "Number of events"),
+               caption = "NOAA Storm Events within 200 km and within a 5-day window of Hurricane Floyd.")
+  
+```
+
+Similarly, you could create a summary with the states in which the most events were listed and give the number and type of events in each of those counties:
+
+```{r}
+floyd_events %>%
+  group_by(state, event_type) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  arrange(state, desc(n)) %>%
+  mutate(event_type = paste0(event_type, " (", n, ")")) %>%
+  group_by(state) %>%
+  summarize(Total = sum(n),
+            Events = paste(event_type, collapse = ", ")) %>%
+  ungroup() %>%
+  arrange(desc(Total)) %>%
+  knitr::kable()
+```
+
+To see examples of how data pulled from `find_events` can be visualized, visit the `map_events` article.

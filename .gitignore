@@ -10,3 +10,5 @@ inst/doc
 */.DS_Store
 */.Rapp.history
 vignettes/.DS_Store
+/doc/
+/Meta/
