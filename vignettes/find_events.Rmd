@@ -31,7 +31,7 @@ One of the primary functions of `noaastormevents` is `find_events`. This functio
 - `injuries_direct`, `injuries_indirect`, `deaths_direct`, `deaths_indirect`, `damage_property`, `damage_crops`: Estimates of damage from the event to human health, property, and crops. For damages, initial values in the database (e.g., `"5K"`) have been converted where possible to numeric values (e.g., `5000`). See the "Details" vignette for more details on this process.
 - `fips`: Five-digit county (Federal Information Processing Standard) FIPS code. This code uniquely identifies each U.S. county. If the event was reported by forecast zone (`cz_type` of `Z`), code within the package has used regular expressions to try to correctly match the area name to a county FIPS (see the "Details" vignette for more details on this process).
 
-For example, a user can run the following code to pull all storm event listings from September 14, 1999 to September 18, 1999
+For example, a user can run the following code to pull all storm event listings from September 14, 1999 to September 18, 1999:
 
 ```{r}
 sept_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
@@ -42,7 +42,8 @@ head(sept_1999_events)
 In addition, `find_events` can focus on events specified by the `event_types` argument. If a user only wants data on hurricane events from the same date range specified above, they could run:
 
 ```{r}
-sept_1999_hurricane_events <- find_events(date_range = c("1999-09-14", "1999-09-18"), event_types = c("Hurricane (Typhoon)"))
+sept_1999_hurricane_events <- find_events(date_range = c("1999-09-14", "1999-09-18"),
+                                          event_types = c("Hurricane (Typhoon)"))
 head(sept_1999_hurricane_events)
 ```
 
@@ -73,7 +74,7 @@ floyd_events %>%
 
 Similarly, you could create a summary with the states in which the most events were listed and give the number and type of events in each of those counties:
 
-```{r}
+```{r message = FALSE, warning = FALSE}
 floyd_events %>%
   group_by(state, event_type) %>%
   summarize(n = n()) %>%
@@ -88,4 +89,4 @@ floyd_events %>%
   knitr::kable()
 ```
 
-To see examples of how data pulled from `find_events` can be visualized, visit the `map_events` article.
+To see examples of how data pulled from `find_events` can be visualized, visit the article on "Mapping Events".

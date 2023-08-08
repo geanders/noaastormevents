@@ -15,12 +15,12 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, message = FALSE, warning = FALSE}
 library(noaastormevents)
 library(dplyr)
 ```
 
-With `map_events`, one of the primary functions in `noaastormevents`, users can map information in the dataframe returned by the `find_events` function. Mappable stats include:
+With `map_events`, one of the primary functions in `noaastormevents`, users can map information in the dataframe returned by the `find_events` function. Things that can be mapped include:
 
 - "any events": Map whether or not a county had any listed events
 - "number of events": Map the number of events listed for a county
@@ -34,7 +34,7 @@ With `map_events`, one of the primary functions in `noaastormevents`, users can 
 While the maps for property and crop damage use a logarithmic scale, while others use an untransformed scale.
 
 
-Because the first argument of `map_events` is a dataframe, you can also use the pipe operator (`%>%`) to pipe the results of a call to `find_events` directly into `map_events`, as shown in the next example.
+Because the first argument of `map_events` is a dataframe, you can also use the pipe operator (`%>%`, from the `dplyr` package) to pipe the results of a call to `find_events` directly into `map_events`, as shown in the next example.
 
 To create a map of all events within 300 km of the track of Hurricane Floyd with start dates in a five-day window of the storm's closest date to each county, and to map all continental states, you can run:
 
