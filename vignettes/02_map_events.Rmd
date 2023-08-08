@@ -3,7 +3,7 @@ title: "Mapping storm events"
 author: "Brooke Anderson, Ziyu Chen, and Jordan Robinson"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{map_events}
+  %\VignetteIndexEntry{2. Mapping storm events}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

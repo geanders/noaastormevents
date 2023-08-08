@@ -3,7 +3,7 @@ title: "Finding storm events"
 author: "Brooke Anderson, Ziyu Chen, and Jordan Robinson"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{find_events}
+  %\VignetteIndexEntry{Finding storm events}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -89,4 +89,4 @@ floyd_events %>%
   knitr::kable()
 ```
 
-To see examples of how data pulled from `find_events` can be visualized, visit the article on "Mapping Events".
+To see examples of how data pulled from `find_events` can be visualized, visit the article on ["Mapping Events"](http://geanders.github.io/noaastormevents/articles/map_events.html). For more details on the underlying data and how the package processes it, see the ["Details" article](http://geanders.github.io/noaastormevents/articles/details.html).

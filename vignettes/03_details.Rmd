@@ -1,10 +1,10 @@
 ---
-title: "Details of `noaastormevents`"
+title: "Details"
 author: "Brooke Anderson, Ziyu Chen, and Jordan Robinson"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Details of noaastormevents}
+  %\VignetteIndexEntry{Details}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
