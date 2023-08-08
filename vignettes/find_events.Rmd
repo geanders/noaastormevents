@@ -1,5 +1,5 @@
 ---
-title: "find_events"
+title: "Finding storm events"
 author: "Brooke Anderson, Ziyu Chen, and Jordan Robinson"
 output: rmarkdown::html_vignette
 vignette: >
