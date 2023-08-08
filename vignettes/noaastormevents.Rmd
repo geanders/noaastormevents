@@ -59,7 +59,7 @@ sept_1999_events <- find_events(date_range = c("1999-09-14", "1999-09-18"))
 head(sept_1999_events)
 ```
 
-The code call returns a data frame with a subset of data from the Storm Events Database for 1999. Each event listing with a start data between September 14 and 18 is included. The data frame has the following columns: 
+The code call returns a data frame with a subset of data from the Storm Events Database for 1999. Each event listing with a start date between September 14 and 18 is included. The data frame has the following columns: 
 
 - `begin_date`: The date the event began
 - `end_date`: The date the event ended
@@ -71,60 +71,8 @@ The code call returns a data frame with a subset of data from the Storm Events D
 - `injuries_direct`, `injuries_indirect`, `deaths_direct`, `deaths_indirect`, `damage_property`, `damage_crops`: Estimates of damage from the event to human health, property, and crops. For damages, initial values in the database (e.g., `"5K"`) have been converted where possible to numeric values (e.g., `5000`). See the "Details" vignette for more details on this process.
 - `fips`: Five-digit county (Federal Information Processing Standard) FIPS code. This code uniquely identifies each U.S. county. If the event was reported by forecast zone (`cz_type` of `Z`), code within the package has used regular expressions to try to correctly match the area name to a county FIPS (see the "Details" vignette for more details on this process).
 
-In some cases, a user may wish to identify all storm events listings that were close in time and place to a tropical storm track, which can be done using the `storm` option of the `find_events` function. To do this, the package draws on data and functions in the packages `hurricaneexposure` (available on CRAN) and `hurricaneexposuredata` (available through a drat repository) to match storm event listings against tropical storm "best tracks" data through the `hurricaneexposuredata` and `hurricaneexposure` packages. 
-
-Event listings are pulled for all events that occurred within a five-day window of the day the storm was closest to each county and that were in counties within a user-specified distance of the storm track. For example, to create a dataset with all event listings for counties within 300 kilometers (`dist_limit` option) of the path of Hurricane Floyd (`storm = "Floyd-1999"`) for a five-day window of the storm's closest approach to each county, the user can run:
-
-```{r}
-floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 300)
-head(floyd_events)
-```
-
-Note that the storm ID includes a storm name ("Floyd") and year ("1999"). Both must be specified, as storm names are not retired until they are used for a very severe storm. This functionality will only work for storms included in the `hurricaneexposuredata` package. These currently include: 
-
-```{r echo = FALSE, message = FALSE, warning = FALSE}
-library(dplyr)
-library(hurricaneexposuredata)
-data("hurr_tracks")
-hurr_tracks %>% 
-  tidyr::separate(storm_id, c("storm", "year")) %>%
-  dplyr::select(storm, year) %>%
-  dplyr::distinct() %>%
-  dplyr::group_by(year) %>% 
-  dplyr::summarize(storms = paste(storm, collapse = ", ")) %>% 
-  knitr::kable()
-```
-
-Once `find_events` has been used to create a dataset of storm event listings, the dataset can be explored. The user can do things like determine the number of events of each type that occurred near in time and location to a storm's track. For example, here is a summary of numbers of different types of events for Hurricane Floyd, created using `dplyr` tools:
-
-```{r message = FALSE, warning = FALSE}
-library(dplyr)
-floyd_events %>%
-  group_by(event_type) %>%
-  summarize(n = n()) %>%
-  arrange(desc(n)) %>%
-  knitr::kable(col.names = c("Event type", "Number of events"),
-               caption = "NOAA Storm Events within 200 km and within a 5-day window of Hurricane Floyd.")
-  
-```
-
-Similarly, you could create a summary with the states in which the most events were listed and give the number and type of events in each of those counties:
-
-```{r}
-floyd_events %>%
-  group_by(state, event_type) %>%
-  summarize(n = n()) %>%
-  ungroup() %>%
-  arrange(state, desc(n)) %>%
-  mutate(event_type = paste0(event_type, " (", n, ")")) %>%
-  group_by(state) %>%
-  summarize(Total = sum(n),
-            Events = paste(event_type, collapse = ", ")) %>%
-  ungroup() %>%
-  arrange(desc(Total)) %>%
-  knitr::kable()
-```
-
+There are several ways that you can customize the use of the `find_events`
+function. For more details, see the article on "Finding Events".
 
 ## Mapping storm events
 
@@ -200,6 +148,9 @@ floyd_events %>%
              states = c("north carolina", "virginia", "maryland"),
              storm = "Floyd-1999", add_tracks = TRUE)
 ```
+
+For more details on how to use the `find_events` function, see the article on "Finding 
+Events". 
 
 ## Find out more
 
