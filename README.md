@@ -193,4 +193,5 @@ details on how to use the `map_events` function, see the article on
 ## Find out more
 
 There are many more details describing how this package works, as well
-as details on the Storm Events data, in the “Details” article.
+as details on the Storm Events data, in the [“Details”
+article](http://geanders.github.io/noaastormevents/articles/details.html).
