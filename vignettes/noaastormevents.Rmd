@@ -25,6 +25,7 @@ if (!not_cran | !hasData) {
 
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 library(noaastormevents)
+library(tidyverse)
 ```
 
 ## Description of package
@@ -91,67 +92,16 @@ The `map_events` function allows you to create maps of several features of the d
 
 The maps for property and crop damage use a logarithmic scale, while others use an untransformed scale. Listings for all events within a county in the input dataframe are summed to create county-level values to map. While the function allows mapping indirect injuries and deaths, in practice is seems these are rarely listed in recent Storm Events data, so these may not create informative maps.
 
-The `map_events` function inputs a dataframe as created by `find_events`. For example, which counties had events listed that started between September 14 and 18, 2009, you can run:
+The `map_events` function inputs a dataframe as created by `find_events`. For example, to map which counties had events listed that started between September 14 and 18, 2009, you can run:
 
 ```{r fig.width = 6, fig.height = 5}
 event_data <- find_events(date_range = c("1999-09-14", "1999-09-18"))
 map_events(event_data)
 ```
 
-Because the first argument of `map_events` is a dataframe, you can also use the pipe operator (`%>%`) to pipe the results of a call to `find_events` directly into `map_events`, as shown in the next example.
-
-The `map_events` function includes a `states` option, to allow the user to limit the map to a subset of states (only states in the continental US can be included). This option also allows the inputs of "east" (the default, maps only states in the eastern half of the United States) and "all" (maps all states in the continental US). To create a map of all events within 300 km of the track of Hurricane Floyd with start dates in a five-day window of the storm's closest date to each county, and to map all continental states, you can run:
-
-```{r fig.width = 6, fig.height = 5}
-floyd_events <- find_events(storm = "Floyd-1999", dist_limit = 300) 
-floyd_events %>% 
-  map_events(states = "all")
-```
-
-If you instead would like to limit the map to states along the East Coast and plot the number of reported events per county, you could instead run:
-
-```{r fig.width = 6, fig.height = 5}
-floyd_events %>% 
-  map_events(plot_type = "number of events",
-             states = c("florida", "georgia", "south carolina", "north carolina",
-                        "virginia", "maryland", "delaware", "pennsylvania",
-                        "new jersey", "new york", "connecticut", "rhode island",
-                        "massachusetts", "vermont", "new hampshire", "maine", 
-                        "west virginia"))
-```
-
-The maps for crop and property damage use a logarithmic scale, which typically shows differences in these measurements better than an untransformed scale. For example, here is the call and resulting map to map crop damage associated with Hurricane Floyd in North Carolina, Virginia, and Maryland:
-
-```{r fig.width = 6, fig.height = 5}
-floyd_events %>%   
-  map_events(plot_type = "crop damage",
-             states = c("north carolina", "virginia", "maryland"))
-```
-
-Property damage can be mapped in a similar way: 
-
-```{r fig.width = 6, fig.height = 5}
-floyd_events %>% 
-  map_events(plot_type = "property damage",
-             states = c("florida", "georgia", "south carolina", "north carolina",
-                        "virginia", "maryland", "delaware", "pennsylvania",
-                        "new jersey", "new york", "connecticut", "rhode island",
-                        "massachusetts", "vermont", "new hampshire", "maine", 
-                        "west virginia"))
-```
-
-The track of a tropical storm can be added to a map by specifying the name of the storm with the `storm` argument and setting `add_tracks` to `TRUE`. For example, the track of Hurricane Floyd can be added to a map of crop damage in North Carolina, Virginia, and Maryland from the example dataframe with the call:
-
-```{r fig.width = 6, fig.height = 5}
-floyd_events %>%   
-  map_events(plot_type = "crop damage",
-             states = c("north carolina", "virginia", "maryland"),
-             storm = "Floyd-1999", add_tracks = TRUE)
-```
-
-For more details on how to use the `find_events` function, see the article on "Finding 
-Events". 
+There are many ways you can customize the use of this function. For more details
+on how to use the `map_events` function, see the article on "Finding Events".
 
 ## Find out more
 
-There are many more details describing how this package works, as well as details on the Storm Events data, in the "Details" vignette that also comes with this package. 
+There are many more details describing how this package works, as well as details on the Storm Events data, in the "Details" article. 
