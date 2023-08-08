@@ -7,7 +7,9 @@ Authors@R: c(person("Brooke", "Anderson",
     person("Ziyu", "Chen",
     email = "zailchen17@icloud.com", role = "aut"),
     person("Therese", "Kondash",
-    email = "theresekondash@gmail.com", role = "aut"))
+    email = "theresekondash@gmail.com", role = "aut"), 
+    person("Jordan", "Robinson", 
+    email = "", role = "aut"))
 Description: Allows users to explore and plot data from the
     National Oceanic and Atmospheric Administration (NOAA) 
     Storm Events database through R for United States counties. 

@@ -1,5 +1,6 @@
 ---
 title: "map_events"
+author: "Brooke Anderson, Ziyu Chen, and Jordan Robinson"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{map_events}

@@ -1,6 +1,6 @@
 ---
 title: "Overview of noaastormevents"
-author: "Brooke Anderson and Ziyu Chen"
+author: "Brooke Anderson, Ziyu Chen, and Jordan Robinson"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
