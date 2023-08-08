@@ -45,8 +45,8 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/details.html">Details of `noaastormevents`</a>
-    <a class="dropdown-item" href="../articles/find_events.html">find_events</a>
-    <a class="dropdown-item" href="../articles/map_events.html">map_events</a>
+    <a class="dropdown-item" href="../articles/find_events.html">Finding storm events</a>
+    <a class="dropdown-item" href="../articles/map_events.html">Mapping storm events</a>
   </div>
 </li>
 <li class="nav-item">
@@ -77,8 +77,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Overview of noaastormevents</h1>
-                        <h4 data-toc-skip class="author">Brooke Anderson
-and Ziyu Chen</h4>
+                        <h4 data-toc-skip class="author">Brooke
+Anderson, Ziyu Chen, and Jordan Robinson</h4>
             
             <h4 data-toc-skip class="date">2023-08-08</h4>
       
@@ -111,7 +111,7 @@ with location details) available per year.</p>
 package uses regular expressions to search the listings of available
 files to identify the filename for a queried year and download that
 year’s data to a user’s R session. The package functions then filter the
-downloaded storm event listings based to the dates, locations, event
+downloaded storm event listings based on the dates, locations, event
 types, and other search limitations specified by the user. In
 particular, this package can be used to identify storm event listings
 that were close in location and time to Atlantic basin tropical storm
@@ -134,10 +134,10 @@ county. For these observations, the package functions attempts to match
 the observation with the appropriate county. However, there are some
 events listed by forecast zone that cannot be matched to county, and so
 are excluded from results returned by this package. Further, there may
-be occasional errors in this matching, so we include a marker returned
-datasets indicating which events were listed by forecast zone rather
-than county, to allow further quality control checks by the user for his
-or her specific applications of the package.</p>
+be occasional errors in this matching, so we include a marker in
+returned datasets indicating which events were listed by forecast zone
+rather than county, to allow further quality control checks by the user
+for their specific applications of the package.</p>
 <p>The <code>noaastormevents</code> package includes options that allow
 users to find events based on proximity to a tropical storm. To use this
 functionality, the user must have the <code>hurricaneexposuredata</code>
@@ -173,7 +173,7 @@ especially from flooding):</p>
 <code class="sourceCode R"><span><span class="va">sept_1999_events</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_events.html">find_events</a></span><span class="op">(</span>date_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1999-09-14"</span>, <span class="st">"1999-09-18"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">sept_1999_events</span><span class="op">)</span></span></code></pre></div>
 <p>The code call returns a data frame with a subset of data from the
-Storm Events Database for 1999. Each event listing with a start data
+Storm Events Database for 1999. Each event listing with a start date
 between September 14 and 18 is included. The data frame has the
 following columns:</p>
 <ul>
@@ -217,61 +217,9 @@ the event was reported by forecast zone (<code>cz_type</code> of
 try to correctly match the area name to a county FIPS (see the “Details”
 vignette for more details on this process).</li>
 </ul>
-<p>In some cases, a user may wish to identify all storm events listings
-that were close in time and place to a tropical storm track, which can
-be done using the <code>storm</code> option of the
-<code>find_events</code> function. To do this, the package draws on data
-and functions in the packages <code>hurricaneexposure</code> (available
-on CRAN) and <code>hurricaneexposuredata</code> (available through a
-drat repository) to match storm event listings against tropical storm
-“best tracks” data through the <code>hurricaneexposuredata</code> and
-<code>hurricaneexposure</code> packages.</p>
-<p>Event listings are pulled for all events that occurred within a
-five-day window of the day the storm was closest to each county and that
-were in counties within a user-specified distance of the storm track.
-For example, to create a dataset with all event listings for counties
-within 300 kilometers (<code>dist_limit</code> option) of the path of
-Hurricane Floyd (<code>storm = "Floyd-1999"</code>) for a five-day
-window of the storm’s closest approach to each county, the user can
-run:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">floyd_events</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_events.html">find_events</a></span><span class="op">(</span>storm <span class="op">=</span> <span class="st">"Floyd-1999"</span>, dist_limit <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">floyd_events</span><span class="op">)</span></span></code></pre></div>
-<p>Note that the storm ID includes a storm name (“Floyd”) and year
-(“1999”). Both must be specified, as storm names are not retired until
-they are used for a very severe storm. This functionality will only work
-for storms included in the <code>hurricaneexposuredata</code> package.
-These currently include:</p>
-<p>Once <code>find_events</code> has been used to create a dataset of
-storm event listings, the dataset can be explored. The user can do
-things like determine the number of events of each type that occurred
-near in time and location to a storm’s track. For example, here is a
-summary of numbers of different types of events for Hurricane Floyd,
-created using <code>dplyr</code> tools:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span><span class="va">floyd_events</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">event_type</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span>col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Event type"</span>, <span class="st">"Number of events"</span><span class="op">)</span>,</span>
-<span>               caption <span class="op">=</span> <span class="st">"NOAA Storm Events within 200 km and within a 5-day window of Hurricane Floyd."</span><span class="op">)</span></span></code></pre></div>
-<p>Similarly, you could create a summary with the states in which the
-most events were listed and give the number and type of events in each
-of those counties:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">floyd_events</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">state</span>, <span class="va">event_type</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">state</span>, <span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>event_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">event_type</span>, <span class="st">" ("</span>, <span class="va">n</span>, <span class="st">")"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">state</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>Total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>,</span>
-<span>            Events <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">event_type</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">Total</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>There are several ways that you can customize the use of the
+<code>find_events</code> function. For more details, see the article on
+“Finding Events”.</p>
 </div>
 <div class="section level2">
 <h2 id="mapping-storm-events">Mapping storm events<a class="anchor" aria-label="anchor" href="#mapping-storm-events"></a>
@@ -312,73 +260,20 @@ to map. While the function allows mapping indirect injuries and deaths,
 in practice is seems these are rarely listed in recent Storm Events
 data, so these may not create informative maps.</p>
 <p>The <code>map_events</code> function inputs a dataframe as created by
-<code>find_events</code>. For example, which counties had events listed
-that started between September 14 and 18, 2009, you can run:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code>find_events</code>. For example, to map which counties had events
+listed that started between September 14 and 18, 2009, you can run:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">event_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_events.html">find_events</a></span><span class="op">(</span>date_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1999-09-14"</span>, <span class="st">"1999-09-18"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/map_events.html">map_events</a></span><span class="op">(</span><span class="va">event_data</span><span class="op">)</span></span></code></pre></div>
-<p>Because the first argument of <code>map_events</code> is a dataframe,
-you can also use the pipe operator (<code>%&gt;%</code>) to pipe the
-results of a call to <code>find_events</code> directly into
-<code>map_events</code>, as shown in the next example.</p>
-<p>The <code>map_events</code> function includes a <code>states</code>
-option, to allow the user to limit the map to a subset of states (only
-states in the continental US can be included). This option also allows
-the inputs of “east” (the default, maps only states in the eastern half
-of the United States) and “all” (maps all states in the continental US).
-To create a map of all events within 300 km of the track of Hurricane
-Floyd with start dates in a five-day window of the storm’s closest date
-to each county, and to map all continental states, you can run:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">floyd_events</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_events.html">find_events</a></span><span class="op">(</span>storm <span class="op">=</span> <span class="st">"Floyd-1999"</span>, dist_limit <span class="op">=</span> <span class="fl">300</span><span class="op">)</span> </span>
-<span><span class="va">floyd_events</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="../reference/map_events.html">map_events</a></span><span class="op">(</span>states <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span></span></code></pre></div>
-<p>If you instead would like to limit the map to states along the East
-Coast and plot the number of reported events per county, you could
-instead run:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">floyd_events</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="../reference/map_events.html">map_events</a></span><span class="op">(</span>plot_type <span class="op">=</span> <span class="st">"number of events"</span>,</span>
-<span>             states <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"florida"</span>, <span class="st">"georgia"</span>, <span class="st">"south carolina"</span>, <span class="st">"north carolina"</span>,</span>
-<span>                        <span class="st">"virginia"</span>, <span class="st">"maryland"</span>, <span class="st">"delaware"</span>, <span class="st">"pennsylvania"</span>,</span>
-<span>                        <span class="st">"new jersey"</span>, <span class="st">"new york"</span>, <span class="st">"connecticut"</span>, <span class="st">"rhode island"</span>,</span>
-<span>                        <span class="st">"massachusetts"</span>, <span class="st">"vermont"</span>, <span class="st">"new hampshire"</span>, <span class="st">"maine"</span>, </span>
-<span>                        <span class="st">"west virginia"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>The maps for crop and property damage use a logarithmic scale, which
-typically shows differences in these measurements better than an
-untransformed scale. For example, here is the call and resulting map to
-map crop damage associated with Hurricane Floyd in North Carolina,
-Virginia, and Maryland:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">floyd_events</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>   </span>
-<span>  <span class="fu"><a href="../reference/map_events.html">map_events</a></span><span class="op">(</span>plot_type <span class="op">=</span> <span class="st">"crop damage"</span>,</span>
-<span>             states <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"north carolina"</span>, <span class="st">"virginia"</span>, <span class="st">"maryland"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Property damage can be mapped in a similar way:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">floyd_events</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="../reference/map_events.html">map_events</a></span><span class="op">(</span>plot_type <span class="op">=</span> <span class="st">"property damage"</span>,</span>
-<span>             states <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"florida"</span>, <span class="st">"georgia"</span>, <span class="st">"south carolina"</span>, <span class="st">"north carolina"</span>,</span>
-<span>                        <span class="st">"virginia"</span>, <span class="st">"maryland"</span>, <span class="st">"delaware"</span>, <span class="st">"pennsylvania"</span>,</span>
-<span>                        <span class="st">"new jersey"</span>, <span class="st">"new york"</span>, <span class="st">"connecticut"</span>, <span class="st">"rhode island"</span>,</span>
-<span>                        <span class="st">"massachusetts"</span>, <span class="st">"vermont"</span>, <span class="st">"new hampshire"</span>, <span class="st">"maine"</span>, </span>
-<span>                        <span class="st">"west virginia"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>The track of a tropical storm can be added to a map by specifying the
-name of the storm with the <code>storm</code> argument and setting
-<code>add_tracks</code> to <code>TRUE</code>. For example, the track of
-Hurricane Floyd can be added to a map of crop damage in North Carolina,
-Virginia, and Maryland from the example dataframe with the call:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">floyd_events</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>   </span>
-<span>  <span class="fu"><a href="../reference/map_events.html">map_events</a></span><span class="op">(</span>plot_type <span class="op">=</span> <span class="st">"crop damage"</span>,</span>
-<span>             states <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"north carolina"</span>, <span class="st">"virginia"</span>, <span class="st">"maryland"</span><span class="op">)</span>,</span>
-<span>             storm <span class="op">=</span> <span class="st">"Floyd-1999"</span>, add_tracks <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>There are many ways you can customize the use of this function. For
+more details on how to use the <code>map_events</code> function, see the
+article on “Finding Events”.</p>
 </div>
 <div class="section level2">
 <h2 id="find-out-more">Find out more<a class="anchor" aria-label="anchor" href="#find-out-more"></a>
 </h2>
 <p>There are many more details describing how this package works, as
-well as details on the Storm Events data, in the “Details” vignette that
-also comes with this package.</p>
+well as details on the Storm Events data, in the “Details” article.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
@@ -388,7 +283,7 @@ also comes with this package.</p>
 
     <footer><div class="pkgdown-footer-left">
   <p></p>
-<p>Developed by Brooke Anderson, Ziyu Chen, Therese Kondash.</p>
+<p>Developed by Brooke Anderson, Ziyu Chen, Therese Kondash, Jordan Robinson.</p>
 </div>
 
 <div class="pkgdown-footer-right">
