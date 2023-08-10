@@ -142,10 +142,11 @@ library(hurricaneexposure)
 hurr_tracks %>%
         select(storm_id) %>%
         distinct() %>%
-        separate(storm_id, into = c("storm_name", "Year"), sep = "-") %>%
+        separate_wider_regex(storm_id, 
+                             c(storm_name = ".*", "-",
+                               Year = ".*")) %>%
         group_by(Year) %>%
         summarize(Storms = paste(storm_name, collapse = ", ")) %>% 
-        as.data.frame() %>% 
         pander::pander(justify = "cl", split.cells = c("20%","80%"))
 ```
 
