@@ -818,9 +818,9 @@ a <- county_damage_2015 %>%
   summarize(n_events = n(),
             average_amount = mean(total_amount),
             max_amount = max(total_amount),
-            range_amount = diff(range(total_amount))) %>%
+            range_amount = diff(range(total_amount)), 
+            .groups = "drop") %>%
   filter(!is.na(max_amount) & max_amount > 0 & n_events > 1) %>% 
-  ungroup() %>%
   mutate(zero_range = range_amount == 0) %>%
   group_by(zero_range) %>%
   count()
@@ -904,7 +904,7 @@ county_damage_2015 %>%
 
 The following figure shows the top 50 episodes in terms of damages (property and crop damage combined) in 2015:
 
-```{r fig.height = 10, fig.width = 7, fig.align = "center", echo = FALSE}
+```{r fig.height = 10, fig.width = 7, fig.align = "center", echo = FALSE, message = FALSE, warning = FALSE}
 library(maps)
 data(state.fips)
 ex <- county_events_2015 %>% 
