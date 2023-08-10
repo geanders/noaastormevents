@@ -73,7 +73,7 @@ The code call returns a data frame with a subset of data from the Storm Events D
 - `fips`: Five-digit county (Federal Information Processing Standard) FIPS code. This code uniquely identifies each U.S. county. If the event was reported by forecast zone (`cz_type` of `Z`), code within the package has used regular expressions to try to correctly match the area name to a county FIPS (see the "Details" vignette for more details on this process).
 
 There are several ways that you can customize the use of the `find_events`
-function. For more details, see the article on "Finding Events".
+function. For more details, see the article on ["Finding Events"](http://geanders.github.io/noaastormevents/articles/find_events.html).
 
 ## Mapping storm events
 
@@ -100,8 +100,8 @@ map_events(event_data)
 ```
 
 There are many ways you can customize the use of this function. For more details
-on how to use the `map_events` function, see the article on "Finding Events".
+on how to use the `map_events` function, see the article on ["Mapping Events"](http://geanders.github.io/noaastormevents/articles/map_events.html).
 
 ## Find out more
 
-There are many more details describing how this package works, as well as details on the Storm Events data, in the "Details" article. 
+There are many more details describing how this package works, as well as details on the Storm Events data, in the ["Details" article](http://geanders.github.io/noaastormevents/articles/details.html). 

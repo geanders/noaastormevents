@@ -136,8 +136,8 @@ columns:
   details on this process).
 
 There are several ways that you can customize the use of the
-`find_events` function. For more details, see the article on “Finding
-Events”.
+`find_events` function. For more details, see the article on [“Finding
+Events”](http://geanders.github.io/noaastormevents/articles/find_events.html).
 
 ## Mapping storm events
 
@@ -188,7 +188,8 @@ map_events(event_data)
 
 There are many ways you can customize the use of this function. For more
 details on how to use the `map_events` function, see the article on
-“Finding Events”.
+[“Mapping
+Events”](http://geanders.github.io/noaastormevents/articles/map_events.html).
 
 ## Find out more
 
