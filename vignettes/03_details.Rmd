@@ -311,7 +311,7 @@ b <- events_2015 %>%
   ungroup() %>%
   filter(n_events >= 50) %>%
   group_by(EPISODE_ID, EVENT_TYPE) %>%
-  summarize(n = n()) %>%
+  summarize(n = n(), .groups = "drop") %>%
   ungroup() %>%
   spread(key = EPISODE_ID, value = n, fill = 0) %>%
   tibble::remove_rownames() %>%
@@ -331,7 +331,7 @@ events_2015 %>%
   ungroup() %>%
   filter(n_events >= 100) %>%
   group_by(EPISODE_ID, EVENT_TYPE) %>%
-  summarize(n = n()) %>%
+  summarize(n = n(), .groups = "drop") %>%
   ungroup() %>%
   mutate(EPISODE_ID = factor(EPISODE_ID),
          EVENT_TYPE = factor(EVENT_TYPE, levels = unique(b$labels[b$order]))) %>%
@@ -492,7 +492,8 @@ events_2015 %>%
   geom_polygon(data = map_data("state", region = "arkansas"),
                aes(x = long, y = lat, group = group),
                    color = "black", fill = NA) + 
-  geom_segment(aes(xend = END_LON, yend = END_LAT), color = "red", size = 1) + 
+  geom_segment(aes(xend = END_LON, yend = END_LAT), 
+               color = "red", linewidth = 1) + 
   theme_void() + 
   coord_map() + 
   facet_wrap(~ EVENT_TYPE, ncol = 3)
