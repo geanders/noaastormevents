@@ -13,3 +13,5 @@
 ^cran-comments\.md$
 ^doc$
 ^Meta$
+^docs$
+^_pkgdown\.yml$
