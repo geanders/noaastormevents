@@ -33,6 +33,7 @@ library(tibble)
 library(tidyr)
 library(viridis)
 library(magrittr)
+library(rvest)
 
 library(noaastormevents)
 ```
@@ -59,9 +60,15 @@ url <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
                 "stormevents/csvfiles/")
 times_translation <- tibble(times = c("K", "M", "G"),
                             times_num = c(10^3, 10^6, 10^9))
-htmltab::htmltab(doc = url, which = 1, rm_nodata_cols = FALSE) %>%
+
+
+storm_file_page <- read_html(url)
+storm_file_page %>% 
+  html_node("table") %>% 
+  html_table(fill = TRUE) %>%
   select(Name, Size) %>%
-  filter(!(Size %in% "-")) %>%
+  filter(!(Size %in% c("", "-"))) %>% 
+  filter(!str_detect(Name, "\\.pdf")) %>%
   mutate(file_type = str_extract(Name, ".*?-ftp"),
          file_type = str_replace(file_type, "StormEvents_", ""),
          file_type = str_replace(file_type, "-ftp", ""),
