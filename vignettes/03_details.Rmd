@@ -273,7 +273,7 @@ top_episodes <- events_2015 %>%
 a <- events_2015 %>%
   filter(EPISODE_ID %in% top_episodes$EPISODE_ID) %>%
   group_by(EPISODE_ID, EVENT_TYPE) %>%
-  summarize(n = n()) %>%
+  summarize(n = n(), .groups = "drop") %>%
   ungroup() %>%
   spread(key = EPISODE_ID, value = n, fill = 0) %>%
   tibble::remove_rownames() %>%
@@ -287,7 +287,7 @@ a <- events_2015 %>%
 events_2015 %>%
   filter(EPISODE_ID %in% top_episodes$EPISODE_ID) %>%
   group_by(EPISODE_ID, EVENT_TYPE) %>%
-  summarize(n = n()) %>%
+  summarize(n = n(), .groups = "drop") %>%
   ungroup() %>%
   mutate(EPISODE_ID = factor(EPISODE_ID, levels = unique(top_episodes$EPISODE_ID)),
          EVENT_TYPE = factor(EVENT_TYPE, levels = unique(a$labels[a$order]))) %>%
