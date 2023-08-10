@@ -29,6 +29,7 @@ library(stringr)
 library(lubridate)
 library(forcats)
 library(dplyr)
+library(tibble)
 library(tidyr)
 library(viridis)
 library(magrittr)
@@ -56,8 +57,8 @@ The size of all three file types has increased with time (see figure below; note
 ```{r echo = FALSE, fig.width = 6, fig.height = 4, fig.align = "center"}
 url <- paste0("http://www1.ncdc.noaa.gov/pub/data/swdi/",
                 "stormevents/csvfiles/")
-times_translation <- data_frame(times = c("K", "M", "G"),
-                                times_num = c(10^3, 10^6, 10^9))
+times_translation <- tibble(times = c("K", "M", "G"),
+                            times_num = c(10^3, 10^6, 10^9))
 htmltab::htmltab(doc = url, which = 1, rm_nodata_cols = FALSE) %>%
   select(Name, Size) %>%
   filter(!(Size %in% "-")) %>%
