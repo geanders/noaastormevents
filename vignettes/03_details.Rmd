@@ -274,7 +274,6 @@ a <- events_2015 %>%
   filter(EPISODE_ID %in% top_episodes$EPISODE_ID) %>%
   group_by(EPISODE_ID, EVENT_TYPE) %>%
   summarize(n = n(), .groups = "drop") %>%
-  ungroup() %>%
   spread(key = EPISODE_ID, value = n, fill = 0) %>%
   tibble::remove_rownames() %>%
   as.data.frame() %>%
@@ -288,7 +287,6 @@ events_2015 %>%
   filter(EPISODE_ID %in% top_episodes$EPISODE_ID) %>%
   group_by(EPISODE_ID, EVENT_TYPE) %>%
   summarize(n = n(), .groups = "drop") %>%
-  ungroup() %>%
   mutate(EPISODE_ID = factor(EPISODE_ID, levels = unique(top_episodes$EPISODE_ID)),
          EVENT_TYPE = factor(EVENT_TYPE, levels = unique(a$labels[a$order]))) %>%
   ggplot(aes(x = EPISODE_ID, y = EVENT_TYPE)) + 
@@ -312,7 +310,6 @@ b <- events_2015 %>%
   filter(n_events >= 50) %>%
   group_by(EPISODE_ID, EVENT_TYPE) %>%
   summarize(n = n(), .groups = "drop") %>%
-  ungroup() %>%
   spread(key = EPISODE_ID, value = n, fill = 0) %>%
   tibble::remove_rownames() %>%
   as.data.frame() %>%
@@ -332,7 +329,6 @@ events_2015 %>%
   filter(n_events >= 100) %>%
   group_by(EPISODE_ID, EVENT_TYPE) %>%
   summarize(n = n(), .groups = "drop") %>%
-  ungroup() %>%
   mutate(EPISODE_ID = factor(EPISODE_ID),
          EVENT_TYPE = factor(EVENT_TYPE, levels = unique(b$labels[b$order]))) %>%
   ggplot(aes(x = EVENT_TYPE, y = EPISODE_ID)) + 
@@ -504,8 +500,7 @@ Some events are reported by forecast zone (`CZTYPE` of "Z") rather than county (
 ```{r echo = FALSE}
 events_2015 %>%
   group_by(CZ_TYPE, EVENT_TYPE) %>%
-  summarize(n_events = n()) %>%
-  ungroup() %>%
+  summarize(n_events = n(), .groups = "drop") %>%
   spread(key = CZ_TYPE, value = n_events, fill = 0) %>%
   mutate(total = C + Z,
          perc_county = 100 * C / total) %>%
