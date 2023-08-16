@@ -42,7 +42,7 @@ Imports:
     tidyr (>= 1.1.1),
     viridis (>= 0.5.1),
     XML (>= 3.99-0.3)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Depends:
     R (>= 3.5)
 Suggests: 
