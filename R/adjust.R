@@ -219,12 +219,8 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 #'
 #' @export
 match_forecast_county <- function(storm_data_z){
-  # Use the data `county.fips` to get county FIPS codes
-  utils::data(county.fips, package = "maps")
-  county.fips <- county.fips %>%
-    tidyr::separate("polyname", c("state", "cz_name"), sep = ",") %>%
-    dplyr::mutate(cz_name = stringr::str_replace(.data$cz_name, ":.+", "")) %>%
-    dplyr::distinct()
+
+  utils::data(county.fips)
 
   small_data <- storm_data_z %>%
     tibble::as_tibble() %>%
@@ -233,19 +229,20 @@ match_forecast_county <- function(storm_data_z){
                                     "LAKE HURON", "LAKE ST CLAIR", "AMERICAN SAMOA",
                                     "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN",
                                     "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
-                                    "LAKE ONTARIO", "VIRGIN ISLANDS", "HAWAII", "ALASKA"))) %>%
+                                    "LAKE ONTARIO", "VIRGIN ISLANDS"))) %>%
     dplyr::mutate(state = stringr::str_to_lower(.data$state),
                    cz_name = stringr::str_to_lower(.data$cz_name),
                    cz_name = stringr::str_replace_all(.data$cz_name, "[.'``]", ""))
 
   # First, try to match `cz_name` to county name in `county.fips`
   a <- small_data %>%
-    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
-    dplyr::mutate(fips = ifelse(.data$state == "district of columbia", 11001, .data$fips),
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
+    dplyr::mutate(#fips = ifelse(.data$state == "district of columbia", 11001, .data$fips),
                   fips = ifelse(.data$state == "virginia" & .data$cz_name == "chesapeake",
-                                51550, .data$fips),
-                  fips = ifelse(.data$state == "alabama" & .data$cz_name == "dekalb",
-                                1049, .data$fips)) %>%
+                                51550, .data$fips)
+                  # fips = ifelse(.data$state == "alabama" & .data$cz_name == "dekalb",
+                  #               1049, .data$fips)
+                  ) %>%
     dplyr::filter(!is.na(.data$fips)) %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% a$event_id))
@@ -257,7 +254,7 @@ match_forecast_county <- function(storm_data_z){
     dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
                                                "([a-z]*+)\\s(county|cnty)")[ , 2]) %>%
     dplyr::filter(!is.na(.data$cz_name)) %>%
-    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
     dplyr::filter(!is.na(.data$fips))  %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% b$event_id))
@@ -266,7 +263,7 @@ match_forecast_county <- function(storm_data_z){
     dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
                                                "([a-z]*+\\s[a-z]*+)\\scounty")[ , 2]) %>%
     dplyr::filter(!is.na(.data$cz_name)) %>%
-    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
     dplyr::filter(!is.na(.data$fips))  %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% c$event_id))
@@ -275,7 +272,7 @@ match_forecast_county <- function(storm_data_z){
     dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
                                                "([a-z]*+)\\scounties")[ , 2]) %>%
     dplyr::filter(!is.na(.data$cz_name)) %>%
-    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
     dplyr::filter(!is.na(.data$fips))  %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% d$event_id))
@@ -284,7 +281,7 @@ match_forecast_county <- function(storm_data_z){
     dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
                                                "([a-z]*+\\s[a-z]*+)\\scounties")[ , 2]) %>%
     dplyr::filter(!is.na(.data$cz_name)) %>%
-    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
     dplyr::filter(!is.na(.data$fips))  %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% e$event_id))
@@ -293,7 +290,7 @@ match_forecast_county <- function(storm_data_z){
   # in `county.fips`. The check the last two words in `cz_name`.
   f <- small_data %>%
     dplyr::mutate(cz_name = stringr::str_match(.data$cz_name, "[a-z]*+$")[ , 1]) %>%
-    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
     dplyr::filter(!is.na(.data$fips))  %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% f$event_id))
@@ -301,7 +298,7 @@ match_forecast_county <- function(storm_data_z){
   g <- small_data %>%
     dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
                                                "[a-z]*+\\s[a-z]*+$")[ , 1]) %>%
-    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
     dplyr::filter(!is.na(.data$fips))  %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% g$event_id))
@@ -309,7 +306,7 @@ match_forecast_county <- function(storm_data_z){
   h <- small_data %>%
     dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
                                                "[a-z]*+\\s[a-z]*+\\s[a-z]*+$")[ , 1]) %>%
-    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
     dplyr::filter(!is.na(.data$fips))  %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% h$event_id))
@@ -318,19 +315,34 @@ match_forecast_county <- function(storm_data_z){
   # Then try removing anything in parentheses in `cz_name` before matching.
   i <- small_data %>%
     dplyr::mutate(cz_name = stringr::str_match(.data$cz_name, "^([a-z]*+)/")[ , 2]) %>%
-    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
     dplyr::filter(!is.na(.data$fips))  %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% i$event_id))
 
   j <- small_data %>%
     dplyr::mutate(cz_name = stringr::str_replace(.data$cz_name, "\\s\\(.+", "")) %>%
-    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
     dplyr::filter(!is.na(.data$fips))  %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% j$event_id))
 
-  matched_data <- dplyr::bind_rows(a, b, c, d, e, f, g, h, i, j) %>%
+  # Match Hawaii FIPS Codes by detecting county names found in county.fips dataset
+  k <- small_data %>%
+    dplyr::filter(state == "hawaii") %>%
+    dplyr::mutate(cz_name = ifelse(stringr::str_detect(.data$cz_name, "maui"), "maui", .data$cz_name),
+                  cz_name = ifelse(stringr::str_detect(.data$cz_name, "oahu|waianae"), "honolulu", .data$cz_name),
+                  cz_name = ifelse(stringr::str_detect(.data$cz_name,
+                                                        "kahoolawe|lanai|leeward haleakala|molokai|windward haleakala"),
+                                                        "maui", .data$cz_name),
+                  cz_name = ifelse(stringr::str_detect(.data$cz_name, "kona"), "hawaii", .data$cz_name),
+                  cz_name = ifelse(stringr::str_detect(.data$cz_name, "niihau"), "kauai", .data$cz_name)) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% k$event_id))
+
+  matched_data <- dplyr::bind_rows(a, b, c, d, e, f, g, h, i, j, k) %>%
     dplyr::mutate(fips = ifelse(.data$fips == 49049, NA, .data$fips)) # Utah County, Utah is getting wrong matches
 
   storm_data_z <- storm_data_z %>%

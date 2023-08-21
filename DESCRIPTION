@@ -9,7 +9,7 @@ Authors@R: c(person("Brooke", "Anderson",
     person("Therese", "Kondash",
     email = "theresekondash@gmail.com", role = "aut"), 
     person("Jordan", "Robinson", 
-    email = "", role = "aut"))
+    email = "jordan227r@gmail.com", role = "aut"))
 Description: Allows users to explore and plot data from the
     National Oceanic and Atmospheric Administration (NOAA) 
     Storm Events database through R for United States counties. 
@@ -42,7 +42,7 @@ Imports:
     tidyr (>= 1.1.1),
     viridis (>= 0.5.1),
     XML (>= 3.99-0.3)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Depends:
     R (>= 3.5)
 Suggests: 
