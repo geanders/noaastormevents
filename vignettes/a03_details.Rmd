@@ -598,7 +598,7 @@ outside_events <- z_events_2015 %>%
                                     "LAKE HURON", "LAKE ST CLAIR", "AMERICAN SAMOA",
                                     "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN",
                                     "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
-                                    "LAKE ONTARIO", "VIRGIN ISLANDS", "HAWAII", "ALASKA")) %>%
+                                    "LAKE ONTARIO", "VIRGIN ISLANDS", "ALASKA")) %>%
   filter(is.na(fips)) 
 ```
 
