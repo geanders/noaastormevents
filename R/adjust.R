@@ -220,7 +220,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 #' @export
 match_forecast_county <- function(storm_data_z){
 
-  utils::data(county.fips)
+  county.fips <- utils::data(county.fips)
 
   small_data <- storm_data_z %>%
     tibble::as_tibble() %>%
@@ -231,8 +231,7 @@ match_forecast_county <- function(storm_data_z){
                                     "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
                                     "LAKE ONTARIO", "VIRGIN ISLANDS"))) %>%
     dplyr::mutate(state = stringr::str_to_lower(.data$state),
-                   cz_name = stringr::str_to_lower(.data$cz_name),
-                   cz_name = stringr::str_replace_all(.data$cz_name, "[.'``]", ""))
+                   cz_name = stringr::str_to_lower(.data$cz_name))
 
   # First, try to match `cz_name` to county name in `county.fips`
   a <- small_data %>%
@@ -328,6 +327,7 @@ match_forecast_county <- function(storm_data_z){
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% j$event_id))
 
   # Match Hawaii FIPS Codes by detecting county names found in county.fips dataset
+  if(sum(small_data$state=="hawaii")>0){
   k <- small_data %>%
     dplyr::filter(state == "hawaii") %>%
     dplyr::mutate(cz_name = ifelse(stringr::str_detect(.data$cz_name, "maui"), "maui", .data$cz_name),
@@ -341,6 +341,9 @@ match_forecast_county <- function(storm_data_z){
     dplyr::filter(!is.na(.data$fips))  %>%
     dplyr::select("event_id", "fips")
   small_data <- dplyr::filter(small_data, !(.data$event_id %in% k$event_id))
+  }else{
+    k=data.frame()
+  }
 
   matched_data <- dplyr::bind_rows(a, b, c, d, e, f, g, h, i, j, k) %>%
     dplyr::mutate(fips = ifelse(.data$fips == 49049, NA, .data$fips)) # Utah County, Utah is getting wrong matches
