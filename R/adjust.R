@@ -173,7 +173,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 #'    from the \code{stringr} package.
 #'
 #' @examples
-#' counties_to_parse <- dplyr::data_frame(
+#' counties_to_parse <- dplyr::tibble(
 #'            event_id = c(1:19),
 #'            cz_name = c("Suffolk",
 #'                        "Eastern Greenbrier",
