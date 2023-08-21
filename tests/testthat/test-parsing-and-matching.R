@@ -32,7 +32,7 @@ test_that("matching cz_names to county names to get FIPS for events listed by fo
                                   NA  # Yellowstone National Park should not match anything
                                )
 
-            counties_to_parse <- dplyr::data_frame(event_id = c(1:19),
+            counties_to_parse <- dplyr::tibble(event_id = c(1:19),
                       cz_name = c("Suffolk", # Should match city in Virginia to a county FIPS
                                   "Eastern Greenbrier", # Should match with qualifier ("Eastern")
                                   "Ventura County Mountains", # Should match word before "County"
