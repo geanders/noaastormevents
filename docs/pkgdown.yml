@@ -2,9 +2,9 @@ pandoc: 3.1.1
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
-  01_find_events: 01_find_events.html
-  02_map_events: 02_map_events.html
-  03_details: 03_details.html
+  a01_find_events: a01_find_events.html
+  a02_map_events: a02_map_events.html
+  a03_details: a03_details.html
   noaastormevents: noaastormevents.html
-last_built: 2023-08-10T16:02Z
+last_built: 2023-08-10T16:34Z
 
