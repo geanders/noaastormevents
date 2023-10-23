@@ -127,7 +127,7 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
   return(storm_data)
 }
 
-#' Match events by forecast zone to county
+#' Match events by forecast zone to county, OLD Function
 #'
 #' For events reported by forecast zone, use regular expressions to match
 #' as many as possible to counties.
@@ -149,28 +149,18 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 #' @note This function does not provide any matches for events outside
 #'    of the continental U.S.
 #'
-#' @details This function tries to match the \code{cz_name} of each event to
-#'    a state and county name from the \code{county.fips} dataframe that comes
-#'    with the \code{maps} package. The following steps are taken to try to
-#'    match each \code{cz_name} to a state and county name from \code{county.fips}:
+#' @details This function tries to join storm event data with FIPS data provided by
+#'    the NOAA Forecast Zone Data set. The following steps are taken to join \code{eventid}
+#'    to at least one \code{FIPS}:
 #'    \enumerate{
-#'      \item Tries to match \code{cz_name} to the county name in \code{county.fips}
-#'        after removing any periods or apostrophes in \code{cz_name}.
-#'      \item Next, for county names with "county" in them, try to match the word before
-#'         "county" to county name in \code{county.fips}. Then check the two words before
-#'         "county", then the one and two words before "counties".
-#'      \item Next, pull out the last word in \code{cz_name} and try to match it to the county
-#'         name in \code{county.fips}. The check the last two words in \code{cz_name}, then check
-#'         the last three words in \code{cz_name}.
-#'      \item Next, pull any words right before a slash and check that against the county name.
-#'      \item Finally, try removing anything in parentheses in \code{cz_name} before matching.
+#'     "cz_fips" = "ZONE"
+#'      \item Tries to match \code{cz_fips} to \code{ZONE} in \code{forecast_zone_data}.
+#'      \item Next, match \code{cz_name} to \code{cz_name} in \code{forecast_zone_data}.
 #'    }
 #'
-#' @note You may want to hand-check that event listings with names like "Lake", "Mountain", and
-#'    "Park" have not been unintentionally linked to a county like "Lake County". While such
-#'    examples seem rare in the example data used to develop this function (NOAA Storm Events
-#'    for 2015), it can sometimes happen. To do so, you can use the \code{str_detect} function
-#'    from the \code{stringr} package.
+#' @note An older version of this function is provided with \code{old_match_forecast_county} that uses
+#'    string patterns to join county FIPS codes. This old version may be better for older storm event data.
+#'    It is recommended to try both and see which version produces better results.
 #'
 #' @examples
 #' counties_to_parse <- dplyr::tibble(
@@ -220,16 +210,17 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 #' @export
 match_forecast_county <- function(storm_data_z){
 
-
+  # Use the data `forecast_zone_data` to get county FIPS codes
   utils::data(forecast_zone_data)
 
   forecast_zone_data <- forecast_zone_data %>%
     dplyr::mutate(cz_name = stringr::str_to_lower(.data$NAME),
-                  state_code = as.integer(stringr::str_extract(FIPS, ".{1,2}(?=[:digit:]{3})")))
+                  state_code = as.integer(stringr::str_extract(FIPS, ".{1,2}(?=[:digit:]{3})"))) %>%
+    dplyr::mutate(forecastfips = paste0(state_code,ZONE))
 
   small_data <- storm_data_z %>%
     tibble::as_tibble() %>%
-    dplyr::select("event_id", "state", "cz_name", "state_fips") %>%
+    dplyr::select("event_id", "state", "cz_name", "state_fips", "cz_fips") %>%
     dplyr::filter(!(.data$state %in% c("GULF OF MEXICO", "GUAM", "ATLANTIC NORTH",
                                        "LAKE HURON", "LAKE ST CLAIR", "AMERICAN SAMOA",
                                        "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN",
@@ -238,135 +229,253 @@ match_forecast_county <- function(storm_data_z){
     dplyr::mutate(state = stringr::str_to_lower(.data$state),
                   cz_name = stringr::str_to_lower(.data$cz_name))
 
-  # First, try to match `cz_name` to county name in `county.fips`
-  # a <- small_data %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::mutate(#fips = ifelse(.data$state == "district of columbia", 11001, .data$fips),
-  #                 fips = ifelse(.data$state == "virginia" & .data$cz_name == "chesapeake",
-  #                               51550, .data$fips)
-  #                 # fips = ifelse(.data$state == "alabama" & .data$cz_name == "dekalb",
-  #                 #               1049, .data$fips)
-  #                 ) %>%
-  #   dplyr::filter(!is.na(.data$fips)) %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% a$event_id))
-  #
-  # # Next, for county names with 'county' in them, try to match the word before 'county'
-  # # to county name in `county.fips`. Then check the two words before 'county', then the
-  # # one and two words before 'counties'
-  # b <- small_data %>%
-  #   dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
-  #                                              "([a-z]*+)\\s(county|cnty)")[ , 2]) %>%
-  #   dplyr::filter(!is.na(.data$cz_name)) %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::filter(!is.na(.data$fips))  %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% b$event_id))
-  #
-  # c <- small_data %>%
-  #   dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
-  #                                              "([a-z]*+\\s[a-z]*+)\\scounty")[ , 2]) %>%
-  #   dplyr::filter(!is.na(.data$cz_name)) %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::filter(!is.na(.data$fips))  %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% c$event_id))
-  #
-  # d <- small_data %>%
-  #   dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
-  #                                              "([a-z]*+)\\scounties")[ , 2]) %>%
-  #   dplyr::filter(!is.na(.data$cz_name)) %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::filter(!is.na(.data$fips))  %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% d$event_id))
-  #
-  # e <- small_data %>%
-  #   dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
-  #                                              "([a-z]*+\\s[a-z]*+)\\scounties")[ , 2]) %>%
-  #   dplyr::filter(!is.na(.data$cz_name)) %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::filter(!is.na(.data$fips))  %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% e$event_id))
-  #
-  # # Next, pull out the last word in `cz_name` and try to match it to the county name
-  # # in `county.fips`. The check the last two words in `cz_name`.
-  # f <- small_data %>%
-  #   dplyr::mutate(cz_name = stringr::str_match(.data$cz_name, "[a-z]*+$")[ , 1]) %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::filter(!is.na(.data$fips))  %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% f$event_id))
-  #
-  # g <- small_data %>%
-  #   dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
-  #                                              "[a-z]*+\\s[a-z]*+$")[ , 1]) %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::filter(!is.na(.data$fips))  %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% g$event_id))
-  #
-  # h <- small_data %>%
-  #   dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
-  #                                              "[a-z]*+\\s[a-z]*+\\s[a-z]*+$")[ , 1]) %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::filter(!is.na(.data$fips))  %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% h$event_id))
-  #
-  # # Next, pull any words right before a slash and check that against the county name.
-  # # Then try removing anything in parentheses in `cz_name` before matching.
-  # i <- small_data %>%
-  #   dplyr::mutate(cz_name = stringr::str_match(.data$cz_name, "^([a-z]*+)/")[ , 2]) %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::filter(!is.na(.data$fips))  %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% i$event_id))
-  #
-  # j <- small_data %>%
-  #   dplyr::mutate(cz_name = stringr::str_replace(.data$cz_name, "\\s\\(.+", "")) %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::filter(!is.na(.data$fips))  %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% j$event_id))
-  #
-  # # Match Hawaii FIPS Codes by detecting county names found in county.fips dataset
-  # if(sum(small_data$state=="hawaii")>0){
-  # k <- small_data %>%
-  #   dplyr::filter(state == "hawaii") %>%
-  #   dplyr::mutate(cz_name = ifelse(stringr::str_detect(.data$cz_name, "maui"), "maui", .data$cz_name),
-  #                 cz_name = ifelse(stringr::str_detect(.data$cz_name, "oahu|waianae"), "honolulu", .data$cz_name),
-  #                 cz_name = ifelse(stringr::str_detect(.data$cz_name,
-  #                                                       "kahoolawe|lanai|leeward haleakala|molokai|windward haleakala"),
-  #                                                       "maui", .data$cz_name),
-  #                 cz_name = ifelse(stringr::str_detect(.data$cz_name, "kona"), "hawaii", .data$cz_name),
-  #                 cz_name = ifelse(stringr::str_detect(.data$cz_name, "niihau"), "kauai", .data$cz_name)) %>%
-  #   dplyr::left_join(county.fips, by = c("state", "cz_name"="county")) %>%
-  #   dplyr::filter(!is.na(.data$fips))  %>%
-  #   dplyr::select("event_id", "fips")
-  # small_data <- dplyr::filter(small_data, !(.data$event_id %in% k$event_id))
-  # }else{
-  #   k=data.frame()
-  # }
-  #
-  # matched_data <- dplyr::bind_rows(a, b, c, d, e, f, g, h, i, j, k) %>%
-  #   dplyr::mutate(fips = ifelse(.data$fips == 49049, NA, .data$fips)) # Utah County, Utah is getting wrong matches
-  #
-  # storm_data_z <- storm_data_z %>%
-  #   dplyr::left_join(matched_data, by = "event_id") %>%
-  #   dplyr::mutate(fips = ifelse(stringr::str_detect(stringr::str_to_lower(.data$cz_name),
-  #                                                      "national park"),
-  #                                  NA, .data$fips)) # Park County, Wyoming is getting wrong matches. Likely, this may happen in other states, as well.
+  # Join by forecast code
+  a <- small_data %>%
+    dplyr::left_join(forecast_zone_data %>%
+    dplyr::select(-c(cz_name)), by=c("state_fips" = "state_code", "cz_fips" = "ZONE")) %>%
+    # select(-c(cz_name.y)) %>%
+    dplyr::filter(!is.na(.data$NAME))
+  # look at what did have match, sample and make sure they properly match
+  small_data <- dplyr::filter(small_data, !.data$event_id %in% a$event_id)
 
-  test <- small_data %>%
-    dplyr::left_join(forecast_zone_data, by=c("cz_name" = "cz_name", "state_fips" = "state_code"))
 
-  test_small_data <- dplyr::filter(test, is.na(.data$FIPS))
+  #From remaining data, join by county name
+  b <- small_data %>%
+    dplyr::left_join(forecast_zone_data, by = c("state_fips" = "state_code", "cz_name" = "cz_name")) %>%
+    dplyr::filter(!is.na(.data$NAME))%>%
+    dplyr::select(-c(ZONE))
+  # do another spot check, look into why codes are different
+  small_data <- dplyr::filter(small_data, !.data$event_id %in% b$event_id)
 
-  return(storm_data_z)
+  completed_data <- dplyr::bind_rows(a,b) %>%
+    dplyr::select(-c(cz_name, state, state_fips, cz_fips))
+
+  storm_data_z <- storm_data_z %>%
+    dplyr::left_join(completed_data, by = "event_id")
+
   return(storm_data_z)
 }
+
+
+
+#' Match events by forecast zone to county, OLD Function
+#'
+#' For events reported by forecast zone, use regular expressions to match
+#' as many as possible to counties.
+#'
+#' @param storm_data_z A dataframe of storm events reported by forecast zone
+#'    (i.e., \code{cz_type == "Z"}) rather than county. This dataframe should
+#'    include the columns:
+#'    \itemize{
+#'      \item{\code{state}: }{State name, in lowercase}
+#'      \item{\code{cz_name}: }{Location name, in lowercase}
+#'      \item{\code{cz_fips}: }{Forecast zone FIPS}
+#'    }
+#'
+#' @return The dataframe of events input to the function, with county FIPS
+#'    added for events matched to a county in the \code{fips} column. Events
+#'    that could not be matched are kept in the dataframe, but the \code{fips}
+#'    code is set to \code{NA}.
+#'
+#' @note This function does not provide any matches for events outside
+#'    of the continental U.S.
+#'
+#' @details This function tries to match the \code{cz_name} of each event to
+#'    a state and county name from the \code{county.fips} dataframe that comes
+#'    with the \code{maps} package. The following steps are taken to try to
+#'    match each \code{cz_name} to a state and county name from \code{county.fips}:
+#'    \enumerate{
+#'      \item Tries to match \code{cz_name} to the county name in \code{county.fips}
+#'        after removing any periods or apostrophes in \code{cz_name}.
+#'      \item Next, for county names with "county" in them, try to match the word before
+#'         "county" to county name in \code{county.fips}. Then check the two words before
+#'         "county", then the one and two words before "counties".
+#'      \item Next, pull out the last word in \code{cz_name} and try to match it to the county
+#'         name in \code{county.fips}. The check the last two words in \code{cz_name}, then check
+#'         the last three words in \code{cz_name}.
+#'      \item Next, pull any words right before a slash and check that against the county name.
+#'      \item Finally, try removing anything in parentheses in \code{cz_name} before matching.
+#'    }
+#'
+#' @note A new version of this function is provided with \code{match_forecast_county} that uses
+#'    NOAA forecast zone data to join counties and zones by code. For new data, that approach
+#'    is more accurate and applicable. This version may be better for older storm event data.
+#'    You may want to hand-check that event listings with names like "Lake", "Mountain", and
+#'    "Park" have not been unintentionally linked to a county like "Lake County". While such
+#'    examples seem rare in the example data used to develop this function (NOAA Storm Events
+#'    for 2015), it can sometimes happen. To do so, you can use the \code{str_detect} function
+#'    from the \code{stringr} package.
+#'
+#' @examples
+#' counties_to_parse <- dplyr::tibble(
+#'            event_id = c(1:19),
+#'            cz_name = c("Suffolk",
+#'                        "Eastern Greenbrier",
+#'                        "Ventura County Mountains",
+#'                        "Central And Southeast Montgomery",
+#'                        "Western Cape May",
+#'                        "San Diego County Coastal Areas",
+#'                        "Blount/Smoky Mountains",
+#'                        "St. Mary's",
+#'                        "Central & Eastern Lake County",
+#'                        "Mountains Southwest Shasta County To Northern Lake County",
+#'                        "Kings (Brooklyn)",
+#'                        "Lower Bucks",
+#'                        "Central St. Louis",
+#'                        "Curry County Coast",
+#'                        "Lincoln County Except The Sheep Range",
+#'                        "Shasta Lake/North Shasta County",
+#'                        "Coastal Palm Beach County",
+#'                        "Larimer & Boulder Counties Between 6000 & 9000 Feet",
+#'                        "Yellowstone National Park"),
+#'           state = c("Virginia",
+#'                     "West Virginia",
+#'                     "California",
+#'                     "Maryland",
+#'                     "New Jersey",
+#'                     "California",
+#'                     "Tennessee",
+#'                     "Maryland",
+#'                     "Oregon",
+#'                     "California",
+#'                     "New York",
+#'                     "Pennsylvania",
+#'                     "Minnesota",
+#'                     "Oregon",
+#'                     "Nevada",
+#'                     "California",
+#'                     "Florida",
+#'                     "Colorado",
+#'                     "Wyoming"))
+#' old_match_forecast_county(counties_to_parse)
+#' @importFrom dplyr %>%
+#' @importFrom rlang .data
+#'
+#' @export
+old_match_forecast_county <- function(storm_data_z){
+  # Use the data `county.fips` to get county FIPS codes
+  utils::data(county.fips, package = "maps")
+  county.fips <- county.fips %>%
+    tidyr::separate("polyname", c("state", "cz_name"), sep = ",") %>%
+    dplyr::mutate(cz_name = stringr::str_replace(.data$cz_name, ":.+", "")) %>%
+    dplyr::distinct()
+
+  small_data <- storm_data_z %>%
+    tibble::as_tibble() %>%
+    dplyr::select("event_id", "state", "cz_name") %>%
+    dplyr::filter(!(.data$state %in% c("GULF OF MEXICO", "GUAM", "ATLANTIC NORTH",
+                                       "LAKE HURON", "LAKE ST CLAIR", "AMERICAN SAMOA",
+                                       "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN",
+                                       "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
+                                       "LAKE ONTARIO", "VIRGIN ISLANDS", "HAWAII", "ALASKA"))) %>%
+    dplyr::mutate(state = stringr::str_to_lower(.data$state),
+                  cz_name = stringr::str_to_lower(.data$cz_name),
+                  cz_name = stringr::str_replace_all(.data$cz_name, "[.'``]", ""))
+
+  # First, try to match `cz_name` to county name in `county.fips`
+  a <- small_data %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::mutate(fips = ifelse(.data$state == "district of columbia", 11001, .data$fips),
+                  fips = ifelse(.data$state == "virginia" & .data$cz_name == "chesapeake",
+                                51550, .data$fips),
+                  fips = ifelse(.data$state == "alabama" & .data$cz_name == "dekalb",
+                                1049, .data$fips)) %>%
+    dplyr::filter(!is.na(.data$fips)) %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% a$event_id))
+
+  # Next, for county names with 'county' in them, try to match the word before 'county'
+  # to county name in `county.fips`. Then check the two words before 'county', then the
+  # one and two words before 'counties'
+  b <- small_data %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "([a-z]*+)\\s(county|cnty)")[ , 2]) %>%
+    dplyr::filter(!is.na(.data$cz_name)) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% b$event_id))
+
+  c <- small_data %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "([a-z]*+\\s[a-z]*+)\\scounty")[ , 2]) %>%
+    dplyr::filter(!is.na(.data$cz_name)) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% c$event_id))
+
+  d <- small_data %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "([a-z]*+)\\scounties")[ , 2]) %>%
+    dplyr::filter(!is.na(.data$cz_name)) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% d$event_id))
+
+  e <- small_data %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "([a-z]*+\\s[a-z]*+)\\scounties")[ , 2]) %>%
+    dplyr::filter(!is.na(.data$cz_name)) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% e$event_id))
+
+  # Next, pull out the last word in `cz_name` and try to match it to the county name
+  # in `county.fips`. The check the last two words in `cz_name`.
+  f <- small_data %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name, "[a-z]*+$")[ , 1]) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% f$event_id))
+
+  g <- small_data %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "[a-z]*+\\s[a-z]*+$")[ , 1]) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% g$event_id))
+
+  h <- small_data %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name,
+                                               "[a-z]*+\\s[a-z]*+\\s[a-z]*+$")[ , 1]) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% h$event_id))
+
+  # Next, pull any words right before a slash and check that against the county name.
+  # Then try removing anything in parentheses in `cz_name` before matching.
+  i <- small_data %>%
+    dplyr::mutate(cz_name = stringr::str_match(.data$cz_name, "^([a-z]*+)/")[ , 2]) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% i$event_id))
+
+  j <- small_data %>%
+    dplyr::mutate(cz_name = stringr::str_replace(.data$cz_name, "\\s\\(.+", "")) %>%
+    dplyr::left_join(county.fips, by = c("state", "cz_name")) %>%
+    dplyr::filter(!is.na(.data$fips))  %>%
+    dplyr::select("event_id", "fips")
+  small_data <- dplyr::filter(small_data, !(.data$event_id %in% j$event_id))
+
+  matched_data <- dplyr::bind_rows(a, b, c, d, e, f, g, h, i, j) %>%
+    dplyr::mutate(fips = ifelse(.data$fips == 49049, NA, .data$fips)) # Utah County, Utah is getting wrong matches
+
+  storm_data_z <- storm_data_z %>%
+    dplyr::left_join(matched_data, by = "event_id") %>%
+    dplyr::mutate(fips = ifelse(stringr::str_detect(stringr::str_to_lower(.data$cz_name),
+                                                    "national park"),
+                                NA, .data$fips)) # Park County, Wyoming is getting wrong matches. Likely, this may happen in other states, as well.
+
+  return(storm_data_z)
+}
+
 
 #' Parse damage values
 #'

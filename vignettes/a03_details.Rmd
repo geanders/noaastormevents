@@ -564,18 +564,12 @@ events_2015 %>%
   pander::pander(split.cells = c(15, 15, 50), justify = "ccl")
 ```
 
-Within the code in `noaastormevents`, the `match_forecast_county` is used to try to match a county FIPS to each of the events listed by forecast zone. To get the full code for that function, you can run `match_forecast_county` (i.e., the function name, without parentheses after). To match an events listed by forecast zone to a county, this function tries the following to try to match all or part of the `state_name` and `cz_name` columns in the storm events data to the state and county names in the `county.fips` dataframe that comes with the `maps` package: 
+Within the code in `noaastormevents`, the `match_forecast_county` is used to try to match a county FIPS to each of the events listed by forecast zone. To get the full code for that function, you can run `match_forecast_county` (i.e., the function name, without parentheses after). To match an events listed by forecast zone to a county, this function tries the following to try to `cz_fips` and `cz_name` columns in the storm events data to the state and county fips codes in the `forecast_zone_data` dataframe sourced from the National Weather Service Public Forecast Zones.: 
 
-1. Tries to match `cz_name` to the county name in `county.fips` after removing any periods or apostrophes in `cz_name`.
-2. Next, for county names with 'county' in them, try to match the word before 'county'
-   to county name in `county.fips`. Then check the two words before 'county', then the
-   one and two words before 'counties'.
-3. Next, pull out the last word in `cz_name` and try to match it to the county name
-  in `county.fips`. Then check the last two words in `cz_name`, then check the last three words in `cz_name`.
-4. Next, pull any words right before a slash and check that against the county name.
-5. Finally, try removing anything in parentheses in `cz_name` before matching.
+1. Tries to match `cz_fips` to the county code in `ZONE` and `state_fips` to `state_code`.
+2. Next, for all remaining events, try to match `cz_name` to `cz_name` and `state_fips` to `state_code`.
 
-In addition, there are a few final steps in cleaning the data. First, all listings with "Utah" in the `cz_name` are set to missing-- while there is a Utah County, Utah, from inspection of event listings in 2015, events in Utah with "Utah" in `cz_name` often referred to parts of the state, rather than to the county. Further, any event with "National Park" listed in `cz_name` is set to not match with a county FIPS. In Wyoming, Park County was being matched to a `cz_name` for Yellowstone National Park, and this could be a problem in other states, so this extra check was included. 
+It is important to note that many forecast zones span multiple counties. As a result, some storm events will have multiple fips code matches. This may make your resulting dataframe longer, but still accurate. Generally, the events in these forecast zones are generally larger, applying to the majority of the zone. 
 
 ```{r echo = FALSE}
 z_events_2015 <- events_2015 %>%
@@ -590,16 +584,18 @@ z_events_2015 <- events_2015 %>%
   match_forecast_county()
 ```
 
-In the 2015 events data, there are 22,664 events listed by forecast zone rather than county. Once the `match_forecast_county` function is applied to these events, 16,405 events were linked to a county (72%) while 6,259 events (28%) could not be matched to a county.
+In the 2015 events data, there are 22,790 events listed by forecast zone rather than county. Once the `match_forecast_county` function is applied to these events, 19,127 events were linked to at least one county (84%). Many forecast zones cover multiple counties, and therefore some events are linked to multiple counties. This results in 24,426 total event/county pairings.
+
+3,633 events (16%) could not be matched to a county.
 
 ```{r echo = FALSE}
-outside_events <- z_events_2015 %>%
+outside_events <- storm_data_z %>%
   filter(state %in% c("GULF OF MEXICO", "GUAM", "ATLANTIC NORTH",
                                     "LAKE HURON", "LAKE ST CLAIR", "AMERICAN SAMOA",
                                     "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN",
                                     "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
                                     "LAKE ONTARIO", "VIRGIN ISLANDS", "ALASKA")) %>%
-  filter(is.na(fips)) 
+  filter(is.na(forecastfips)) 
 ```
 
 Of the events not matched to a county, 2,997 events were outside the continental U.S. (i.e., in Hawaii, Alaska, U.S. territories, or waters): 
@@ -623,70 +619,7 @@ continental_events <- z_events_2015 %>%
   filter(is.na(fips)) 
 ```
 
-This left 3,262 events in the continental U.S. that were listed by forecast zone but could not be linked to a county by the `match_forecast_county` function. Most of these events had a value for `cz_name` with words related to mountains, water, adjacency (e.g., "area of", "vicinity of"), or a few other word types (e.g., "desert", "hwy"). The following table gives the number of these remaining unmatched events with words from each of these categories (note: the `cz_name` for an event may have words from more than one of these categories, in which case it would be counted in this table under both categories). 
-
-```{r echo = FALSE}
-mountain_words <- c("mountains", "mountain", "valley", "valleys", "divide", "range",
-                    "ridge", "ridges", "gap", "front", "cascades", "foothills", "plateau",
-                    "highlands", "mtns", "hills", "mesa", "mesas", "vly", "peak",
-                    "gorge", "rim", "arches", "hole", "canyon")
-water_words <- c("beaches", "beach", "river", "basin", "coast", "delta", "lake",
-                 "shoreline", "bay")
-adjacent_words <- c("area", "region", "vicinity", "country")
-other_words <- c("desert", "hwy", "panhandle", "corridor", "nation", "plains", 
-                 "lowlands", "prarie")
-
-continental_events <- continental_events %>%
-  mutate(cz_name = str_to_lower(cz_name),
-         has_mountain_words = str_detect(cz_name, paste0(mountain_words, collapse = "|")),
-         has_water_words = str_detect(cz_name, paste0(water_words, collapse = "|")),
-         has_adjacent_words = str_detect(cz_name, paste0(adjacent_words, collapse = "|")),
-         has_other_words = str_detect(cz_name, paste0(other_words, collapse = "|")))
-
-continental_events %>% 
-  summarize(mountain_words = sum(has_mountain_words),
-            water_words = sum(has_water_words),
-            adjacent_words = sum(has_adjacent_words),
-            other_words = sum(has_other_words)) %>% 
-  gather(key = word_type, value = n_events) %>%
-  mutate(words = c(paste(mountain_words, collapse = ", "),
-                   paste(water_words, collapse = ", "),
-                   paste(adjacent_words, collapse = ", "),
-                   paste(other_words, collapse = ", "))) %>%
-  select(word_type, words, n_events) %>%
-  mutate(word_type = str_to_title(str_replace(word_type, "_words", ""))) %>%
-  dplyr::rename(`Word type` = word_type,
-                Words = words,
-                `# events` = n_events) %>%
-  as.data.frame() %>% 
-  pander::pander(split.cells = c(10, 50, 10), big.mark = ",", justify = "llc")
-```
-
-The following table summarizes the number of events that could not be linked to a county that contained at least one of each of these types of words:
-
-```{r echo = FALSE}
-continental_events %>% 
-  dplyr::group_by(event_type) %>%
-  dplyr::summarize(mountain_words = sum(has_mountain_words),
-                   water_words = sum(has_water_words),
-                   adjacent_words = sum(has_adjacent_words),
-                   other_words = sum(has_other_words)) %>% 
-  dplyr::arrange(desc(mountain_words)) %>%
-  knitr::kable(col.names = c("Event type", "Mountain words", "Water words", "Adjacent words",
-                             "Other words"))
-```
-
-For 2015, here are the `cz_name` values for the events that could not be matched to a county and did not include the words listed above:
-
-```{r echo = FALSE}
-continental_events %>% 
-  filter(!has_mountain_words & !has_water_words & !has_adjacent_words & !has_other_words) %>%
-  select(cz_name, state) %>% 
-  mutate(cz_name = str_to_title(cz_name),
-         state = str_to_title(state)) %>%
-  distinct() %>%
-  knitr::kable()
-```
+This left 636 events in the continental U.S. that were listed by forecast zone but could not be linked to a county by the `match_forecast_county` function. 
 
 For the events listed by forecast zone that could be successfully matched to a county, here are the geographic distributions in event counts in 2015:
 
@@ -722,16 +655,8 @@ z_events_2015 %>%
   labs(fill = "Number of events")
 ```
 
-When using this function, and for event listings generated using this function, the user may want to hand-check that event listings with names like "Lake" and "Mountain" in the `cz_name` column are not erroneously matched to counties with names like "Lake County" and "Mountain County". Code like the following can be used for these checks (in this case, checking a dataframe of event listings named `z_events_2015` that is output from `match_forecast_county` and so has `fips` added for each event listing, if a match could be found): 
+This function uses the forecast zone data sourced in September 2023. There is no public data on historic forecast zones. The NWS updates zones on a non-consistent basis, often only changing a few zones at a time. As a result, some older storm event data may have a lower matching rate than data from recent years. An older version of this function is available in `old_match_forecast_county`. This function uses `cz_name` and takes several steps to extract a match to the `county.fips` package available in the `maps` package. If you are not getting a high enough match rate with the `match_forecast_county`, it is recommended to try the older version and see if it returns more matches.
 
-```{r eval = FALSE}
-z_events_2015 %>% 
-  filter(cz_type == "Z") %>% 
-  select(cz_name, state, fips) %>% 
-  mutate(cz_name = str_to_title(cz_name)) %>% 
-  filter(str_detect(cz_name, "Lake") & !is.na(fips))  %>% 
-  distinct()
-```
 
 ### Impact measurements
 

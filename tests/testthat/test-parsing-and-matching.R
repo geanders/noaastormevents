@@ -72,8 +72,115 @@ test_that("matching cz_names to county names to get FIPS for events listed by fo
                                            "Colorado",
                                            "Wyoming"))
 
-            matched_counties <- match_forecast_county(counties_to_parse)
+            matched_counties <- old_match_forecast_county(counties_to_parse)
 
             expect_equal(expected_fips, matched_counties$fips)
+          }
+)
+
+test_that("matching forecast zone codes to get county FIPS codes",
+          {
+            expected_fips <- c(8029, 8077, 8085, 8091, 8113, #Delta, Mesa, Mountrose, Ouray, San Miguel counties for UNCOMPAHGRE PLATEAU AND DALLAS DIVIDE
+                               56001, 56007, #Albany, Carbon counties for NORTH SNOWY RANGE FOOTHILLS
+                               30067, 30097, 30107, #Park, Sweet Grass, Wheatlans counties for CRAZY MOUNTAINS
+                               32007, 32033, #Elko, White Pine for RUBY MOUNTAINS/E HUMBOLDT RANGE
+                               41021, 41055, 41065, #Gilliam, Sherman, Wasco for EASTERN COLUMBIA RIVER GORGE
+                               36081, #Queens for Southern Queens
+                               8007, 8033, 8053, 8067, 8083, 8111, 8113, #Archuleta, Dolores, Hinsdale, La Plata, Montezuma, San Juan, San Miguel for SOUTHWESTERN SAN JUAN MOUNTAINS
+                               45077, #Pickens for Pickens Mountains
+                               51199, 51199, 51735, #York, City of Poquoson for York
+                               49003, 49005, 49011, 49029, 49033, 49035, 49043, 49057, #Box Elder, Cache, Davis, Morgan, Rich, Salt Lake, Summit, Weber for Wasatch Mountains I-80 North
+                               30049, 30099, #Lewis and Clark, Teton for Southern Rocky Mountain Front
+                               16019, 16043, 16051, 16065, #Bonneville, Fremont, Jefferson, Madison for Upper Snake River Plain
+                               35028, 35039, 35043, #Los Alamos, Rio Arriba, Sandoval for Jemez Mountains
+                               6029, #Kern for Bakersfield
+                               24023, #Garrett for Garrett
+                               48303, #Lubbock for Lubbock
+                               54007, #Braxton for Braxton
+                               31013 #Box Butte for Box Butte
+            )
+            #"event_id", "state", "cz_name", "state_fips", "cz_fips"
+            counties_to_parse <- dplyr::tibble(event_id = c(1:18),
+                                               cz_name = c("UNCOMPAHGRE PLATEAU AND DALLAS DIVIDE",
+                                                           "NORTH SNOWY RANGE FOOTHILLS",
+                                                           "CRAZY MOUNTAINS",
+                                                           "RUBY MOUNTAINS/E HUMBOLDT RANGE",
+                                                           "EASTERN COLUMBIA RIVER GORGE",
+                                                           "SOUTHERN QUEENS",
+                                                           "SOUTHWESTERN SAN JUAN MOUNTAINS",
+                                                           "PICKENS MOUNTAINS",
+                                                           "YORK",
+                                                           "WASATCH MOUNTAINS I-80 NORTH",
+                                                           "SOUTHERN ROCKY MOUNTAIN FRONT",
+                                                           "UPPER SNAKE RIVER PLAIN",
+                                                           "JEMEZ MOUNTAINS",
+                                                           "BAKERSFIELD",
+                                                           "GARRETT",
+                                                           "LUBBOCK",
+                                                           "BRAXTON",
+                                                           "BOX BUTTE"
+                                                           ), # National park, so should not match (FIPS = NA)
+                                               state = c("COLORADO",
+                                                         "WYOMING",
+                                                         "MONTANA",
+                                                         "NEVADA",
+                                                         "OREGON",
+                                                         "NEW YORK",
+                                                         "COLORADO",
+                                                         "SOUTH CAROLINA",
+                                                         "VIRGINIA",
+                                                         "UTAH",
+                                                         "MONTANA",
+                                                         "IDAHO",
+                                                         "NEW MEXICO",
+                                                         "CALIFORNIA",
+                                                         "MARYLAND",
+                                                         "TEXAS",
+                                                         "WEST VIRGINIA",
+                                                         "NEBRASKA"
+                                                         ),
+                                               state_fips = c(8,
+                                                              56,
+                                                              30,
+                                                              32,
+                                                              41,
+                                                              36,
+                                                              8,
+                                                              45,
+                                                              51,
+                                                              49,
+                                                              30,
+                                                              16,
+                                                              35,
+                                                              6,
+                                                              24,
+                                                              48,
+                                                              54,
+                                                              31
+                                                              ),
+                                               cz_fips = c(17,
+                                                           110,
+                                                           68,
+                                                           34,
+                                                           41,
+                                                           178,
+                                                           19,
+                                                           2,
+                                                           91,
+                                                           7,
+                                                           48,
+                                                           20,
+                                                           511,
+                                                           314,
+                                                           1,
+                                                           35,
+                                                           28,
+                                                           3
+                                                          )
+                                               )
+
+            matched_counties <- match_forecast_county(counties_to_parse)
+
+            expect_equal(expected_fips, matched_counties$FIPS)
           }
 )

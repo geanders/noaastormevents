@@ -5,8 +5,8 @@ forecast_zone_data <- read.csv(file = "~//noaastormevents//data-raw//forecast_zo
                                col.names = c("STATE","ZONE","CWA","NAME","STATE_ZONE","COUNTY","FIPS",
                                              "TIME_ZONE","FE_AREA","LAT","LON"))
 forecast_zone_data <- forecast_zone_data %>%
-  select(STATE, NAME, COUNTY, FIPS)
+  select(STATE, NAME, ZONE, COUNTY, FIPS)
 
-usethis::use_data(forecast_zone_data)
+usethis::use_data(forecast_zone_data, overwrite = TRUE)
 
 
