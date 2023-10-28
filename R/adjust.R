@@ -163,47 +163,86 @@ adjust_storm_data <- function(storm_data, date_range = NULL,
 #'    It is recommended to try both and see which version produces better results.
 #'
 #' @examples
-#' counties_to_parse <- dplyr::tibble(
-#'            event_id = c(1:19),
-#'            cz_name = c("Suffolk",
-#'                        "Eastern Greenbrier",
-#'                        "Ventura County Mountains",
-#'                        "Central And Southeast Montgomery",
-#'                        "Western Cape May",
-#'                        "San Diego County Coastal Areas",
-#'                        "Blount/Smoky Mountains",
-#'                        "St. Mary's",
-#'                        "Central & Eastern Lake County",
-#'                        "Mountains Southwest Shasta County To Northern Lake County",
-#'                        "Kings (Brooklyn)",
-#'                        "Lower Bucks",
-#'                        "Central St. Louis",
-#'                        "Curry County Coast",
-#'                        "Lincoln County Except The Sheep Range",
-#'                        "Shasta Lake/North Shasta County",
-#'                        "Coastal Palm Beach County",
-#'                        "Larimer & Boulder Counties Between 6000 & 9000 Feet",
-#'                        "Yellowstone National Park"),
-#'           state = c("Virginia",
-#'                     "West Virginia",
-#'                     "California",
-#'                     "Maryland",
-#'                     "New Jersey",
-#'                     "California",
-#'                     "Tennessee",
-#'                     "Maryland",
-#'                     "Oregon",
-#'                     "California",
-#'                     "New York",
-#'                     "Pennsylvania",
-#'                     "Minnesota",
-#'                     "Oregon",
-#'                     "Nevada",
-#'                     "California",
-#'                     "Florida",
-#'                     "Colorado",
-#'                     "Wyoming"))
-#' match_forecast_county(counties_to_parse)
+#'counties_to_parse <- dplyr::tibble(event_id = c(1:18),
+#'                                   cz_name = c("UNCOMPAHGRE PLATEAU AND DALLAS DIVIDE",
+#'                                               "NORTH SNOWY RANGE FOOTHILLS",
+#'                                               "CRAZY MOUNTAINS",
+#'                                               "RUBY MOUNTAINS/E HUMBOLDT RANGE",
+#'                                               "EASTERN COLUMBIA RIVER GORGE",
+#'                                               "SOUTHERN QUEENS",
+#'                                               "SOUTHWESTERN SAN JUAN MOUNTAINS",
+#'                                               "PICKENS MOUNTAINS",
+#'                                               "YORK",
+#'                                               "WASATCH MOUNTAINS I-80 NORTH",
+#'                                               "SOUTHERN ROCKY MOUNTAIN FRONT",
+#'                                               "UPPER SNAKE RIVER PLAIN",
+#'                                               "JEMEZ MOUNTAINS",
+#'                                               "BAKERSFIELD",
+#'                                               "GARRETT",
+#'                                               "LUBBOCK",
+#'                                               "BRAXTON",
+#'                                               "BOX BUTTE"
+#'                                   ), # National park, so should not match (FIPS = NA)
+#'                                   state = c("COLORADO",
+#'                                             "WYOMING",
+#'                                             "MONTANA",
+#'                                             "NEVADA",
+#'                                             "OREGON",
+#'                                             "NEW YORK",
+#'                                             "COLORADO",
+#'                                             "SOUTH CAROLINA",
+#'                                             "VIRGINIA",
+#'                                             "UTAH",
+#'                                             "MONTANA",
+#'                                             "IDAHO",
+#'                                             "NEW MEXICO",
+#'                                             "CALIFORNIA",
+#'                                             "MARYLAND",
+#'                                             "TEXAS",
+#'                                             "WEST VIRGINIA",
+#'                                             "NEBRASKA"
+#'                                   ),
+#'                                   state_fips = c(8,
+#'                                                  56,
+#'                                                  30,
+#'                                                  32,
+#'                                                  41,
+#'                                                  36,
+#'                                                  8,
+#'                                                  45,
+#'                                                  51,
+#'                                                  49,
+#'                                                  30,
+#'                                                  16,
+#'                                                  35,
+#'                                                  6,
+#'                                                  24,
+#'                                                  48,
+#'                                                  54,
+#'                                                  31
+#'                                   ),
+#'                                   cz_fips = c(17,
+#'                                               110,
+#'                                               68,
+#'                                               34,
+#'                                               41,
+#'                                               178,
+#'                                               19,
+#'                                               2,
+#'                                               91,
+#'                                               7,
+#'                                               48,
+#'                                               20,
+#'                                               511,
+#'                                               314,
+#'                                               1,
+#'                                               35,
+#'                                               28,
+#'                                               3
+#'                                   )
+#')
+#'
+#'match_forecast_county(counties_to_parse)
 #' @importFrom dplyr %>%
 #' @importFrom rlang .data
 #'
@@ -215,8 +254,8 @@ match_forecast_county <- function(storm_data_z){
 
   forecast_zone_data <- forecast_zone_data %>%
     dplyr::mutate(cz_name = stringr::str_to_lower(.data$NAME),
-                  state_code = as.integer(stringr::str_extract(FIPS, ".{1,2}(?=[:digit:]{3})"))) %>%
-    dplyr::mutate(forecastfips = paste0(state_code,ZONE))
+                  state_code = as.integer(stringr::str_extract(.data$FIPS, ".{1,2}(?=[:digit:]{3})"))) %>%
+    dplyr::mutate(forecastfips = paste0(.data$state_code,.data$ZONE))
 
   small_data <- storm_data_z %>%
     tibble::as_tibble() %>%
@@ -232,7 +271,7 @@ match_forecast_county <- function(storm_data_z){
   # Join by forecast code
   a <- small_data %>%
     dplyr::left_join(forecast_zone_data %>%
-    dplyr::select(-c(cz_name)), by=c("state_fips" = "state_code", "cz_fips" = "ZONE")) %>%
+    dplyr::select(-c(.data$cz_name)), by=c("state_fips" = "state_code", "cz_fips" = "ZONE")) %>%
     # select(-c(cz_name.y)) %>%
     dplyr::filter(!is.na(.data$NAME))
   # look at what did have match, sample and make sure they properly match
@@ -243,12 +282,12 @@ match_forecast_county <- function(storm_data_z){
   b <- small_data %>%
     dplyr::left_join(forecast_zone_data, by = c("state_fips" = "state_code", "cz_name" = "cz_name")) %>%
     dplyr::filter(!is.na(.data$NAME))%>%
-    dplyr::select(-c(ZONE))
+    dplyr::select(-c(.data$ZONE))
   # do another spot check, look into why codes are different
   small_data <- dplyr::filter(small_data, !.data$event_id %in% b$event_id)
 
   completed_data <- dplyr::bind_rows(a,b) %>%
-    dplyr::select(-c(cz_name, state, state_fips, cz_fips))
+    dplyr::select(-c("cz_name", "state", "state_fips", "cz_fips"))
 
   storm_data_z <- storm_data_z %>%
     dplyr::left_join(completed_data, by = "event_id")

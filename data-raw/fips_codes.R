@@ -19,4 +19,4 @@ county.fips <- county.fips %>%
       filter(!is.na(county)) %>%
   select(fips, state, county)
 
-usethis::use_data(county.fips, overwrite = TRUE)
+# usethis::use_data(county.fips, overwrite = TRUE)

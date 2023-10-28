@@ -589,7 +589,7 @@ In the 2015 events data, there are 22,790 events listed by forecast zone rather 
 3,633 events (16%) could not be matched to a county.
 
 ```{r echo = FALSE}
-outside_events <- storm_data_z %>%
+outside_events <- z_events_2015 %>%
   filter(state %in% c("GULF OF MEXICO", "GUAM", "ATLANTIC NORTH",
                                     "LAKE HURON", "LAKE ST CLAIR", "AMERICAN SAMOA",
                                     "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN",
@@ -616,7 +616,7 @@ continental_events <- z_events_2015 %>%
                                     "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN",
                                     "HAWAII WATERS", "PUERTO RICO", "E PACIFIC", "LAKE ERIE",
                                     "LAKE ONTARIO", "VIRGIN ISLANDS", "HAWAII", "ALASKA"))) %>%
-  filter(is.na(fips)) 
+  filter(is.na(forecastfips)) 
 ```
 
 This left 636 events in the continental U.S. that were listed by forecast zone but could not be linked to a county by the `match_forecast_county` function. 
@@ -624,8 +624,8 @@ This left 636 events in the continental U.S. that were listed by forecast zone b
 For the events listed by forecast zone that could be successfully matched to a county, here are the geographic distributions in event counts in 2015:
 
 ```{r message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6, fig.align = "center", echo = FALSE}
-z_events_2015 %>%
-  filter(!is.na(fips)) %>%
+test <- z_events_2015 %>%
+  filter(!is.na(forecastfips)) %>%
   filter(!(state %in% c("GULF OF MEXICO", "ALASKA", "GUAM", "ATLANTIC NORTH",
                         "LAKE HURON", "LAKE ST CLAIR", "HAWAII", "AMERICAN SAMOA",
                         "LAKE SUPERIOR", "ATLANTIC SOUTH", "LAKE MICHIGAN", 
@@ -636,10 +636,10 @@ z_events_2015 %>%
   ungroup() %>%
   filter(n_events >= 100) %>%
   select(-n_events) %>%
-  group_by(fips, event_type) %>%
+  group_by(FIPS, event_type) %>%
   dplyr::summarize(value = n()) %>%
   ungroup() %>%
-  left_join(maps::county.fips, by = "fips") %>%
+  left_join(maps::county.fips, by = c("FIPS" = "fips")) %>%
   left_join(unite(map_data("county"), polyname, region, subregion, sep = ","),
             by = "polyname") %>%
   ggplot(aes(x = long, y = lat, group = group, fill = value)) +
@@ -681,7 +681,7 @@ c_events_2015 <- events_2015 %>%
   dplyr::filter_(~ cz_type == "C") %>%
   dplyr::mutate_(fips = ~ as.numeric(paste0(state_fips, str_pad(cz_fips, 3, pad = "0"))))
 
-county_events_2015 <- bind_rows(c_events_2015, filter(z_events_2015, !is.na(fips)))
+county_events_2015 <- bind_rows(c_events_2015, filter(z_events_2015, !is.na(FIPS)))
 ```
 
 Many of the impact values are given using abbreviations for amounts. For example, this listing for a tornado gives the property damage as "5.00K":
