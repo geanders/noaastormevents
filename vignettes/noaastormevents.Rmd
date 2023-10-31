@@ -25,7 +25,6 @@ if (!not_cran | !hasData) {
 
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 library(noaastormevents)
-library(tidyverse)
 ```
 
 ## Description of package

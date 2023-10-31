@@ -23,19 +23,12 @@ BugReports: https://github.com/geanders/noaastormevents/issues
 License: GPL (>= 2)
 LazyData: TRUE
 Imports:
-    choroplethr (>= 3.7.0),
-    choroplethrMaps (>= 1.0.1),
     curl (>= 5.0.1),
-    data.table (>= 1.13.0),
     dplyr (>= 1.0.2),
-    forcats (>= 0.5.0),
     ggplot2 (>= 3.3.2),
-    hurricaneexposure (>= 0.1.1),
     lubridate (>= 1.7.9),
     maps (>= 3.3.0),
     magrittr (>= 1.5),
-    plyr (>= 1.8.6),
-    RColorBrewer (>= 1.1.2),
     rlang (>= 0.4.7),
     stringr (>= 1.4.0),
     tibble (>= 3.0.3),
@@ -46,9 +39,12 @@ RoxygenNote: 7.1.2
 Depends:
     R (>= 3.5)
 Suggests: 
+    forcats (>= 0.5.0),
+    hurricaneexposure (>= 0.1.1),
     hurricaneexposuredata (>= 0.1.0),
     knitr (>= 1.29.0),
     pander (>= 0.6.3),
+    plyr (>= 1.8.6),
     rmarkdown (>= 2.3),
     rvest (>= 1.0.3),
     testthat (>= 2.3.2)
