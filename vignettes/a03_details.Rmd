@@ -671,15 +671,15 @@ The "Details" datasets for each year include six measurements of the impacts of 
 
 ```{r echo = FALSE}
 c_events_2015 <- events_2015 %>%
-  dplyr::select_(~ BEGIN_YEARMONTH, ~ BEGIN_DAY, ~ END_YEARMONTH, ~ END_DAY,
-                   ~ EPISODE_ID, ~EVENT_ID, ~ STATE, ~ CZ_TYPE, ~ CZ_NAME,
-                  ~ DEATHS_DIRECT, ~ DEATHS_INDIRECT, ~ INJURIES_DIRECT,
-                  ~ INJURIES_INDIRECT, ~ DAMAGE_PROPERTY, ~ DAMAGE_CROPS,
-                   ~ EVENT_TYPE, ~ STATE_FIPS, ~ CZ_FIPS, ~ SOURCE,
-                   ~ EPISODE_NARRATIVE, ~ EVENT_NARRATIVE) %>%
+  dplyr::select(.data$BEGIN_YEARMONTH, .data$BEGIN_DAY, .data$END_YEARMONTH, .data$END_DAY,
+                   .data$EPISODE_ID, .data$EVENT_ID, .data$STATE, .data$CZ_TYPE, .data$CZ_NAME,
+                  .data$DEATHS_DIRECT, .data$DEATHS_INDIRECT, .data$INJURIES_DIRECT,
+                  .data$INJURIES_INDIRECT, .data$DAMAGE_PROPERTY, .data$DAMAGE_CROPS,
+                   .data$EVENT_TYPE, .data$STATE_FIPS, .data$CZ_FIPS, .data$SOURCE,
+                   .data$EPISODE_NARRATIVE, .data$EVENT_NARRATIVE) %>%
   setNames(tolower(names(.))) %>%
-  dplyr::filter_(~ cz_type == "C") %>%
-  dplyr::mutate_(fips = ~ as.numeric(paste0(state_fips, str_pad(cz_fips, 3, pad = "0"))))
+  dplyr::filter(.data$cz_type == "C") %>%
+  dplyr::mutate(fips = as.numeric(paste0(.data$state_fips, str_pad(.data$cz_fips, 3, pad = "0"))))
 
 county_events_2015 <- bind_rows(c_events_2015, filter(z_events_2015, !is.na(FIPS)))
 ```
